@@ -5,20 +5,22 @@
 {% block title %} Dashboard {% endblock %} 
 
 {% block body %}
-<div class="row" style="margin-top:60px">
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <div class="page-pretitle">
-                    Overview
-                </div>
+<!-- Page title -->
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col-auto">
+            <div class="page-pretitle">
+                Overview
             </div>
+            <h2 class="page-title">
+                Velero Dashboard
+            </h2>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-2">
+<div class="row row-deck row-cards">
+    <div class="col-md-6 col-xl-4">
         <div class="card card-sm">
             <div class="card-body d-flex align-items-center">
                 <span class="text-green mr-3">
@@ -43,7 +45,7 @@
         </div>
     </div>
 
-    <div class="col-2">
+    <div class="col-md-6 col-xl-4">
         <div class="card card-sm">
             <div class="card-body d-flex align-items-center">
                 <span class="text-blue mr-3">
@@ -66,7 +68,7 @@
         </div>
     </div>
 
-    <div class="col-2">
+    <div class="col-md-6 col-xl-4">
         <div class="card card-sm">
             <div class="card-body d-flex align-items-center">
                 <span class="text-purple mr-3">
@@ -92,7 +94,7 @@
         </div>
     </div>
 
-    <div class="col-3">
+    <div class="col-md-6 col-lg-6">
         <div class="card">
             <div class="card-header">
                 <h4 class="card-title mr-3">Backup Location</h4>
@@ -114,7 +116,7 @@
         </div>
     </div>
 
-    <div class="col-3">
+    <div class="col-md-6 col-lg-6">
         <div class="card">
             <div class="card-header">
                 <h4 class="card-title mr-3">Snapshot Location</h4>
