@@ -20,31 +20,45 @@
 {% block title %} Backup {% endblock %}
  
 {% block body %}
-<!-- Page title -->
+
 <div class="page-header">
-    <div class="row align-items-center">
-        <div class="col-auto">
-            <div class="page-pretitle">
-                Backup job list
-            </div>
-            <h2 class="page-title">
-                Backup Page
-            </h2>
-        </div>
+  <div class="row align-items-center">
+    <div class="col">
+      <div class="page-pretitle">
+        Backup job list
+      </div>
+      <h2 class="page-title">
+        Backups
+      </h2>
     </div>
-    <div class="float-right">
-        <a href="#" class="btn btn-outline-dark active float-right" data-toggle="modal" data-target="#modal-create">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24"
-                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z"></path>
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2"></path>
-                <circle cx="12" cy="14" r="2"></circle>
-                <polyline points="14 4 14 8 8 8 8 4"></polyline>
-            </svg>
+    <div class="col-auto ms-auto">
+      <div class="btn-list">
+        <span class="d-none d-sm-inline">
+          <a href="#" class="btn">
+            New view
+          </a>
+        </span>
+        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
             Create Backup
         </a>
+        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </a>
+      </div>
     </div>
+  </div>
 </div>
+
+
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Backups</h3>
