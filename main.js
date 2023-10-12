@@ -54,7 +54,7 @@ app.get('/api/status', async (request, response) => {
 
 app.get('/api/backups', async (request, response) => {
     const backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups');
-    console.log('Backups: ', backups.body);
+    //console.log('Backups: ', backups.body.items);
     response.send(backups.body);
 });
 
@@ -86,7 +86,6 @@ app.post('/api/backups', async (request, response) => {
 
 app.get('/api/restores', async (request, response) => {
     const restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'restores');
-    console.log('Restores: ', restores.body);
     response.send(restores.body);
 });
 
@@ -119,7 +118,6 @@ app.post('/api/restores', async (request, response) => {
 
 app.get('/api/schedules', async (request, response) => {
     const schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'schedules');
-    console.log('Schedules: ', schedules.body);
     response.send(schedules.body);
 });
 
