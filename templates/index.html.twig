@@ -47,6 +47,35 @@
         </div>
     </div>
     <div class="col-6">
+        <div class="card card-sm">
+             <div class="card-body">
+                <h2 class="card-title mt-3">
+                    <i class="bi bi-speedometer2"></i> 
+                    <span>Status</span>
+                    <span class="spinner-grow bloc-status"></span>
+                </h2>
+                <p class="card-text">
+                    <ol class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">Velero</div>
+                            <h5><span class="badge bg-secondary rounded-pill bloc-status service-status"></span></h5>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">Storage</div>
+                            <h5><span class="badge bg-secondary rounded-pill bloc-status storage-status"></span></h5>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">Last Sync</div>
+                            <h5><span class="badge bg-secondary bloc-status storage-last-sync"></span></h5>
+                        </li>
+                    </ol>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    {# <div class="col-6">
         <div class="card">
             <div class="card-header">
                 <h4 class="card-title"><i class="bi bi-database"></i> Backup Location</h4>
@@ -65,7 +94,7 @@
                 </table>
             </div>
         </div>
-    </div>
+    </div> #}
 </div>
 
 <h2 class="mt-5">Backups jobs</h1>
@@ -128,5 +157,5 @@
 {% endblock %} 
 
 {% block javascript %}
-<script src="/js/main.js"></script>
+<script src="/js/app.js"></script>
 {% endblock %}

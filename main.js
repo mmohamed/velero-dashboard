@@ -7,7 +7,7 @@ const { TwingEnvironment, TwingLoaderFilesystem } = require("twing");
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 
 const app = express();
@@ -30,25 +30,27 @@ app.get("/", (request, response) => {
     });
 });
 
-app.get("/backups", async (request, response) => {
-    const backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups');
-    twing.render("backups.html.twig", { backups: backups.body.items }).then(output => {
-        response.end(output);
-    });
-});
-
 app.get('/api/status', async (request, response) => {
-    const backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups');
-    const restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'restores');
-    const schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'schedules');
+    const deployStatus = await k8sApi.readNamespacedDeploymentStatus('velero', 'velero');
     const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backupstoragelocations');
     const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'volumesnapshotlocations');
+   
+    var backupStorageLocationStatus = "uncknown";
+    var backupStorageLocationLastSync = null;
+    
+    for(var i in backupStorageLocations.body.items){
+        if(backupStorageLocations.body.items[i].spec.default){
+            backupStorageLocationStatus = backupStorageLocations.body.items[i].status.phase;
+            backupStorageLocationLastSync = backupStorageLocations.body.items[i].status.lastSyncedTime
+            break;
+        }
+    }
+
     response.send({
-        backups: backups.body.items.length,
-        restores: restores.body.items.length,
-        schedules: schedules.body.items.length,
-        backupStorageLocations: backupStorageLocations.body.items,
-        volumeSnapshotLocations: volumeSnapshotLocations.body.items,
+        isReady: (deployStatus.body.status.replicas - deployStatus.body.status.readyReplicas) == 0,
+        StorageStatus: backupStorageLocationStatus, 
+        lastSync: backupStorageLocationLastSync,
+        volumeSnapshot: volumeSnapshotLocations.body.items.length > 0
     });
 });
 
