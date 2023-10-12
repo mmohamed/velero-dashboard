@@ -1,7 +1,10 @@
 {% extends "layout.html.twig" %} 
 
 {% block css %}
+<link href="/css/bootstrap.min.css" rel="stylesheet" />
+<link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <link href="/css/dataTables.min.css" rel="stylesheet" />
+<link href="/css/table.css" rel="stylesheet" />
 <style>
     #logs {
         height: 900px;
@@ -137,6 +140,7 @@
 
 {% block javascript %}
 <script src="/js/dataTables.min.js"></script>
+<script src="/js/dataTables.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
 
