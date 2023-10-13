@@ -8,13 +8,14 @@ $(document).ready(function() {
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         beforeSend: function() {
-            $('.bloc-status').addClass('spinner-grow').empty();          
+            $('.bloc-status').empty();   
+            $('.status-loader').addClass('spinner-grow');          
         },
         success: function(response) {
-            $('.bloc-status').removeClass('spinner-grow');      
+            $('.status-loader').removeClass('spinner-grow');      
             $('.service-status').text(response.isReady ? 'Ready' : 'Not Ready');    
             $('.storage-status').text(response.StorageStatus);    
-            $('.storage-last-sync').text(moment(new Date(response.lastSync)).from(new Date()));     
+            $('.storage-last-sync').text(moment(new Date(response.lastSync)).from(new Date())); 
         },
         error: function(error) {
             console.log("Status : ", error);
@@ -49,7 +50,7 @@ $(document).ready(function() {
                 data : "created", 
                 render: function (data, type, row) {
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
                 }
             },
             { 
@@ -61,7 +62,7 @@ $(document).ready(function() {
             {
                 data: "name",
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-danger btn-sm">Restore</button>';
+                    return '<button type="button" class="btn btn-outline-danger btn-sm" disabled>Restore</button>';
                 }
             }
         ]
@@ -108,7 +109,7 @@ $(document).ready(function() {
             backupTableApi.draw();      
         },
         error: function(error) {
-            console.log("Status : ", error);
+            console.log("Backups : ", error);
         }
     });
 
@@ -143,7 +144,7 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
                 }
             },
             { 
@@ -151,7 +152,7 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
                 } 
             }
         ]
@@ -189,7 +190,7 @@ $(document).ready(function() {
                     status: response.items[i].status.phase,
                     errors: response.items[i].status.errors | 0,
                     warnings: response.items[i].status.warning | 0,
-                    start: response.items[i].metadata.startTimestamp,
+                    start: response.items[i].status.startTimestamp,
                     end: response.items[i].status.completionTimestamp,
                     raw: response.items[i]
                 }]);
@@ -198,7 +199,7 @@ $(document).ready(function() {
             restoreTableApi.draw();      
         },
         error: function(error) {
-            console.log("Status : ", error);
+            console.log("Restores : ", error);
         }
     });
 
@@ -231,7 +232,13 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
+                }
+            },
+            {
+                data: "name",
+                render: function (data, type, row) {
+                    return '<button type="button" class="btn btn-outline-primary btn-sm" disabled>Execute now</button>';
                 }
             }
         ]
@@ -277,7 +284,7 @@ $(document).ready(function() {
             scheduleTableApi.draw();      
         },
         error: function(error) {
-            console.log("Status : ", error);
+            console.log("Schedules : ", error);
         }
     });
 
