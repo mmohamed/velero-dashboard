@@ -10,7 +10,7 @@
     "ext": "js,json,mjs,html,html.twig"
   },
   "author": "Marouan MOHAMED",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@kubernetes/client-node": "^0.19.0",
     "body-parser": "^1.20.2",
