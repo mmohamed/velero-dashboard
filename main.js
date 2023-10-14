@@ -234,7 +234,25 @@ app.get('/api/restores', async (request, response) => {
 });
 
 app.post('/api/restores', async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
     try {
+        // filtering
+        let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups', request.body.backup);
+        let user = request.session.user;
+        if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+            var hasAccess = true;
+            for(var i in backup.body.spec.includedNamespaces){
+                if(user.namespaces.indexOf(backup.body.spec.includedNamespaces[i]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(!hasAccess || !backup.body.spec.includedNamespaces || !backup.body.spec.includedNamespaces.length > 0){
+                return response.status(403).json({});
+            }
+        }
+        
+        // create restore
         var body = {
             "apiVersion": "velero.io/v1",
             "kind": "Restore",
@@ -245,14 +263,14 @@ app.post('/api/restores', async (request, response) => {
             "spec": {
                 "backupName": request.body.backup,
                 "defaultVolumesToRestic": true,
-                "includedNamespaces": ["ovpn"],
+                "includedNamespaces": backup.body.spec.includedNamespaces,
                 "storageLocation": "default",
                 "excludedResources": ["nodes", "events", "events.events.k8s.io", "backups.velero.io", "restores.velero.io", "resticrepositories.velero.io"],
                 "ttl": "720h0m0s"
             }
         }
         var returned = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', 'velero', 'restores', body);
-        response.send({'status': true, 'restore': returned});
+        response.send({'status': true, 'restore': returned.response.body});
     } catch (err) {
         console.error(err);
         response.send({'status': false});

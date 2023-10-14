@@ -62,12 +62,40 @@ $(document).ready(function() {
             {
                 data: "name",
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-outline-danger btn-sm" disabled>Restore</button>';
+                    return '<button type="button" class="btn btn-outline-danger btn-sm restore-action" data-name="'+data+'">Restore</button>';
                 }
             }
         ]
     });
     
+    $(document).on('click', 'button.restore-action', function(){
+        let name = $(this).attr('data-name');
+        let response = confirm("Are you sure you want to restore '"+name+"' ?");
+        if(response){
+
+            $.ajax({
+                url: "/api/restores",
+                type: "POST",
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
+                beforeSend: function() {  
+                    $('.backup-bloc').block();  
+                },
+                success: function(response) {
+                    $('#info').find('.toast-body').html('New restore job "'+response.restore.metadata.name+'" is created')
+                    $('#info').toast('show')    
+                },
+                error: function(error) {
+                    console.log("Create restore : ", error);
+                },
+                complete: function(){
+                    $('.backup-bloc').unblock();
+                }
+            });
+        }
+    });
+
     backupTable.on('click', 'td.dt-control', function (e) {
         let tr = e.target.closest('tr');
         let row = backupTable.row(tr);
