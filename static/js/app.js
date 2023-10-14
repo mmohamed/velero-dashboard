@@ -93,16 +93,16 @@ $(document).ready(function() {
             $('.counter-backups').addClass('spinner-grow').empty();  
         },
         success: function(response) {
-            $('.counter-backups').removeClass('spinner-grow').text(response.items.length);
-            for(var i in response.items){
+            $('.counter-backups').removeClass('spinner-grow').text(response.length);
+            for(var i in response){
                 backupTableApi.rows.add([{
-                    name: response.items[i].metadata.name,
-                    status: response.items[i].status.phase,
-                    errors: response.items[i].status.errors | 0,
-                    warnings: response.items[i].status.warning | 0,
-                    created: response.items[i].metadata.creationTimestamp,
-                    expires: response.items[i].status.expiration,
-                    raw: response.items[i]
+                    name: response[i].metadata.name,
+                    status: response[i].status.phase,
+                    errors: response[i].status.errors | 0,
+                    warnings: response[i].status.warning | 0,
+                    created: response[i].metadata.creationTimestamp,
+                    expires: response[i].status.expiration,
+                    raw: response[i]
                 }]);
                 
             }  
@@ -183,16 +183,16 @@ $(document).ready(function() {
             $('.counter-restores').addClass('spinner-grow').empty();  
         },
         success: function(response) {
-            $('.counter-restores').removeClass('spinner-grow').text(response.items.length);
-            for(var i in response.items){
+            $('.counter-restores').removeClass('spinner-grow').text(response.length);
+            for(var i in response){
                 restoreTableApi.rows.add([{
-                    name: response.items[i].metadata.name,
-                    status: response.items[i].status.phase,
-                    errors: response.items[i].status.errors | 0,
-                    warnings: response.items[i].status.warning | 0,
-                    start: response.items[i].status.startTimestamp,
-                    end: response.items[i].status.completionTimestamp,
-                    raw: response.items[i]
+                    name: response[i].metadata.name,
+                    status: response[i].status.phase,
+                    errors: response[i].status.errors | 0,
+                    warnings: response[i].status.warning | 0,
+                    start: response[i].status.startTimestamp,
+                    end: response[i].status.completionTimestamp,
+                    raw: response[i]
                 }]);
                 
             }  
@@ -269,15 +269,15 @@ $(document).ready(function() {
             $('.counter-schedules').addClass('spinner-grow').empty();  
         },
         success: function(response) {
-            $('.counter-schedules').removeClass('spinner-grow').text(response.items.length);
-            for(var i in response.items){
+            $('.counter-schedules').removeClass('spinner-grow').text(response.length);
+            for(var i in response){
                 scheduleTableApi.rows.add([{
-                    name: response.items[i].metadata.name,
-                    status: response.items[i].status.phase,
-                    ttl: response.items[i].spec.template.ttl,
-                    schedule: response.items[i].spec.schedule,
-                    last: response.items[i].status.lastBackup,
-                    raw: response.items[i]
+                    name: response[i].metadata.name,
+                    status: response[i].status.phase,
+                    ttl: response[i].spec.template.ttl,
+                    schedule: response[i].spec.schedule,
+                    last: response[i].status.lastBackup,
+                    raw: response[i]
                 }]);
                 
             }  

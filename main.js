@@ -26,6 +26,11 @@ app.use(express.static(__dirname+'/static'));
 const loader = new TwingLoaderFilesystem("./templates");
 const twing = new TwingEnvironment(loader);
 
+const filter = function(groups){
+    
+    return availableNamespaces;
+}
+
 app.get('/login', (request, response) => {
     twing.render("login.html.twig").then(output => {
         response.end(output);
@@ -74,14 +79,37 @@ app.post('/login', async function(request, response){
                     usernameAttribute: process.env.LDAP_SEARCH_FILTER,
                     username: request.body.username,
                 });
-                console.debug(authenticated);
+                console.log('Authenticated user : ',authenticated);
                 if(authenticated){
+                    let groups = authenticated.groups.split('|');
+                    let availableNamespaces = [];
+                    try{
+                        if(process.env.NAMESPACE_FILTERING){
+                            var filtering = JSON.parse(process.env.NAMESPACE_FILTERING);
+                            for (var i in groups){
+                                for(var j in filtering){
+                                    if(filtering[j].group === groups[i]){
+                                        for(var k in filtering[j].namespaces){
+                                            if(availableNamespaces.indexOf(filtering[j].namespaces[k]) === -1){
+                                                availableNamespaces.push(filtering[j].namespaces[k]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }catch (err) {
+                        console.error(err);
+                    }
+
                     request.session.user = {
                         admin: false,
                         username: request.body.username,
                         password: request.body.password,
-                        groups: authenticated.groups.split('|')
+                        groups: groups,
+                        namespaces: availableNamespaces
                     };
+
                     response.redirect('/');
                     return ;
                 }
@@ -130,11 +158,28 @@ app.get('/api/status', async (request, response) => {
 
 app.get('/api/backups', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
-    if(process.env.NAMESPACE_FILTERING){
-        const filtering = JSON.parse(process.env.NAMESPACE_FILTERING);
+    let backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups');
+    // filter
+    let user = request.session.user;
+    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+        let availableBackups = [];
+        let allBAckups = backups.body.items;
+        for(let i in allBAckups){
+            var hasAccess = true;
+            for(var j in allBAckups[i].spec.includedNamespaces){
+                if(user.namespaces.indexOf(allBAckups[i].spec.includedNamespaces[j]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(hasAccess && allBAckups[i].spec.includedNamespaces && allBAckups[i].spec.includedNamespaces.length > 0){
+                availableBackups.push(allBAckups[i]);
+            }
+        }
+        response.send(availableBackups);
+        return;
     }
-    const backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'backups');
-    response.send(backups.body);
+    response.send(backups.body.items);
 });
 
 app.post('/api/backups', async (request, response) => {
@@ -164,8 +209,28 @@ app.post('/api/backups', async (request, response) => {
 
 app.get('/api/restores', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
-    const restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'restores');
-    response.send(restores.body);
+    let restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'restores');
+    // filter
+    let user = request.session.user;
+    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+        let availableRestores = [];
+        let allRestores = restores.body.items;
+        for(let i in allRestores){
+            var hasAccess = true;
+            for(var j in allRestores[i].spec.includedNamespaces){
+                if(user.namespaces.indexOf(allRestores[i].spec.includedNamespaces[j]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(hasAccess && allRestores[i].spec.includedNamespaces && allRestores[i].spec.includedNamespaces.length > 0){
+                availableRestores.push(allRestores[i]);
+            }
+        }
+        response.send(availableRestores);
+        return;
+    }
+    response.send(restores.body.items);
 });
 
 app.post('/api/restores', async (request, response) => {
@@ -196,12 +261,33 @@ app.post('/api/restores', async (request, response) => {
 
 app.get('/api/schedules', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
-    const schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'schedules');
-    response.send(schedules.body);
+    let schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', 'velero', 'schedules');
+    // filter
+    let user = request.session.user;
+    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+        let availableRestores = [];
+        let allSchedules = schedules.body.items;
+        for(let i in allSchedules){
+            var hasAccess = true;
+            for(var j in allSchedules[i].spec.includedNamespaces){
+                if(user.namespaces.indexOf(allSchedules[i].spec.template.includedNamespaces[j]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(hasAccess && allSchedules[i].spec.template.includedNamespaces && allSchedules[i].spec.template.includedNamespaces.length > 0){
+                availableRestores.push(allSchedules[i]);
+            }
+        }
+        response.send(availableRestores);
+        return;
+    }
+    
+    response.send(schedules.body.items);
 });
 
 app.post('/api/schedules', async (request, response) => {
-    if(!request.session.user) return response.status(403).json({});
+    if(!request.session.user || !request.session.user.isAdmin) return response.status(403).json({});
     try {
         var body = {
             "apiVersion": "velero.io/v1",
@@ -212,10 +298,10 @@ app.post('/api/schedules', async (request, response) => {
             },
             "spec": {
                 "schedule": request.body.schedule,
-                "defaultVolumesToRestic": true,
-                "includedNamespaces": ["ovpn"],
                 "template": {
-                    "ttl": request.body.ttl ? request.body.ttl : "360h0m0s"
+                    "ttl": request.body.ttl ? request.body.ttl : "360h0m0s",
+                    "includedNamespaces": ["ovpn"],
+                    "defaultVolumesToRestic": true
                 },
                 "useOwnerReferencesInBackup": false
             }
