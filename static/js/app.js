@@ -83,8 +83,13 @@ $(document).ready(function() {
                     $('.backup-bloc').block();  
                 },
                 success: function(response) {
-                    $('#info').find('.toast-body').html('New restore job "'+response.restore.metadata.name+'" is created')
-                    $('#info').toast('show')    
+                    $.toast({
+                        heading: 'Information',
+                        text: 'New restore job "'+response.restore.metadata.name+'" is created',
+                        icon: 'info',
+                        loader: true,        // Change it to false to disable loader
+                        loaderBg: '#9EC600'  // To change the background
+                    })
                 },
                 error: function(error) {
                     console.log("Create restore : ", error);
