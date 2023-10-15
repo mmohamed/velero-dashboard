@@ -13,11 +13,23 @@ $(document).ready(function() {
         },
         success: function(response) {
             $('.status-loader').removeClass('spinner-grow');      
-            $('.service-status').text(response.isReady ? 'Ready' : 'Not Ready');    
+            $('.service-status').text(response.isReady ? 'Ready' : 'Not Ready'); 
+            $('.service-status').attr('class', function(i, c){
+                return c.replace(/(^|\s)bg-\S+/g, '');
+            }).addClass(response.isReady ? 'bg-primary' : 'bg-danger');
             $('.storage-status').text(response.StorageStatus);    
-            $('.storage-last-sync').text(moment(new Date(response.lastSync)).from(new Date())); 
+            $('.storage-status').attr('class', function(i, c){
+                return c.replace(/(^|\s)bg-\S+/g, '');
+            }).addClass(response.StorageStatus === 'Available' ? 'bg-primary' : 'bg-danger');
+            $('.storage-last-sync').text(response.lastSync ? moment(new Date(response.lastSync)).from(new Date()) : ''); 
         },
         error: function(error) {
+            $.toast({
+                heading: 'Error',
+                text: 'Unable to get velero status, please contact the administrator.',
+                showHideTransition: 'plain',
+                icon: 'warning'
+            });
             console.log("Status : ", error);
         }
     });
@@ -31,6 +43,7 @@ $(document).ready(function() {
         pagingType: 'simple_numbers',
         lengthMenu: [10, 50, 100, 200],
         data : [],
+        order: [[5, 'desc']],
         columnDefs: [
             {
                 className: 'dt-control',
@@ -50,7 +63,8 @@ $(document).ready(function() {
                 data : "created", 
                 render: function (data, type, row) {
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
+                    if(type == 'sort') return dt;
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
             { 
@@ -61,6 +75,7 @@ $(document).ready(function() {
             },
             {
                 data: "name",
+                orderable: false,
                 render: function (data, type, row) {
                     return '<button type="button" class="btn btn-outline-danger btn-sm restore-action" data-name="'+data+'">Restore</button>';
                 }
@@ -94,6 +109,12 @@ $(document).ready(function() {
                     $('html, body').scrollTop($('.restore-bloc').offset().top);
                 },
                 error: function(error) {
+                    $.toast({
+                        heading: 'Error',
+                        text: 'Unable to create a restore job, please contact the administrator.',
+                        showHideTransition: 'plain',
+                        icon: 'warning'
+                    });
                     console.log("Create restore : ", error);
                 },
                 complete: function(){
@@ -142,12 +163,19 @@ $(document).ready(function() {
                     }]);
                     
                 }  
-                backupTableApi.draw();      
+                backupTableApi.order([5, 'desc']).draw();
+                backupTableApi.page(0).draw('page');     
             },
             complete: function(){
                 $('.backup-bloc').unblock();
             },
             error: function(error) {
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to load backup jobs, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
                 console.log("Backups : ", error);
             }
         });
@@ -162,6 +190,7 @@ $(document).ready(function() {
         pagingType: 'simple_numbers',
         lengthMenu: [10, 50, 100, 200],
         data : [],
+        order: [[2, 'desc']],
         columnDefs: [
             {
                 className: 'dt-control',
@@ -174,6 +203,15 @@ $(document).ready(function() {
         columns : [
             { "data" : null },
             { "data" : "name" },
+            { 
+                data : "created", 
+                render: function (data, type, row) {
+                    if(!data) return '';
+                    var dt = new Date(data);
+                    if(type == 'sort') return dt;
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+                }
+            },
             { "data" : "status" },
             { "data" : "errors" },
             { "data" : "warnings" },
@@ -182,7 +220,8 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
+                    if(type == 'sort') return dt;
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
             { 
@@ -190,7 +229,8 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
+                    if(type == 'sort') return dt;
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 } 
             }
         ]
@@ -229,18 +269,26 @@ $(document).ready(function() {
                         status: response[i].status ? response[i].status.phase: 'Unknown',
                         errors: response[i].status ? response[i].status.errors | 0: 'Unknown',
                         warnings: response[i].status ? response[i].status.warning | 0: 'Unknown',
+                        created: response[i].metadata.creationTimestamp,
                         start: response[i].status ? response[i].status.startTimestamp : '',
                         end: response[i].status ? response[i].status.completionTimestamp : '',
                         raw: response[i]
                     }]);
                     
                 }  
-                restoreTableApi.draw();      
+                restoreTableApi.order([2, 'desc']).draw();
+                restoreTableApi.page(0).draw('page');     
             },
             complete: function(){
                 $('.restore-bloc').unblock();
             },
             error: function(error) {
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to load restore jobs, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
                 console.log("Restores : ", error);
             }
         });
@@ -254,6 +302,7 @@ $(document).ready(function() {
         pagingType: 'simple_numbers',
         lengthMenu: [10, 50, 100, 200],
         data : [],
+        order: [[5, 'desc']],
         columnDefs: [
             {
                 className: 'dt-control',
@@ -274,7 +323,8 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric'});
+                    if(type == 'sort') return dt;
+                    return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
             {
@@ -324,6 +374,12 @@ $(document).ready(function() {
                     $('html, body').scrollTop($('.backup-bloc').offset().top);
                 },
                 error: function(error) {
+                    $.toast({
+                        heading: 'Error',
+                        text: 'Unable to create a backup job, please contact the administrator.',
+                        showHideTransition: 'plain',
+                        icon: 'warning'
+                    });
                     console.log("Create backup : ", error);
                 },
                 complete: function(){
@@ -365,6 +421,12 @@ $(document).ready(function() {
                 $('.schedule-bloc').unblock();
             },
             error: function(error) {
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to load schedules, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
                 console.log("Schedules : ", error);
             }
         });
