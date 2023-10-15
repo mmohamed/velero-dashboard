@@ -91,6 +91,7 @@ $(document).ready(function() {
                         loaderBg: '#9EC600'         
                     });
                     __loadRestores();
+                    $('html, body').scrollTop($('.restore-bloc').offset().top);
                 },
                 error: function(error) {
                     console.log("Create restore : ", error);
@@ -132,11 +133,11 @@ $(document).ready(function() {
                 for(var i in response){
                     backupTableApi.rows.add([{
                         name: response[i].metadata.name,
-                        status: response[i].status.phase,
-                        errors: response[i].status.errors | 0,
-                        warnings: response[i].status.warning | 0,
+                        status: response[i].status ? response[i].status.phase: 'Unknown',
+                        errors: response[i].status ? response[i].status.errors | 0: 'Unknown',
+                        warnings: response[i].status ? response[i].status.warning | 0: 'Unknown',
                         created: response[i].metadata.creationTimestamp,
-                        expires: response[i].status.expiration,
+                        expires: response[i].status ? response[i].status.expiration: '',
                         raw: response[i]
                     }]);
                     
@@ -320,6 +321,7 @@ $(document).ready(function() {
                         loaderBg: '#9EC600'         
                     });
                     __loadBackups();
+                    $('html, body').scrollTop($('.backup-bloc').offset().top);
                 },
                 error: function(error) {
                     console.log("Create backup : ", error);
@@ -349,10 +351,10 @@ $(document).ready(function() {
                 for(var i in response){
                     scheduleTableApi.rows.add([{
                         name: response[i].metadata.name,
-                        status: response[i].status.phase,
+                        status: response[i].status ? response[i].status.phase: 'Unknown',
                         ttl: response[i].spec.template.ttl,
                         schedule: response[i].spec.schedule,
-                        last: response[i].status.lastBackup,
+                        last: response[i].status ? response[i].status.lastBackup: '',
                         raw: response[i]
                     }]);
                     

@@ -158,7 +158,7 @@ app.get('/api/backups', async (request, response) => {
     let backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups');
     // filter
     let user = request.session.user;
-    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+    if(!user.admin && process.env.NAMESPACE_FILTERING){
         let availableBackups = [];
         let allBAckups = backups.body.items;
         for(let i in allBAckups){
@@ -185,7 +185,7 @@ app.post('/api/backups', async (request, response) => {
         // filtering
         let schedule  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules', request.body.schedule);
         let user = request.session.user;
-        if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+        if(!user.admin && process.env.NAMESPACE_FILTERING){
             var hasAccess = true;
             for(var i in schedule.body.spec.template.includedNamespaces){
                 if(user.namespaces.indexOf(schedule.body.spec.template.includedNamespaces[i]) === -1){
@@ -227,7 +227,7 @@ app.get('/api/restores', async (request, response) => {
     let restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'restores');
     // filter
     let user = request.session.user;
-    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+    if(!user.admin && process.env.NAMESPACE_FILTERING){
         let availableRestores = [];
         let allRestores = restores.body.items;
         for(let i in allRestores){
@@ -254,7 +254,7 @@ app.post('/api/restores', async (request, response) => {
         // filtering
         let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups', request.body.backup);
         let user = request.session.user;
-        if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+        if(!user.admin && process.env.NAMESPACE_FILTERING){
             var hasAccess = true;
             for(var i in backup.body.spec.includedNamespaces){
                 if(user.namespaces.indexOf(backup.body.spec.includedNamespaces[i]) === -1){
@@ -297,7 +297,7 @@ app.get('/api/schedules', async (request, response) => {
     let schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules');
     // filter
     let user = request.session.user;
-    if(!user.isAdmin && process.env.NAMESPACE_FILTERING){
+    if(!user.admin && process.env.NAMESPACE_FILTERING){
         let availableRestores = [];
         let allSchedules = schedules.body.items;
         for(let i in allSchedules){
@@ -320,7 +320,7 @@ app.get('/api/schedules', async (request, response) => {
 });
 
 app.post('/api/schedules', async (request, response) => {
-    if(!request.session.user || !request.session.user.isAdmin) return response.status(403).json({});
+    if(!request.session.user || !request.session.user.admin) return response.status(403).json({});
     try {
         var body = {
             "apiVersion": "velero.io/v1",

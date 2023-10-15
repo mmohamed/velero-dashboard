@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-velero-ldap
+  namespace: velero
+  labels:
+    app: myveleroldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myveleroldap
+  template:
+    metadata:
+      labels:
+        app: myveleroldap
+    spec:
+      containers:
+      - name: my-velero-ldap
+        image: medinvention/simple-ldap-test-server:0.0.1-beta
+        ports:
+          - containerPort: 636
+            name: ldap 
+          - containerPort: 389
+            name: ldaps  
+        resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-velero-ldap-svc
+  namespace: velero
+spec:
+  ports:
+    - name: ldap
+      port: 636
+      targetPort: 636
+    - name: ldaps
+      port: 389
+      targetPort: 389
+  selector:
+    app: myveleroldap
