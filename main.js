@@ -75,10 +75,11 @@ app.post('/login', async function(request, response){
                     userSearchBase: process.env.LDAP_SEARCH_BASE,
                     usernameAttribute: process.env.LDAP_SEARCH_FILTER,
                     username: request.body.username,
+                    attributes: ['groups', 'givenName', 'sn', 'sAMAccountName', 'userPrincipalName', 'memberOf', 'gecos' ]
                 });
                 if(DEBUG_MODE) console.log('Authenticated user : ',authenticated);
                 if(authenticated){
-                    let groups = authenticated.groups.split('|');
+                    let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups.split('|');
                     let availableNamespaces = [];
                     try{
                         if(process.env.NAMESPACE_FILTERING){
@@ -101,7 +102,7 @@ app.post('/login', async function(request, response){
 
                     request.session.user = {
                         admin: false,
-                        username: request.body.username,
+                        username: authenticated.gecos ? authenticated.gecos : request.body.username,
                         password: request.body.password,
                         groups: groups,
                         namespaces: availableNamespaces
