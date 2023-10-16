@@ -303,7 +303,7 @@ app.get('/api/schedules', async (request, response) => {
         let allSchedules = schedules.body.items;
         for(let i in allSchedules){
             var hasAccess = true;
-            for(var j in allSchedules[i].spec.includedNamespaces){
+            for(var j in allSchedules[i].spec.template.includedNamespaces){
                 if(user.namespaces.indexOf(allSchedules[i].spec.template.includedNamespaces[j]) === -1){
                     hasAccess = false;
                     break;
