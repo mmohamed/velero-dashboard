@@ -35,6 +35,11 @@ $(document).ready(function() {
     });
 
     /*** Backup list ****/
+    $('#list-backups').on('init.dt', function(){
+        let reloadButton = $('<button type="button" class="btn btn-secondary btn-sm mx-3"><span class="bi bi-arrow-clockwise"></span>&nbsp;Reload</button>');
+        $('div.backup-bloc div.dataTables_filter').append(reloadButton);
+        reloadButton.bind('click', function(){ __loadBackups(); });
+    });
 
     var backupTable = $('#list-backups').DataTable({
         paging: true,
@@ -135,7 +140,7 @@ $(document).ready(function() {
             row.child('<pre>'+desc+'</pre>').show();
         }
     });
-
+    
     __loadBackups = function(){
         var backupTableApi = $('#list-backups').dataTable().api();
 
@@ -182,7 +187,12 @@ $(document).ready(function() {
     }
 
     /*** Restore list ****/
-    
+    $('#list-restores').on('init.dt', function(){
+        let reloadButton = $('<button type="button" class="btn btn-secondary btn-sm mx-3"><span class="bi bi-arrow-clockwise"></span>&nbsp;Reload</button>');
+        $('div.restore-bloc div.dataTables_filter').append(reloadButton);
+        reloadButton.bind('click', function(){ __loadRestores(); });
+    });
+
     var restoreTable = $('#list-restores').DataTable({
         paging: true,
         ordering: true,
@@ -294,7 +304,12 @@ $(document).ready(function() {
         });
     }
     /*** Schedule list ****/
-    
+    $('#list-schedules').on('init.dt', function(){
+        let reloadButton = $('<button type="button" class="btn btn-secondary btn-sm mx-3"><span class="bi bi-arrow-clockwise"></span>&nbsp;Reload</button>');
+        $('div.schedule-bloc div.dataTables_filter').append(reloadButton);
+        reloadButton.bind('click', function(){ __loadSchedules(); });
+    });
+
     var scheduleTable = $('#list-schedules').DataTable({
         paging: true,
         ordering: true,
