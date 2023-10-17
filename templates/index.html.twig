@@ -10,7 +10,7 @@
     <div class="col-2">
         <div class="card card-sm">
              <div class="card-body">
-                <h2 class="card-title mt-3">
+                <h2 class="card-title mt-4">
                     <i class="bi bi-floppy2"></i> 
                     <span class="spinner-grow counter-backups"></span>
                 </h2>
@@ -23,7 +23,7 @@
     <div class="col-2">
         <div class="card card-sm">
              <div class="card-body">
-                <h2 class="card-title mt-3">
+                <h2 class="card-title mt-4">
                     <i class="bi bi-bootstrap-reboot"></i> 
                     <span class="spinner-grow counter-restores"></span>
                 </h2>
@@ -36,7 +36,7 @@
     <div class="col-2">
         <div class="card card-sm">
              <div class="card-body">
-                <h2 class="card-title mt-3">
+                <h2 class="card-title mt-4">
                     <i class="bi bi-calendar"></i> 
                     <span class="spinner-grow counter-schedules"></span>
                 </h2>
@@ -48,9 +48,9 @@
     </div>
 
     <div class="col-6">
-        <div class="card card-sm">
+        <div class="card card-sd">
              <div class="card-body">
-                <h2 class="card-title mt-3">
+                <h2 class="card-title">
                     <i class="bi bi-speedometer2"></i> 
                     <span class="status-global">Status</span>
                     <span class="status-loader spinner-grow"></span>
@@ -58,13 +58,24 @@
                 <div class="card-text">
                     <div class="row g-3">
                         <div class="col">
-                            <span class="text-muted badge-status">Velero</span><span class="badge bg-secondary bloc-status service-status"></span>
+                            <span class="text-muted badge-status"><strong>Velero</strong></span>
                         </div>
                         <div class="col">    
-                            <span class="text-muted badge-status">Storage</span><span class="badge bg-secondary bloc-status storage-status"></span>
+                            <span class="text-muted badge-status"><strong>Storage</strong></span>
                         </div>
                         <div class="col">
-                            <span class="text-muted badge-status">Last Sync</span><span class="badge bg-secondary bloc-status storage-last-sync"></span>
+                            <span class="text-muted badge-status"><strong>Last Sync</strong></span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col">
+                            <span class="badge bg-secondary bloc-status service-status"></span>
+                        </div>
+                        <div class="col">    
+                            <span class="badge bg-secondary bloc-status storage-status"></span>
+                        </div>
+                        <div class="col">
+                            <span class="badge bg-secondary bloc-status storage-last-sync"></span>
                         </div>
                     </div>
                 </div>

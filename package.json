@@ -1,7 +1,7 @@
 {
-  "name": "velero-dashboard-server",
-  "version": "1.0.0",
-  "description": "",
+  "name": "my-velero",
+  "version": "1.0.5-beta",
+  "description": "Velero dashboard UI",
   "main": "main.js",
   "scripts": {
     "start": "nodemon main.js"
@@ -10,7 +10,7 @@
     "ext": "js,json,mjs,html,html.twig"
   },
   "author": "Marouan MOHAMED",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@kubernetes/client-node": "^0.19.0",
     "body-parser": "^1.20.2",

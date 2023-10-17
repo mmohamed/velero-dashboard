@@ -3,6 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#031014">
     <title>My Velero - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/bootstrap-icons.css">
@@ -16,9 +23,6 @@
       table-layout: fixed; 
       word-wrap: break-word;
       font-size: 0.9rem;
-    }
-    .badge-status{
-      padding-right: 18px;
     }
     .counter-backups, .counter-restores, .counter-schedules, .status-global{
       margin-left: 10px;
@@ -38,7 +42,7 @@
 
     <footer class="footer mt-auto py-3 bg-body-tertiary">
         <div class="container">
-            <span class="text-body-secondary">&copy; My Velero - <a href="https://medinvention.io" target="_blank">medinvention.io</a></span>
+            <span class="text-body-secondary">&copy; My Velero - <a href="https://medinvention.io" target="_blank">medinvention.io</a> [Experimentation - Beta]</span>
         </div>
     </footer>
     {% endblock -%}
