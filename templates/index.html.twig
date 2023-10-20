@@ -89,7 +89,7 @@
 <div class="backup-bloc">
     <h2 class="mt-5">Backups</h1>
     <hr/>
-    <table id="list-backups" class="table table-striped align-middle small job-list">
+    <table id="list-backups" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle small job-list">
         <thead>
             <tr>
                 <th></th>
@@ -111,7 +111,7 @@
 <div class="restore-bloc">
     <h1 class="mt-5">Restores</h1>
     <hr/>
-    <table id="list-restores" class="table table-striped align-middle job-list">
+    <table id="list-restores" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle job-list">
         <thead>
             <tr>
                 <th></th>
@@ -133,7 +133,7 @@
 <div class="schedule-bloc">
     <h2 class="mt-5">Schedules</h1>
     <hr/>
-    <table id="list-schedules" class="table table-striped align-middle job-list">
+    <table id="list-schedules" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle job-list">
         <thead>
             <tr>
                 <th></th>

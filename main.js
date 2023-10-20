@@ -29,6 +29,17 @@ app.use(express.static(__dirname+'/static'));
 const loader = new TwingLoaderFilesystem("./templates");
 const twing = new TwingEnvironment(loader);
 
+app.use((request, response, next) => {
+    if(process.env.READ_ONLY_USER === '1'){
+        if(request.method != 'GET' && request.url !== '/login'){
+            if(!request.session || !request.session.user || !request.session.user.admin){
+                return response.status(405).end('Method Not Allowed');
+            }
+        }
+    }
+    return next();
+});
+
 app.get('/login', (request, response) => {
     twing.render("login.html.twig").then(output => {
         response.end(output);
@@ -124,7 +135,9 @@ app.post('/login', async function(request, response){
 
 app.get("/", async (request, response) => {
     if(!request.session.user) return response.redirect('/login');
-    twing.render("index.html.twig", { user: request.session.user.username }).then(output => {
+    let user = request.session.user;
+    let readOnly = process.env.READ_ONLY_USER === '1' && !user.admin;
+    twing.render("index.html.twig", { readonly: readOnly, user: user.username }).then(output => {
         response.end(output);
     });
 });

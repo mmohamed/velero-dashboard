@@ -68,7 +68,7 @@ $(document).ready(function() {
                 data : "created", 
                 render: function (data, type, row) {
                     var dt = new Date(data);
-                    if(type == 'sort') return dt;
+                    if(type == 'sort') return dt.getTime();
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
@@ -82,7 +82,7 @@ $(document).ready(function() {
                 data: "name",
                 orderable: false,
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-outline-danger btn-sm restore-action" data-name="'+data+'">Restore</button>';
+                    return '<button type="button" class="btn btn-outline-danger btn-sm restore-action" data-name="'+data+'" '+( $('#list-backups').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Restore</button>';
                 }
             }
         ]
@@ -90,43 +90,58 @@ $(document).ready(function() {
     
     $(document).on('click', 'button.restore-action', function(){
         let name = $(this).attr('data-name');
-        let response = confirm("Are you sure you want to restore '"+name+"' ?");
-        if(response){
-
-            $.ajax({
-                url: "/api/restores",
-                type: "POST",
-                dataType: 'json',
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
-                beforeSend: function() {  
-                    $('.backup-bloc').block();  
+        $.confirm({
+            title: 'Confirm!',
+            icon: 'bi bi-exclamation-circle',
+            type: 'red',
+            typeAnimated: true,
+            closeIcon: true,
+            closeIconClass: 'bi bi-x-square',
+            content: "Are you sure you want to restore '"+name+"' ?",
+            buttons: {
+                confirm: {
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        $.ajax({
+                            url: "/api/restores",
+                            type: "POST",
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
+                            beforeSend: function() {  
+                                $('.backup-bloc').block();  
+                            },
+                            success: function(response) {
+                                $.toast({
+                                    heading: 'Information',
+                                    text: 'New restore job "'+response.restore.metadata.name+'" is created',
+                                    icon: 'info',
+                                    loader: true,        
+                                    loaderBg: '#9EC600'         
+                                });
+                                __loadRestores();
+                                $('html, body').scrollTop($('.restore-bloc').offset().top);
+                            },
+                            error: function(error) {
+                                $.toast({
+                                    heading: 'Error',
+                                    text: 'Unable to create a restore job, please contact the administrator.',
+                                    showHideTransition: 'plain',
+                                    icon: 'warning'
+                                });
+                                console.log("Create restore : ", error);
+                            },
+                            complete: function(){
+                                $('.backup-bloc').unblock();
+                            }
+                        });
+                    }
                 },
-                success: function(response) {
-                    $.toast({
-                        heading: 'Information',
-                        text: 'New restore job "'+response.restore.metadata.name+'" is created',
-                        icon: 'info',
-                        loader: true,        
-                        loaderBg: '#9EC600'         
-                    });
-                    __loadRestores();
-                    $('html, body').scrollTop($('.restore-bloc').offset().top);
-                },
-                error: function(error) {
-                    $.toast({
-                        heading: 'Error',
-                        text: 'Unable to create a restore job, please contact the administrator.',
-                        showHideTransition: 'plain',
-                        icon: 'warning'
-                    });
-                    console.log("Create restore : ", error);
-                },
-                complete: function(){
-                    $('.backup-bloc').unblock();
+                cancel: function () {
+                    
                 }
-            });
-        }
+            }
+        });
     });
 
     backupTable.on('click', 'td.dt-control', function (e) {
@@ -218,7 +233,7 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    if(type == 'sort') return dt;
+                    if(type == 'sort') return dt.getTime();
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
@@ -230,7 +245,7 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    if(type == 'sort') return dt;
+                    if(type == 'sort') return dt.getTime();
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
@@ -239,7 +254,7 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    if(type == 'sort') return dt;
+                    if(type == 'sort') return dt.getTime();
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 } 
             }
@@ -338,14 +353,14 @@ $(document).ready(function() {
                 render: function (data, type, row) {
                     if(!data) return '';
                     var dt = new Date(data);
-                    if(type == 'sort') return dt;
+                    if(type == 'sort') return dt.getTime();
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
             {
                 data: "name",
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-outline-primary btn-sm backup-action" data-name="'+data+'">Execute now</button>';
+                    return '<button type="button" class="btn btn-outline-primary btn-sm backup-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Execute now</button>';
                 }
             }
         ]
@@ -365,43 +380,58 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.backup-action', function(){
         let name = $(this).attr('data-name');
-        let response = confirm("Are you sure you want to create a backup base on '"+name+"' schedule ?");
-        if(response){
-
-            $.ajax({
-                url: "/api/backups",
-                type: "POST",
-                dataType: 'json',
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({schedule: name, name: name+'-backup-'+Math.floor(Date.now() / 1000)}),
-                beforeSend: function() {  
-                    $('.schedule-bloc').block();  
+        $.confirm({
+            title: 'Confirm!',
+            icon: 'bi bi-exclamation-circle',
+            type: 'red',
+            typeAnimated: true,
+            closeIcon: true,
+            closeIconClass: 'bi bi-x-square',
+            content: "Are you sure you want to create a backup base on '"+name+"' schedule ?",
+            buttons: {
+                confirm: {
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        $.ajax({
+                            url: "/api/backups",
+                            type: "POST",
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify({schedule: name, name: name+'-backup-'+Math.floor(Date.now() / 1000)}),
+                            beforeSend: function() {  
+                                $('.schedule-bloc').block();  
+                            },
+                            success: function(response) {
+                                $.toast({
+                                    heading: 'Information',
+                                    text: 'New backup job "'+response.backup.metadata.name+'" is created',
+                                    icon: 'info',
+                                    loader: true,        
+                                    loaderBg: '#9EC600'         
+                                });
+                                __loadBackups();
+                                $('html, body').scrollTop($('.backup-bloc').offset().top);
+                            },
+                            error: function(error) {
+                                $.toast({
+                                    heading: 'Error',
+                                    text: 'Unable to create a backup job, please contact the administrator.',
+                                    showHideTransition: 'plain',
+                                    icon: 'warning'
+                                });
+                                console.log("Create backup : ", error);
+                            },
+                            complete: function(){
+                                $('.schedule-bloc').unblock();
+                            }
+                        });
+                    }
                 },
-                success: function(response) {
-                    $.toast({
-                        heading: 'Information',
-                        text: 'New backup job "'+response.backup.metadata.name+'" is created',
-                        icon: 'info',
-                        loader: true,        
-                        loaderBg: '#9EC600'         
-                    });
-                    __loadBackups();
-                    $('html, body').scrollTop($('.backup-bloc').offset().top);
-                },
-                error: function(error) {
-                    $.toast({
-                        heading: 'Error',
-                        text: 'Unable to create a backup job, please contact the administrator.',
-                        showHideTransition: 'plain',
-                        icon: 'warning'
-                    });
-                    console.log("Create backup : ", error);
-                },
-                complete: function(){
-                    $('.schedule-bloc').unblock();
+                cancel: function () {
+                    
                 }
-            });
-        }
+            }
+        });
     });
 
     __loadSchedules = function(){
