@@ -2,14 +2,21 @@
 <form id="new-backup-form" class="row g-3" novalidate>
     <div class="col-md-12">
         <label for="name" class="form-label">Backup name</label>
-        <input type="text" class="form-control is-invalid" id="name" placeholder="my backup" value="{{ backup ? backup.name : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'name' in errors %}is-invalid{% endif %}" id="name" placeholder="my backup" value="{{ backup ? backup.name : '' }}">
         <div class="invalid-feedback">Please provide a valide backup name.</div>
     </div>
  
     <div class="col-md-6">
         <label for="includenamespace" class="form-label">Include namespaces</label>
-        <input type="text" class="form-control" id="includenamespace" placeholder="my namespace" value="{{ backup ? backup.includenamespace : '' }}">
+        <select id="includenamespace" class="form-select {% if errors is defined and 'includenamespace' in errors %}is-invalid{% endif %}" data-placeholder="Select namespace" multiple>
+            {% for namespace in namespaces %}
+            <option value="{{ namespace.metadata.name }}" {% if backup and namespace.metadata.name in backup.includenamespace %}selected{% endif %}>{{ namespace.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a least a valid namespace.</div>
     </div>
+
+    
     <div class="col-md-6">
         <label for="includeresources" class="form-label">Include resources</label>
         <input type="text" class="form-control" id="includeresources" placeholder="my resource" value="{{ backup ? backup.includeresources : '' }}">
@@ -17,7 +24,12 @@
 
     <div class="col-md-6">
         <label for="excludenamespace" class="form-label">Exclude namespaces</label>
-        <input type="text" class="form-control" id="excludenamespace" placeholder="other namespace" value="{{ backup ? backup.excludenamespace : '' }}">
+        <select id="excludenamespace" class="form-select" data-placeholder="Select namespace" multiple>
+            {% for namespace in namespaces %}
+            <option value="{{ namespace.metadata.name }}" {% if backup and namespace.metadata.name in backup.excludenamespace %}selected{% endif %}>{{ namespace.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a valid namespace.</div>
     </div>
     <div class="col-md-6">
         <label for="excluderesources" class="form-label">Exclude resources</label>
@@ -78,6 +90,11 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
+    $('select#includenamespace, select#excludenamespace').select2({
+        theme: "bootstrap-5", 
+        closeOnSelect: false, 
+        placeholder: $(this).data('placeholder')
+    });
     $('form#new-backup-form').unbind('submit');
     $('form#new-backup-form').bind('submit', function(event){
         event.preventDefault();
@@ -87,6 +104,13 @@ $(document).ready(function() {
         });
         $(this).find('select').each(function(){
             data[$(this).attr('id')] = $(this).find(':selected').val();
+        });
+        $(this).find('select[multiple]').each(function(){
+            var name = $(this).attr('id');
+            data[name] = []
+            $(this).find(':selected').each(function(){
+                data[name].push($(this).val());
+            });
         });
         $(this).find('input[type=checkbox]').each(function(){
             data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';

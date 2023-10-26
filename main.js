@@ -12,7 +12,8 @@ require('dotenv').config();
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 
-const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
+const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
+const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 const app = express();
 const VELERO_NAMESPACE = process.env.VELERO_NAMESPACE ?  process.env.VELERO_NAMESPACE : 'velero'
@@ -148,13 +149,15 @@ app.use("/backup/new", async (request, response) => {
     let readOnly = process.env.READ_ONLY_USER === '1' && !user.admin;
     if(readOnly) return response.status(403).json({});
 
+    const namespaces = await k8sApi.listNamespace();
     const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
     const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
 
     if (request.method === 'GET' || request.method === 'HEAD') {
         return twing.render("backup.form.html.twig", { 
             backupStorageLocations: backupStorageLocations.body.items,
-            volumeSnapshotLocations: volumeSnapshotLocations.body.items
+            volumeSnapshotLocations: volumeSnapshotLocations.body.items,
+            namespaces: namespaces.body.items,
         }).then(output => {
             response.end(output);
         });
@@ -164,7 +167,8 @@ app.use("/backup/new", async (request, response) => {
         twing.render("backup.form.html.twig", { 
             backup: request.body,
             backupStorageLocations: backupStorageLocations.body.items,
-            volumeSnapshotLocations: volumeSnapshotLocations.body.items
+            volumeSnapshotLocations: volumeSnapshotLocations.body.items,
+            namespaces: namespaces.body.items,
         }).then(output => {
             response.end(output);
         });
@@ -174,7 +178,7 @@ app.use("/backup/new", async (request, response) => {
 
 app.get('/api/status', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
-    const deployStatus = await k8sApi.readNamespacedDeploymentStatus('velero', VELERO_NAMESPACE);
+    const deployStatus = await k8sAppsApi.readNamespacedDeploymentStatus('velero', VELERO_NAMESPACE);
     const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
     const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
    
