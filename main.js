@@ -142,6 +142,16 @@ app.get("/", async (request, response) => {
     });
 });
 
+app.get("/backup/new", async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    let user = request.session.user;
+    let readOnly = process.env.READ_ONLY_USER === '1' && !user.admin;
+    if(readOnly) return response.status(403).json({});
+    twing.render("backup.form.html.twig", { }).then(output => {
+        response.end(output);
+    });
+});
+
 app.get('/api/status', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     const deployStatus = await k8sApi.readNamespacedDeploymentStatus('velero', VELERO_NAMESPACE);
