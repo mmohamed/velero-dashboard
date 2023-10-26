@@ -1,85 +1,102 @@
 
-<form>
-    <div class="form-row">
-        <div class="form-group">
-            <label for="name">Backup name</label>
-            <input type="text" class="form-control" id="name" placeholder="my backup">
-        </div>
+<form id="new-backup-form" class="row g-3" novalidate>
+    <div class="col-md-12">
+        <label for="name" class="form-label">Backup name</label>
+        <input type="text" class="form-control is-invalid" id="name" placeholder="my backup" value="{{ backup ? backup.name : '' }}">
+        <div class="invalid-feedback">Please provide a valide backup name.</div>
+    </div>
+ 
+    <div class="col-md-6">
+        <label for="includenamespace" class="form-label">Include namespaces</label>
+        <input type="text" class="form-control" id="includenamespace" placeholder="my namespace" value="{{ backup ? backup.includenamespace : '' }}">
+    </div>
+    <div class="col-md-6">
+        <label for="includeresources" class="form-label">Include resources</label>
+        <input type="text" class="form-control" id="includeresources" placeholder="my resource" value="{{ backup ? backup.includeresources : '' }}">
     </div>
 
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="include-namespace">Include namespaces</label>
-            <input type="text" class="form-control" id="include-namespace" placeholder="my namespace">
+    <div class="col-md-6">
+        <label for="excludenamespace" class="form-label">Exclude namespaces</label>
+        <input type="text" class="form-control" id="excludenamespace" placeholder="other namespace" value="{{ backup ? backup.excludenamespace : '' }}">
+    </div>
+    <div class="col-md-6">
+        <label for="excluderesources" class="form-label">Exclude resources</label>
+        <input type="text" class="form-control" id="excluderesources" placeholder="other resource" value="{{ backup ? backup.excluderesources : '' }}">
+    </div>
+    <hr/>
+    <div class="col-md-6">
+        <label for="retention" class="form-label">Backup retention</label>
+        <select id="retention" class="form-select">
+            <option value="30" {% if backup and backup.retention == '30' %}selected{% endif %}>30 days</option>
+            <option value="60" {% if backup and backup.retention == '60' %}selected{% endif %}>60 days</option>
+            <option value="90" {% if backup and backup.retention == '90' %}selected{% endif %}>90 days</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="setting" class="form-label">Settings</label>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if backup and backup.snapshot == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="snapshot">Snapshot</label>
         </div>
-        <div class="form-group col-md-6">
-            <label for="include-resources">Include resources</label>
-            <input type="text" class="form-control" id="include-resources" placeholder="my resource">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if backup and backup.cluster == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="cluster">Include cluster resource</label>
         </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="restic" id="restic" value="1" {% if backup and backup.restic == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="restic">Default volume to Restic</label>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <label for="backuplabels" class="form-label">Backup labels</label>
+        <input type="text" class="form-control" id="backuplabels" placeholder="Labels"  value="{{ backup ? backup.backuplabels : '' }}">
+    </div>
+    <div class="col-md-6">
+        <label for="useselector" class="form-label">Use selector</label>
+        <input type="text" class="form-control" id="useselector" placeholder="Selectors"  value="{{ backup ? backup.useselector : '' }}">
+    </div>
+    
+    <div class="col-md-6">
+        <label for="backuplocation" class="form-label">Backup location</label>
+        <select id="backuplocation" class="form-select">
+            {% for location in backupStorageLocations %}
+            <option value="{{ location.metadata.name }}" {% if backup and backup.backuplocation == location.metadata.name %}selected{% endif %}>{{ location.metadata.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="snapshotlocation" class="form-label">Snapshot location</label>
+        <select id="snapshotlocation" class="form-select">
+            {% for snapshot in backupStorageLocations %}
+            <option value="{{ snapshot.metadata.name }}" {% if backup and backup.snapshotlocation == snapshot.metadata.name %}selected{% endif %}>{{ snapshot.metadata.name }}</option>
+            {% endfor %}
+        </select>
     </div>
 
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="exclude-namespace">Exclude namespaces</label>
-            <input type="text" class="form-control" id="exclude-namespace" placeholder="other namespace">
-        </div>
-        <div class="form-group col-md-6">
-            <label for="exclude-resources">Exclude resources</label>
-            <input type="text" class="form-control" id="exclude-resources" placeholder="other resource">
-        </div>
-    </div>
-
-        <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="retention">Backup retention</label>
-            <select id="retention" class="form-control">
-                <option selected>30 days</option>
-                <option>60 days</option>
-                <option>90 days</option>
-            </select>
-        </div>
-        <div class="form-group col-md-6">
-            <label for="setting">Settings</label>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="true">
-                <label class="form-check-label" for="snapshot">Snapshot</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="true">
-                <label class="form-check-label" for="cluster">Include cluster resource</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="restic" id="restic" value="true">
-                <label class="form-check-label" for="restic">Default volume to Restic</label>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="exclude-namespace">Backup labels</label>
-            <input type="text" class="form-control" id="backup-labels" placeholder="Labels">
-        </div>
-        <div class="form-group col-md-6">
-            <label for="exclude-resources">Use selector</label>
-            <input type="text" class="form-control" id="use-selector" placeholder="Selectors">
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="backup-location">Backup location</label>
-            <select id="backup-location" class="form-control">
-                <option selected>Default</option>
-                <option>Second</option>
-            </select>
-        </div>
-        <div class="form-group col-md-6">
-            <label for="snapshot-location">Snapshot location</label>
-            <select id="snapshot-location" class="form-control">
-                <option selected>Default</option>
-                <option>Second</option>
-            </select>
-        </div>
-    </div>
 </form>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('form#new-backup-form').unbind('submit');
+    $('form#new-backup-form').bind('submit', function(event){
+        event.preventDefault();
+        var data = {};
+        $(this).find('input[type=text]').each(function(){
+            data[$(this).attr('id')] = $(this).val();
+        });
+        $(this).find('select').each(function(){
+            data[$(this).attr('id')] = $(this).find(':selected').val();
+        });
+        $(this).find('input[type=checkbox]').each(function(){
+            data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';
+        });
+        $('#new-backup-modal .modal-content').block();
+        $('#new-backup-modal .modal-body').load('/backup/new', data, function(response, status, xhr) {
+            $('#new-backup-modal .modal-content').unblock();
+            if(status === 201)  $('#new-backup-modal').modal('hide'); 
+        });
+        return false;
+    })
+});
+</script>

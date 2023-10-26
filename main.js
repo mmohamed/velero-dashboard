@@ -142,15 +142,35 @@ app.get("/", async (request, response) => {
     });
 });
 
-app.get("/backup/new", async (request, response) => {
+app.use("/backup/new", async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     let user = request.session.user;
     let readOnly = process.env.READ_ONLY_USER === '1' && !user.admin;
     if(readOnly) return response.status(403).json({});
-    twing.render("backup.form.html.twig", { }).then(output => {
-        response.end(output);
-    });
+
+    const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
+    const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
+
+    if (request.method === 'GET' || request.method === 'HEAD') {
+        return twing.render("backup.form.html.twig", { 
+            backupStorageLocations: backupStorageLocations.body.items,
+            volumeSnapshotLocations: volumeSnapshotLocations.body.items
+        }).then(output => {
+            response.end(output);
+        });
+    }
+    if (request.method === 'POST') {
+        console.log(request.body);
+        twing.render("backup.form.html.twig", { 
+            backup: request.body,
+            backupStorageLocations: backupStorageLocations.body.items,
+            volumeSnapshotLocations: volumeSnapshotLocations.body.items
+        }).then(output => {
+            response.end(output);
+        });
+    }
 });
+
 
 app.get('/api/status', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});

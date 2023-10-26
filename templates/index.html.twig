@@ -156,9 +156,6 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="new-backup-modal-label">New backup</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
       </div>
       <div class="modal-body">
         
@@ -181,10 +178,16 @@ $(document).ready(function() {
                url: '/backup/new',
                success: function(response){ 
                     $('#new-backup-modal .modal-body').html(response);
-                    $('#new-backup-modal ').modal('show'); 
+                    $('#new-backup-modal').modal('show'); 
                }
          });
-    })
+    });
+    $('#new-backup-modal button.btn-primary').bind('click', function(){
+        $('#new-backup-modal').find('form').trigger('submit'); 
+    });
+    $('#new-backup-modal button.btn-secondary').bind('click', function(){
+        $('#new-backup-modal').modal('hide');
+    });
 });
 </script>
 {% endblock %}
