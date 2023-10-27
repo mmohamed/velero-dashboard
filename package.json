@@ -1,6 +1,6 @@
 {
   "name": "my-velero",
-  "version": "1.0.7-beta",
+  "version": "1.0.8-beta",
   "description": "Velero dashboard UI",
   "main": "main.js",
   "scripts": {
