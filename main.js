@@ -153,26 +153,168 @@ app.use("/backup/new", async (request, response) => {
     const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
     const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
 
-    if (request.method === 'GET' || request.method === 'HEAD') {
-        return twing.render("backup.form.html.twig", { 
-            backupStorageLocations: backupStorageLocations.body.items,
-            volumeSnapshotLocations: volumeSnapshotLocations.body.items,
-            namespaces: namespaces.body.items,
-        }).then(output => {
-            response.end(output);
-        });
+    // filter
+    let availableNamespaces = [];
+    if(!user.admin && process.env.NAMESPACE_FILTERING){
+        let allNamespaces = namespaces.body.items;
+        for(let i in allNamespaces){
+            if(user.namespaces.indexOf(allNamespaces[i].metadata.name) != -1){
+                availableNamespaces.push(allNamespaces[i]);
+            }
+        }
+    }else{
+        availableNamespaces = namespaces.body.items;
     }
+
     if (request.method === 'POST') {
-        console.log(request.body);
+        let errors = [];
+        let message;
+        let found;
+        let bodyRequest =  request.body;
+        if(!bodyRequest.name || bodyRequest.name.trim().length == 0){
+            errors.push('name');
+        }
+        // includenamespace
+        if(!bodyRequest.includenamespace || bodyRequest.includenamespace.length == 0){
+            errors.push('includenamespace');
+        }else{
+            for(let i in bodyRequest.includenamespace){
+                found = false
+                for(let j in availableNamespaces){
+                    if(bodyRequest.includenamespace[i] === availableNamespaces[j].metadata.name){
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    errors.push('includenamespace');
+                    break;
+                }
+            }
+        }
+        // excludenamespace
+        if(bodyRequest.excludenamespace){
+            for(let i in bodyRequest.excludenamespace){
+                found = false
+                for(let j in availableNamespaces){
+                    if(bodyRequest.excludenamespace[i] === availableNamespaces[j].metadata.name){
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    errors.push('excludenamespace');
+                    break;
+                }
+            }
+        }
+        // retention
+        if(!bodyRequest.retention || ['30', '60', '90'].indexOf(bodyRequest.retention) === -1){
+            errors.push('retention');
+        }
+        // backuplocation
+        if(!bodyRequest.backuplocation || bodyRequest.backuplocation.trim().length == 0){
+            errors.push('backuplocation');
+        }
+        if(bodyRequest.backuplocation){
+            found = false;
+            for(let i in backupStorageLocations.body.items){
+                if(bodyRequest.backuplocation === backupStorageLocations.body.items[i].metadata.name){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                errors.push('backuplocation');
+            }
+        }
+        // snapshotlocation
+        if(!bodyRequest.snapshotlocation || bodyRequest.snapshotlocation.trim().length == 0){
+            errors.push('snapshotlocation');
+        }
+        if(bodyRequest.snapshotlocation){
+            found = false;
+            for(let i in volumeSnapshotLocations.body.items){
+                if(bodyRequest.snapshotlocation === volumeSnapshotLocations.body.items[i].metadata.name){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                errors.push('snapshotlocation');
+            }
+        }
+        
+        if(!errors.length){
+            // create backup
+            var body = {
+                "apiVersion": "velero.io/v1",
+                "kind": "Backup",
+                "metadata": {
+                    "name": bodyRequest.name,
+                    "namespace": VELERO_NAMESPACE,
+                    "labels": bodyRequest.backuplabels ? bodyRequest.backuplabels.split(',') : {}
+                },
+                "spec": {
+                    "defaultVolumesToRestic": bodyRequest.restic === '1' ? true : false,
+                    "includedNamespaces": bodyRequest.includenamespace,
+                    "excludedNamespaces": bodyRequest.excludenamespace ? bodyRequest.excludenamespace : [],
+                    "includedResources": bodyRequest.includeresources ? bodyRequest.includeresources.trim().split(',') : [],
+                    "excludedResources": bodyRequest.excluderesources ? bodyRequest.excluderesources.trim().split(',') : [],
+                    "includeClusterResources" : bodyRequest.cluster === '1' && user.admin ? true : false,
+                    "snapshotVolumes": bodyRequest.snapshot === '1' ? true : null,
+                    "storageLocation": bodyRequest.backuplocation,
+                    "volumeSnapshotLocations": [bodyRequest.snapshotlocation],
+                    "ttl": (parseInt(bodyRequest.retention)*24)+'h0m0s'
+                }
+            }
+            if(bodyRequest.useselector && bodyRequest.useselector.trim().length > 0){
+                let selectors = bodyRequest.useselector.split(',');
+                let labelSelector = {matchLabels: {}}
+                for(let i in selectors){
+                    if(selectors[i].split(':').length === 2){
+                        labelSelector.matchLabels[selectors[i].split(':')[0]] = selectors[i].split(':')[1];
+                    }
+                }
+                // @see https://github.com/vmware-tanzu/velero/issues/2083
+                if(selectors.length > 0){
+                    body.spec.labelSelector = labelSelector; 
+                }
+            }
+            
+            try {
+                await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups', body);
+            } catch (err) {
+                console.error(err);
+                errors.push('global');
+                message = err.body.message;
+            }
+        }
+
         twing.render("backup.form.html.twig", { 
-            backup: request.body,
+            backup: bodyRequest,
             backupStorageLocations: backupStorageLocations.body.items,
             volumeSnapshotLocations: volumeSnapshotLocations.body.items,
-            namespaces: namespaces.body.items,
+            namespaces: availableNamespaces,
+            errors: errors,
+            message: message,
+            user: user
         }).then(output => {
-            response.end(output);
+            response.status(errors.length ? 200 : 201).end(output);
         });
+
+        return;
     }
+
+    return twing.render("backup.form.html.twig", { 
+        backupStorageLocations: backupStorageLocations.body.items,
+        volumeSnapshotLocations: volumeSnapshotLocations.body.items,
+        namespaces: availableNamespaces,
+        user: user,
+        defaultToRestic: USE_RESTIC
+    }).then(output => {
+        response.end(output);
+    });
 });
 
 

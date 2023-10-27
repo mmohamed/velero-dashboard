@@ -1,9 +1,12 @@
 
 <form id="new-backup-form" class="row g-3" novalidate>
+    {% if errors is defined and 'global' in errors %}
+    <div class="alert alert-danger" role="alert">Error, unable to create the new backup : {% if message is defined %}"{{ message }}"{% endif %} !</div>
+    {% endif %}
     <div class="col-md-12">
         <label for="name" class="form-label">Backup name</label>
         <input type="text" class="form-control {% if errors is defined and 'name' in errors %}is-invalid{% endif %}" id="name" placeholder="my backup" value="{{ backup ? backup.name : '' }}">
-        <div class="invalid-feedback">Please provide a valide backup name.</div>
+        <div class="invalid-feedback">Please provide a valid backup name.</div>
     </div>
  
     <div class="col-md-6">
@@ -19,12 +22,13 @@
     
     <div class="col-md-6">
         <label for="includeresources" class="form-label">Include resources</label>
-        <input type="text" class="form-control" id="includeresources" placeholder="my resource" value="{{ backup ? backup.includeresources : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'includeresources' in errors %}is-invalid{% endif %}" id="includeresources" placeholder="my resource" value="{{ backup ? backup.includeresources : '' }}">
+        <div class="invalid-feedback">Please provide a valid recources name (can be list).</div>
     </div>
 
     <div class="col-md-6">
         <label for="excludenamespace" class="form-label">Exclude namespaces</label>
-        <select id="excludenamespace" class="form-select" data-placeholder="Select namespace" multiple>
+        <select id="excludenamespace" class="form-select {% if errors is defined and 'excludenamespace' in errors %}is-invalid{% endif %}" data-placeholder="Select namespace" multiple>
             {% for namespace in namespaces %}
             <option value="{{ namespace.metadata.name }}" {% if backup and namespace.metadata.name in backup.excludenamespace %}selected{% endif %}>{{ namespace.metadata.name }}</option>
             {% endfor %}
@@ -33,16 +37,18 @@
     </div>
     <div class="col-md-6">
         <label for="excluderesources" class="form-label">Exclude resources</label>
-        <input type="text" class="form-control" id="excluderesources" placeholder="other resource" value="{{ backup ? backup.excluderesources : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'excluderesources' in errors %}is-invalid{% endif %}" id="excluderesources" placeholder="other resource" value="{{ backup ? backup.excluderesources : '' }}">
+        <div class="invalid-feedback">Please select a valid resources (can be list).</div>
     </div>
     <hr/>
     <div class="col-md-6">
         <label for="retention" class="form-label">Backup retention</label>
-        <select id="retention" class="form-select">
+        <select id="retention" class="form-select {% if errors is defined and 'retention' in errors %}is-invalid{% endif %}">
             <option value="30" {% if backup and backup.retention == '30' %}selected{% endif %}>30 days</option>
             <option value="60" {% if backup and backup.retention == '60' %}selected{% endif %}>60 days</option>
             <option value="90" {% if backup and backup.retention == '90' %}selected{% endif %}>90 days</option>
         </select>
+        <div class="invalid-feedback">Please provide a valid retention.</div>
     </div>
     <div class="col-md-6">
         <label for="setting" class="form-label">Settings</label>
@@ -51,39 +57,43 @@
             <label class="form-check-label" for="snapshot">Snapshot</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if backup and backup.cluster == '1' %}checked{% endif %}>
+            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if backup and backup.cluster == '1' %}checked{% endif %}{% if not user.admin %} disabled{% endif %}>
             <label class="form-check-label" for="cluster">Include cluster resource</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="restic" id="restic" value="1" {% if backup and backup.restic == '1' %}checked{% endif %}>
+            <input class="form-check-input" type="checkbox" name="restic" id="restic" value="1" {% if (backup and backup.restic == '1') or (not backup is defined and defaultToRestic) %}checked{% endif %}>
             <label class="form-check-label" for="restic">Default volume to Restic</label>
         </div>
     </div>
     
     <div class="col-md-6">
         <label for="backuplabels" class="form-label">Backup labels</label>
-        <input type="text" class="form-control" id="backuplabels" placeholder="Labels"  value="{{ backup ? backup.backuplabels : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'backuplabels' in errors %}is-invalid{% endif %}" id="backuplabels" placeholder="Labels"  value="{{ backup ? backup.backuplabels : '' }}">
+        <div class="invalid-feedback">Please provide a valid backup labels (can be list).</div>
     </div>
     <div class="col-md-6">
         <label for="useselector" class="form-label">Use selector</label>
-        <input type="text" class="form-control" id="useselector" placeholder="Selectors"  value="{{ backup ? backup.useselector : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'useselector' in errors %}is-invalid{% endif %}" id="useselector" placeholder="Selectors"  value="{{ backup ? backup.useselector : '' }}">
+        <div class="invalid-feedback">Please provide a valid selectors (can be list).</div>
     </div>
     
     <div class="col-md-6">
         <label for="backuplocation" class="form-label">Backup location</label>
-        <select id="backuplocation" class="form-select">
+        <select id="backuplocation" class="form-select {% if errors is defined and 'backuplocation' in errors %}is-invalid{% endif %}">
             {% for location in backupStorageLocations %}
             <option value="{{ location.metadata.name }}" {% if backup and backup.backuplocation == location.metadata.name %}selected{% endif %}>{{ location.metadata.name }}</option>
             {% endfor %}
         </select>
+        <div class="invalid-feedback">Please provide a valid backup location.</div>
     </div>
     <div class="col-md-6">
         <label for="snapshotlocation" class="form-label">Snapshot location</label>
-        <select id="snapshotlocation" class="form-select">
+        <select id="snapshotlocation" class="form-select {% if errors is defined and 'snapshotlocation' in errors %}is-invalid{% endif %}">
             {% for snapshot in backupStorageLocations %}
             <option value="{{ snapshot.metadata.name }}" {% if backup and backup.snapshotlocation == snapshot.metadata.name %}selected{% endif %}>{{ snapshot.metadata.name }}</option>
             {% endfor %}
         </select>
+        <div class="invalid-feedback">Please provide a valid snapshot location.</div>
     </div>
 
 </form>
@@ -118,7 +128,10 @@ $(document).ready(function() {
         $('#new-backup-modal .modal-content').block();
         $('#new-backup-modal .modal-body').load('/backup/new', data, function(response, status, xhr) {
             $('#new-backup-modal .modal-content').unblock();
-            if(status === 201)  $('#new-backup-modal').modal('hide'); 
+            if(xhr.status === 201) {
+                $('#new-backup-modal').modal('hide'); 
+                $(document).trigger('refresh-and-go-to-backup');
+            } 
         });
         return false;
     })

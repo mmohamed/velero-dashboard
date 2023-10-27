@@ -477,6 +477,11 @@ $(document).ready(function() {
         });
     }
 
+    $(document).bind('refresh-and-go-to-backup', function(){
+        __loadBackups();
+        $('html, body').scrollTop($('.backup-bloc').offset().top);
+    });
+    
     __loadBackups();
     __loadRestores();
     __loadSchedules();
