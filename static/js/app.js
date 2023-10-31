@@ -82,7 +82,9 @@ $(document).ready(function() {
                 data: "name",
                 orderable: false,
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-outline-danger btn-sm restore-action" data-name="'+data+'" '+( $('#list-backups').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Restore</button>';
+                    var btn = '<button type="button" class="btn btn-outline-warning btn-sm restore-action" data-name="'+data+'" '+( $('#list-backups').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Restore</button>';
+                    btn += '<button type="button" class="btn btn-outline-danger btn-sm delete-backup-action" data-name="'+data+'" '+( $('#list-backups').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Delete</button>';
+                    return btn;
                 }
             }
         ]
@@ -130,6 +132,62 @@ $(document).ready(function() {
                                     icon: 'warning'
                                 });
                                 console.log("Create restore : ", error);
+                            },
+                            complete: function(){
+                                $('.backup-bloc').unblock();
+                            }
+                        });
+                    }
+                },
+                cancel: function () {
+                    
+                }
+            }
+        });
+    });
+
+    $(document).on('click', 'button.delete-backup-action', function(){
+        let name = $(this).attr('data-name');
+        $.confirm({
+            title: 'Confirm!',
+            icon: 'bi bi-exclamation-circle',
+            type: 'red',
+            typeAnimated: true,
+            closeIcon: true,
+            closeIconClass: 'bi bi-x-square',
+            content: "Are you sure you want to delete the backup '"+name+"' ?",
+            buttons: {
+                confirm: {
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        $.ajax({
+                            url: "/api/backups",
+                            type: "DELETE",
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify({backup: name, name: name+'-delete-'+Math.floor(Date.now() / 1000)}),
+                            beforeSend: function() {  
+                                $('.backup-bloc').block();  
+                            },
+                            success: function(response) {
+                                $.toast({
+                                    heading: 'Information',
+                                    text: 'New delete backup request is created',
+                                    icon: 'info',
+                                    loader: true,        
+                                    loaderBg: '#9EC600'         
+                                });
+                                __loadBackups();
+                                $('html, body').scrollTop($('.backup-bloc').offset().top);
+                            },
+                            error: function(error) {
+                                $.toast({
+                                    heading: 'Error',
+                                    text: 'Unable to create a delete backup request, please contact the administrator.',
+                                    showHideTransition: 'plain',
+                                    icon: 'warning'
+                                });
+                                console.log("Create delete request error : ", error);
                             },
                             complete: function(){
                                 $('.backup-bloc').unblock();
@@ -360,7 +418,9 @@ $(document).ready(function() {
             {
                 data: "name",
                 render: function (data, type, row) {
-                    return '<button type="button" class="btn btn-outline-primary btn-sm backup-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Execute now</button>';
+                    var btn = '<button type="button" class="btn btn-outline-primary btn-sm backup-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Execute now</button>';
+                    btn += '<button type="button" class="btn btn-outline-danger btn-sm delete-schedule-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Delete</button>';
+                    return btn;
                 }
             }
         ]
@@ -434,6 +494,62 @@ $(document).ready(function() {
         });
     });
 
+    $(document).on('click', 'button.delete-schedule-action', function(){
+        let name = $(this).attr('data-name');
+        $.confirm({
+            title: 'Confirm!',
+            icon: 'bi bi-exclamation-circle',
+            type: 'red',
+            typeAnimated: true,
+            closeIcon: true,
+            closeIconClass: 'bi bi-x-square',
+            content: "Are you sure you want to delete '"+name+"' schedule ?",
+            buttons: {
+                confirm: {
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        $.ajax({
+                            url: "/api/schedules",
+                            type: "DELETE",
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify({schedule: name}),
+                            beforeSend: function() {  
+                                $('.schedule-bloc').block();  
+                            },
+                            success: function(response) {
+                                $.toast({
+                                    heading: 'Information',
+                                    text: 'Schedule "'+name+'" is deleted',
+                                    icon: 'info',
+                                    loader: true,        
+                                    loaderBg: '#9EC600'         
+                                });
+                                __loadSchedules();
+                                $('html, body').scrollTop($('.schedule-bloc').offset().top);
+                            },
+                            error: function(error) {
+                                $.toast({
+                                    heading: 'Error',
+                                    text: 'Unable to delete a schedule, please contact the administrator.',
+                                    showHideTransition: 'plain',
+                                    icon: 'warning'
+                                });
+                                console.log("Delete schedule error : ", error);
+                            },
+                            complete: function(){
+                                $('.schedule-bloc').unblock();
+                            }
+                        });
+                    }
+                },
+                cancel: function () {
+                    
+                }
+            }
+        });
+    });
+    
     __loadSchedules = function(){
         var scheduleTableApi = $('#list-schedules').dataTable().api();
 
@@ -480,6 +596,11 @@ $(document).ready(function() {
     $(document).bind('refresh-and-go-to-backup', function(){
         __loadBackups();
         $('html, body').scrollTop($('.backup-bloc').offset().top);
+    });
+
+    $(document).bind('refresh-and-go-to-schedule', function(){
+        __loadSchedules();
+        $('html, body').scrollTop($('.schedule-bloc').offset().top);
     });
     
     __loadBackups();
