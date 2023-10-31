@@ -451,7 +451,7 @@ app.use("/schedule/new", async (request, response) => {
                         "ttl": (parseInt(bodyRequest.retention)*24)+'h0m0s',
                     },
                     "schedule": bodyRequest.cron,
-                    "useOwnerReferencesInBackup" : bodyRequest.ownerreferences === '1' ? true : falseincre
+                    "useOwnerReferencesInBackup" : bodyRequest.ownerreferences === '1' ? true : false
                 }
             }
             if(bodyRequest.useselector && bodyRequest.useselector.trim().length > 0){
