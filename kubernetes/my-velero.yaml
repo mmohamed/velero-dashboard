@@ -54,8 +54,10 @@ spec:
       containers:
       - name: my-velero
         image: medinvention/my-velero-dashboard:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
+          protocol: TCP
         resources:
             limits:
               cpu: 1000m

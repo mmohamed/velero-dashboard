@@ -131,7 +131,7 @@
 </div>
 
 <div class="schedule-bloc">
-    <h2 class="mt-5">Schedules</h1>
+    <h1 class="mt-5">Schedules <button id="new-schedule" type="button" class="btn btn-outline-primary" style="float: right"><i class="bi bi-plus-circle-fill"></i> New schedule</button></h1>
     <hr/>
     <table id="list-schedules" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle job-list">
         <thead>
@@ -151,11 +151,11 @@
     </table>
 </div>
 
-<div class="modal fade" id="new-backup-modal" tabindex="-1" role="dialog" aria-labelledby="new-backup-modal-label" aria-hidden="true">
+<div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="form-modal-label" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="new-backup-modal-label">New backup</h5>
+        <h5 class="modal-title" id="form-modal-label">New</h5>
       </div>
       <div class="modal-body">
         
@@ -176,17 +176,32 @@ $(document).ready(function() {
     $('button#new-backup').bind('click', function(){
         $.ajax({
                url: '/backup/new',
+               beforeSend: function(){
+                $('#form-modal-label').html('New backup')
+               },
                success: function(response){ 
-                    $('#new-backup-modal .modal-body').html(response);
-                    $('#new-backup-modal').modal('show'); 
+                    $('#form-modal .modal-body').html(response);
+                    $('#form-modal').modal('show'); 
                }
          });
     });
-    $('#new-backup-modal button.btn-primary').bind('click', function(){
-        $('#new-backup-modal').find('form').trigger('submit'); 
+    $('button#new-schedule').bind('click', function(){
+        $.ajax({
+               url: '/schedule/new',
+                beforeSend: function(){
+                $('#form-modal-label').html('New schedule')
+               },
+               success: function(response){ 
+                    $('#form-modal .modal-body').html(response);
+                    $('#form-modal').modal('show'); 
+               }
+         });
     });
-    $('#new-backup-modal button.btn-secondary').bind('click', function(){
-        $('#new-backup-modal').modal('hide');
+    $('#form-modal button.btn-primary').bind('click', function(){
+        $('#form-modal').find('form').trigger('submit'); 
+    });
+    $('#form-modal button.btn-secondary').bind('click', function(){
+        $('#form-modal').modal('hide');
     });
 });
 </script>

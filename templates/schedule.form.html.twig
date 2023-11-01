@@ -1,0 +1,147 @@
+
+<form id="new-schedule-form" class="row g-3" novalidate>
+    {% if errors is defined and 'global' in errors %}
+    <div class="alert alert-danger" role="alert">Error, unable to create the new schedule : {% if message is defined %}"{{ message }}"{% endif %} !</div>
+    {% endif %}
+    <div class="col-md-12">
+        <label for="name" class="form-label">Schedule name</label>
+        <input type="text" class="form-control {% if errors is defined and 'name' in errors %}is-invalid{% endif %}" id="name" placeholder="my schedule" value="{{ schedule ? schedule.name : '' }}">
+        <div class="invalid-feedback">Please provide a valid schedule name.</div>
+    </div>
+ 
+    <div class="col-md-6">
+        <label for="includenamespace" class="form-label">Include namespaces</label>
+        <select id="includenamespace" class="form-select {% if errors is defined and 'includenamespace' in errors %}is-invalid{% endif %}" data-placeholder="Select namespace" multiple>
+            {% for namespace in namespaces %}
+            <option value="{{ namespace.metadata.name }}" {% if schedule and namespace.metadata.name in schedule.includenamespace %}selected{% endif %}>{{ namespace.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a least a valid namespace.</div>
+    </div>
+
+    
+    <div class="col-md-6">
+        <label for="includeresources" class="form-label">Include resources</label>
+        <input type="text" class="form-control {% if errors is defined and 'includeresources' in errors %}is-invalid{% endif %}" id="includeresources" placeholder="my resource" value="{{ schedule ? schedule.includeresources : '' }}">
+        <div class="invalid-feedback">Please provide a valid recources name (can be list).</div>
+    </div>
+
+    <div class="col-md-6">
+        <label for="excludenamespace" class="form-label">Exclude namespaces</label>
+        <select id="excludenamespace" class="form-select {% if errors is defined and 'excludenamespace' in errors %}is-invalid{% endif %}" data-placeholder="Select namespace" multiple>
+            {% for namespace in namespaces %}
+            <option value="{{ namespace.metadata.name }}" {% if schedule and namespace.metadata.name in schedule.excludenamespace %}selected{% endif %}>{{ namespace.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please select a valid namespace.</div>
+    </div>
+    <div class="col-md-6">
+        <label for="excluderesources" class="form-label">Exclude resources</label>
+        <input type="text" class="form-control {% if errors is defined and 'excluderesources' in errors %}is-invalid{% endif %}" id="excluderesources" placeholder="other resource" value="{{ schedule ? schedule.excluderesources : '' }}">
+        <div class="invalid-feedback">Please select a valid resources (can be list).</div>
+    </div>
+    <hr/>
+    <div class="col-md-6">
+        <label for="retention" class="form-label">Backup retention & CRON</label>
+        <select id="retention" class="form-select {% if errors is defined and 'retention' in errors %}is-invalid{% endif %}">
+            <option value="30" {% if schedule and schedule.retention == '30' %}selected{% endif %}>30 days</option>
+            <option value="60" {% if schedule and schedule.retention == '60' %}selected{% endif %}>60 days</option>
+            <option value="90" {% if schedule and schedule.retention == '90' %}selected{% endif %}>90 days</option>
+        </select>
+        <div class="invalid-feedback">Please provide a valid retention.</div>
+        
+        <label for="cron" class="form-label"></label>
+        <input type="text" name="cron" class="form-control {% if errors is defined and 'cron' in errors %}is-invalid{% endif %}" id="cron" placeholder="my schedule cron" value="{{ schedule ? schedule.cron : '' }}">
+        <div class="invalid-feedback">Please provide a valid schedule CRON.</div>
+    </div>
+    <div class="col-md-6">
+        <label for="setting" class="form-label">Settings</label>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if schedule and schedule.snapshot == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="snapshot">Snapshot</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if schedule and schedule.cluster == '1' %}checked{% endif %}{% if not user.admin %} disabled{% endif %}>
+            <label class="form-check-label" for="cluster">Include cluster resource</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="restic" id="restic" value="1" {% if (schedule and schedule.restic == '1') or (not schedule is defined and defaultToRestic) %}checked{% endif %}>
+            <label class="form-check-label" for="restic">Default volume to Restic</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="ownerreferences" id="ownerreferences" value="1" {% if schedule and schedule.ownerreferences == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="ownerreferences">Owner references in backup</label>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <label for="schedulelabels" class="form-label">Schedule labels</label>
+        <input type="text" class="form-control {% if errors is defined and 'schedulelabels' in errors %}is-invalid{% endif %}" id="schedulelabels" placeholder="Labels"  value="{{ schedule ? schedule.schedulelabels : '' }}">
+        <div class="invalid-feedback">Please provide a valid schedule labels (can be list).</div>
+    </div>
+    <div class="col-md-6">
+        <label for="useselector" class="form-label">Use selector</label>
+        <input type="text" class="form-control {% if errors is defined and 'useselector' in errors %}is-invalid{% endif %}" id="useselector" placeholder="Selectors"  value="{{ schedule ? schedule.useselector : '' }}">
+        <div class="invalid-feedback">Please provide a valid selectors (can be list).</div>
+    </div>
+    
+    <div class="col-md-6">
+        <label for="backuplocation" class="form-label">Backup location</label>
+        <select id="backuplocation" class="form-select {% if errors is defined and 'backuplocation' in errors %}is-invalid{% endif %}">
+            {% for location in backupStorageLocations %}
+            <option value="{{ location.metadata.name }}" {% if schedule and schedule.backuplocation == location.metadata.name %}selected{% endif %}>{{ location.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please provide a valid backup location.</div>
+    </div>
+    <div class="col-md-6">
+        <label for="snapshotlocation" class="form-label">Snapshot location</label>
+        <select id="snapshotlocation" class="form-select {% if errors is defined and 'snapshotlocation' in errors %}is-invalid{% endif %}">
+            {% for snapshot in backupStorageLocations %}
+            <option value="{{ snapshot.metadata.name }}" {% if schedule and schedule.snapshotlocation == snapshot.metadata.name %}selected{% endif %}>{{ snapshot.metadata.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Please provide a valid snapshot location.</div>
+    </div>
+
+</form>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('select#includenamespace, select#excludenamespace').select2({
+        theme: "bootstrap-5", 
+        closeOnSelect: false, 
+        placeholder: $(this).data('placeholder')
+    });
+    $('form#new-schedule-form').unbind('submit');
+    $('form#new-schedule-form').bind('submit', function(event){
+        event.preventDefault();
+        var data = {};
+        $(this).find('input[type=text]').each(function(){
+            data[$(this).attr('id')] = $(this).val();
+        });
+        $(this).find('select').each(function(){
+            data[$(this).attr('id')] = $(this).find(':selected').val();
+        });
+        $(this).find('select[multiple]').each(function(){
+            var name = $(this).attr('id');
+            data[name] = []
+            $(this).find(':selected').each(function(){
+                data[name].push($(this).val());
+            });
+        });
+        $(this).find('input[type=checkbox]').each(function(){
+            data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';
+        });
+        $('#form-modal .modal-content').block();
+        $('#form-modal .modal-body').load('/schedule/new', data, function(response, status, xhr) {
+            $('#form-modal .modal-content').unblock();
+            if(xhr.status === 201) {
+                $('#form-modal').modal('hide'); 
+                $(document).trigger('refresh-and-go-to-schedule');
+            } 
+        });
+        return false;
+    })
+});
+</script>

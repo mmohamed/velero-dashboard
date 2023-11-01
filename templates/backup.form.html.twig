@@ -125,11 +125,11 @@ $(document).ready(function() {
         $(this).find('input[type=checkbox]').each(function(){
             data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';
         });
-        $('#new-backup-modal .modal-content').block();
-        $('#new-backup-modal .modal-body').load('/backup/new', data, function(response, status, xhr) {
-            $('#new-backup-modal .modal-content').unblock();
+        $('#form-modal .modal-content').block();
+        $('#form-modal .modal-body').load('/backup/new', data, function(response, status, xhr) {
+            $('#form-modal .modal-content').unblock();
             if(xhr.status === 201) {
-                $('#new-backup-modal').modal('hide'); 
+                $('#form-modal').modal('hide'); 
                 $(document).trigger('refresh-and-go-to-backup');
             } 
         });
