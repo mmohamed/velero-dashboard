@@ -412,19 +412,21 @@ app.use("/schedule/new", async (request, response) => {
             }
         }
         // snapshotlocation
-        if(!bodyRequest.snapshotlocation || bodyRequest.snapshotlocation.trim().length == 0){
-            errors.push('snapshotlocation');
-        }
-        if(bodyRequest.snapshotlocation){
-            found = false;
-            for(let i in volumeSnapshotLocations.body.items){
-                if(bodyRequest.snapshotlocation === volumeSnapshotLocations.body.items[i].metadata.name){
-                    found = true;
-                    break;
-                }
-            }
-            if(!found){
+        if(bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+            if(!bodyRequest.snapshotlocation || bodyRequest.snapshotlocation.trim().length == 0){
                 errors.push('snapshotlocation');
+            }
+            if(bodyRequest.snapshotlocation){
+                found = false;
+                for(let i in volumeSnapshotLocations.body.items){
+                    if(bodyRequest.snapshotlocation === volumeSnapshotLocations.body.items[i].metadata.name){
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    errors.push('snapshotlocation');
+                }
             }
         }
         
@@ -440,7 +442,7 @@ app.use("/schedule/new", async (request, response) => {
                 },
                 "spec": {
                     "template": {
-                        "defaultVolumesToRestic": bodyRequest.restic === '1' ? true : false,
+                        "defaultVolumesToFsBackup": bodyRequest.fsbackup === '1' ? true : false,
                         "includedNamespaces": bodyRequest.includenamespace,
                         "excludedNamespaces": bodyRequest.excludenamespace ? bodyRequest.excludenamespace : [],
                         "includedResources": bodyRequest.includeresources ? bodyRequest.includeresources.trim().split(',') : [],
@@ -448,7 +450,7 @@ app.use("/schedule/new", async (request, response) => {
                         "includeClusterResources" : bodyRequest.cluster === '1' && user.admin ? true : false,
                         "snapshotVolumes": bodyRequest.snapshot === '1' ? true : null,
                         "storageLocation": bodyRequest.backuplocation,
-                        "volumeSnapshotLocations": [bodyRequest.snapshotlocation],
+                        "volumeSnapshotLocations": bodyRequest.snapshotlocation ? [bodyRequest.snapshotlocation]: [],
                         "ttl": (parseInt(bodyRequest.retention)*24)+'h0m0s',
                     },
                     "schedule": bodyRequest.cron,
@@ -498,7 +500,7 @@ app.use("/schedule/new", async (request, response) => {
         volumeSnapshotLocations: volumeSnapshotLocations.body.items,
         namespaces: availableNamespaces,
         user: user,
-        defaultToRestic: USE_RESTIC
+        defaultVolumesToFsBackup: USE_FSBACKUP
     }).then(output => {
         response.end(output);
     });
