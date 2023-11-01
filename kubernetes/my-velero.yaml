@@ -1,3 +1,16 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myvelero-secret
+  namespace: velero
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: YWRtaW5wd2Q=
+
+---
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -40,7 +53,7 @@ spec:
       serviceAccountName: myvelero-sa
       containers:
       - name: my-velero
-        image: medinvention/my-velero-dashboard:1.0.8-beta
+        image: medinvention/my-velero-dashboard:latest
         ports:
         - containerPort: 3000
         resources:
@@ -52,10 +65,16 @@ spec:
               memory: 512Mi
         env:
           - name: ADMIN_USERNAME
-            value: admin
+            valueFrom:
+              secretKeyRef:
+                name: myvelero-secret
+                key: username
           - name: ADMIN_PASSWORD
-            value: admin
-          - name: USE_RESTIC
+            valueFrom:
+              secretKeyRef:
+                name: myvelero-secret
+                key: password
+          - name: USE_FSBACKUP
             value: "1"
           - name: DEBUG
             value: "1"

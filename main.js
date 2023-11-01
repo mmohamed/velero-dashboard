@@ -17,7 +17,7 @@ const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 const app = express();
 const VELERO_NAMESPACE = process.env.VELERO_NAMESPACE ?  process.env.VELERO_NAMESPACE : 'velero'
-const USE_RESTIC = process.env.USE_RESTIC==="1" ? true : false;
+const USE_FSBACKUP = process.env.USE_FSBACKUP==="1" ? true : false;
 const DEBUG_MODE = process.env.DEBUG==="1" ? true : false;
 
 app.use(cors());
@@ -152,7 +152,7 @@ app.use("/backup/new", async (request, response) => {
     const namespaces = await k8sApi.listNamespace();
     const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
     const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
-
+    
     // filter
     let availableNamespaces = [];
     if(!user.admin && process.env.NAMESPACE_FILTERING){
@@ -229,22 +229,23 @@ app.use("/backup/new", async (request, response) => {
             }
         }
         // snapshotlocation
-        if(!bodyRequest.snapshotlocation || bodyRequest.snapshotlocation.trim().length == 0){
-            errors.push('snapshotlocation');
-        }
-        if(bodyRequest.snapshotlocation){
-            found = false;
-            for(let i in volumeSnapshotLocations.body.items){
-                if(bodyRequest.snapshotlocation === volumeSnapshotLocations.body.items[i].metadata.name){
-                    found = true;
-                    break;
-                }
-            }
-            if(!found){
+        if(bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+            if(!bodyRequest.snapshotlocation || bodyRequest.snapshotlocation.trim().length == 0){
                 errors.push('snapshotlocation');
             }
+            if(bodyRequest.snapshotlocation){
+                found = false;
+                for(let i in volumeSnapshotLocations.body.items){
+                    if(bodyRequest.snapshotlocation === volumeSnapshotLocations.body.items[i].metadata.name){
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    errors.push('snapshotlocation');
+                }
+            }
         }
-        
         if(!errors.length){
             // create backup
             var body = {
@@ -256,7 +257,7 @@ app.use("/backup/new", async (request, response) => {
                     "labels": bodyRequest.backuplabels ? bodyRequest.backuplabels.split(',') : {}
                 },
                 "spec": {
-                    "defaultVolumesToRestic": bodyRequest.restic === '1' ? true : false,
+                    "defaultVolumesToFsBackup": bodyRequest.fsbackup === '1' ? true : false,
                     "includedNamespaces": bodyRequest.includenamespace,
                     "excludedNamespaces": bodyRequest.excludenamespace ? bodyRequest.excludenamespace : [],
                     "includedResources": bodyRequest.includeresources ? bodyRequest.includeresources.trim().split(',') : [],
@@ -264,7 +265,7 @@ app.use("/backup/new", async (request, response) => {
                     "includeClusterResources" : bodyRequest.cluster === '1' && user.admin ? true : false,
                     "snapshotVolumes": bodyRequest.snapshot === '1' ? true : null,
                     "storageLocation": bodyRequest.backuplocation,
-                    "volumeSnapshotLocations": [bodyRequest.snapshotlocation],
+                    "volumeSnapshotLocations": bodyRequest.snapshotlocation ? [bodyRequest.snapshotlocation]: [],
                     "ttl": (parseInt(bodyRequest.retention)*24)+'h0m0s'
                 }
             }
@@ -311,7 +312,7 @@ app.use("/backup/new", async (request, response) => {
         volumeSnapshotLocations: volumeSnapshotLocations.body.items,
         namespaces: availableNamespaces,
         user: user,
-        defaultToRestic: USE_RESTIC
+        defaultVolumesToFsBackup: USE_FSBACKUP
     }).then(output => {
         response.end(output);
     });
@@ -397,7 +398,7 @@ app.post('/api/backups', async (request, response) => {
                 "namespace": VELERO_NAMESPACE
             },
             "spec": {
-                "defaultVolumesToRestic": USE_RESTIC,
+                "defaultVolumesToFsBackup": USE_FSBACKUP,
                 "includedNamespaces": schedule.body.spec.template.includedNamespaces,
                 "storageLocation": "default",
                 "volumeSnapshotLocations": ["default"],
@@ -467,7 +468,7 @@ app.post('/api/restores', async (request, response) => {
             },
             "spec": {
                 "backupName": request.body.backup,
-                "defaultVolumesToRestic": USE_RESTIC,
+                "defaultVolumesToFsBackup": USE_FSBACKUP,
                 "includedNamespaces": backup.body.spec.includedNamespaces,
                 "storageLocation": "default",
                 "excludedResources": ["nodes", "events", "events.events.k8s.io", "backups.velero.io", "restores.velero.io", "resticrepositories.velero.io"],
@@ -524,7 +525,7 @@ app.post('/api/schedules', async (request, response) => {
                 "template": {
                     "ttl": request.body.ttl ? request.body.ttl : "360h0m0s",
                     "includedNamespaces": ["ovpn"],
-                    "defaultVolumesToRestic": USE_RESTIC
+                    "defaultVolumesToFsBackup": USE_FSBACKUP
                 },
                 "useOwnerReferencesInBackup": false
             }

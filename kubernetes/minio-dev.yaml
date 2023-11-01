@@ -1,0 +1,108 @@
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: miniosecret
+  namespace: velero
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: YWRtaW5wd2Q=
+  
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-velero-minio
+  namespace: velero
+  labels:
+    app: myvelerominio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myvelerominio
+  template:
+    metadata:
+      labels:
+        app: myvelerominio
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
+      containers:
+      - name: my-velero-minio
+        image: bitnami/minio:2023.10.25
+        env:
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: miniosecret
+                key: username
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: miniosecret
+                key: password
+          - name: MINIO_SITE_REGION
+            value: minio
+          - name: MINIO_DEFAULT_BUCKETS
+            value: velero
+          - name: MINIO_SERVER_URL
+            value: http://my-velero-minio-svc.velero.svc:9000
+        ports:
+          - containerPort: 9000
+            name: endpoint 
+          - containerPort: 9001
+            name: console  
+        resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        volumeMounts:
+          - mountPath: /bitnami/minio/data
+            name: minio-data
+      volumes:
+        - name: minio-data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: velero
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-velero-minio-svc
+  namespace: velero
+spec:
+  ports:
+    - name: endpoint
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: myvelerominio

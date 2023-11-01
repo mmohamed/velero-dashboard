@@ -53,7 +53,7 @@
     <div class="col-md-6">
         <label for="setting" class="form-label">Settings</label>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if backup and backup.snapshot == '1' %}checked{% endif %}>
+            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if volumeSnapshotLocations|length == 0 %}disabled{% elseif backup and backup.snapshot == '1' %}checked{% endif %}>
             <label class="form-check-label" for="snapshot">Snapshot</label>
         </div>
         <div class="form-check">
@@ -61,8 +61,8 @@
             <label class="form-check-label" for="cluster">Include cluster resource</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="restic" id="restic" value="1" {% if (backup and backup.restic == '1') or (not backup is defined and defaultToRestic) %}checked{% endif %}>
-            <label class="form-check-label" for="restic">Default volume to Restic</label>
+            <input class="form-check-input" type="checkbox" name="fsbackup" id="fsbackup" value="1" {% if (backup and backup.fsbackup == '1') or (not backup is defined and defaultVolumesToFsBackup) %}checked{% endif %}>
+            <label class="form-check-label" for="fsbackup">Default volume to FS Backup</label>
         </div>
     </div>
     
@@ -88,8 +88,8 @@
     </div>
     <div class="col-md-6">
         <label for="snapshotlocation" class="form-label">Snapshot location</label>
-        <select id="snapshotlocation" class="form-select {% if errors is defined and 'snapshotlocation' in errors %}is-invalid{% endif %}">
-            {% for snapshot in backupStorageLocations %}
+        <select id="snapshotlocation" class="form-select {% if errors is defined and 'snapshotlocation' in errors %}is-invalid{% endif %}" {% if volumeSnapshotLocations|length == 0 %}disabled{% endif %}>
+            {% for snapshot in volumeSnapshotLocations %}
             <option value="{{ snapshot.metadata.name }}" {% if backup and backup.snapshotlocation == snapshot.metadata.name %}selected{% endif %}>{{ snapshot.metadata.name }}</option>
             {% endfor %}
         </select>
