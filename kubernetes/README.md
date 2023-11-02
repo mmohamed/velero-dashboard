@@ -12,7 +12,7 @@ velero install \
     --use-node-agent \
     --secret-file ./credentials-velero \
     --use-volume-snapshots=false \
-    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://my-velero-minio-svc.velero.svc:9000
+    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=https://myvelero-minio.medinvention.dev
 
 @see https://github.com/vmware-tanzu/velero/issues/6382
 kubectl patch crd restores.velero.io --type json -p='[{"op": "remove", "path": "/spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/hooks/properties/resources/items/properties/postHooks/items/properties/init/properties/initContainers/x-kubernetes-preserve-unknown-fields"}]'

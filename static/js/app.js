@@ -103,19 +103,25 @@ $(document).ready(function() {
         let name = $(this).attr('data-name');
         $.ajax({
             url: "/backups/result/"+name,
-            beforeSend: function() {  
-                $('#form-modal').modal('show'); 
-                $('#form-modal').block();  
-                $('#form-modal-label').html('Backup "'+name+'"result');
+            beforeSend: function() {
+                $.blockUI({baseZ: 9999});
+                $('#result-modal-label').html('Backup "'+name+'" result');
             },
             success: function(response) {
-                $('#form-modal .modal-body').html(response);
+                $('#result-modal').modal('show'); 
+                $('#result-modal .modal-body').html(response);
             },
             error: function(error) {
                 console.log("Get backup result : ", error);
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to get the backup result, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
             },
             complete: function(){
-                $('#form-modal').unblock();
+                $.unblockUI();
             }
         });
     });

@@ -352,7 +352,7 @@ app.get("/backups/result/:name", async (request, response) => {
                 return response.status(403).json({});
             }
         }
-        // create download request
+        // create download request for result
         let body = {
             "apiVersion": "velero.io/v1",
             "kind": "DownloadRequest",
@@ -368,31 +368,68 @@ app.get("/backups/result/:name", async (request, response) => {
             }
         }
         let downloadRequest = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', body);
-        let isProcessed = false, retry = 0, downloadLink = null;
-        while(!isProcessed && retry < 3){
-            let downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
-            console.debug(downloadRequest.response.body);
+        
+        let isProcessed = false, retry = 0, downloadResultLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
             if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
                 isProcessed = true;
-                downloadLink = downloadRequest.response.body.status.downloadURL;
+                downloadResultLink = downloadRequest.response.body.status.downloadURL;
             }else{
-                sleep.sleep(5);
+                sleep.sleep(1);
             }
             retry++;
         }
-        // download result file
-        var result = '';
-        if(downloadLink){
-            downloadLink = 'http://localhost:3000/qrcode-backup-results.gz';            
-            let { data } = await axios.get(downloadLink, { responseType: 'arraybuffer', 'decompress': true });
-            console.debug(data.toString());
-            console.debug(zlib.inflateSync(data).toString());
-            return twing.render("backup.result.html.twig", { 
-                result: JSON.parse('{}')
-            }).then(output => {
-                response.end(output);
-            });
+
+        downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
+        // create download request for log
+        body = {
+            "apiVersion": "velero.io/v1",
+            "kind": "DownloadRequest",
+            "metadata": {
+                "namespace": VELERO_NAMESPACE,
+                "name": downloadRequestName,
+            },
+            "spec": {
+                "target": {
+                    "kind": "BackupLog",
+                    "name": request.params.name
+                }
+            }
         }
+        downloadRequest = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', body);
+        isProcessed = false, retry = 0;
+        let downloadLogLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
+            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadLogLink = downloadRequest.response.body.status.downloadURL;
+            }else{
+                sleep.sleep(1);
+            }
+            retry++;
+        }
+
+        // download result file
+        let jsonResult = null;
+        if(downloadResultLink){          
+            let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': false });
+            jsonResult = zlib.unzipSync(data).toString();
+        }
+        // download log file
+        let logResult = null;
+        if(downloadLogLink){          
+            let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
+            logResult = zlib.unzipSync(data).toString();
+        }
+        
+        return twing.render("backup.result.html.twig", { 
+            result: jsonResult ? JSON.parse(jsonResult) : null,
+            log: logResult,
+        }).then(output => {
+            response.end(output);
+        });
 
     } catch (err) {
         console.error(err);

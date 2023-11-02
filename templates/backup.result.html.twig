@@ -1,0 +1,30 @@
+<ul class="list-group list-group-flush">
+    <li class="list-group-item active" aria-current="true">Warnings</li>
+    {% if result and result.warnings and result.warnings|json_encode() != '[]' %}
+    {% for categoryName, categories in result.warnings %}
+         {% for warning in categories %}
+          <li class="list-group-item list-group-item-warning">[{{ categoryName }}] - {{ warning }}</li>  
+         {% endfor %}
+    {% endfor %}
+    {% else %}
+    <li class="list-group-item">No warnings</li>  
+    {% endif %}
+
+    <li class="list-group-item active" aria-current="true">Errors</li>
+    {% if result and result.errors and result.errors|json_encode() != '[]' %}
+    {% for categoryName, categories in result.errors %}
+         {% for error in categories %}
+          <li class="list-group-item list-group-item-danger">[{{ categoryName }}] - {{ error }}</li>  
+         {% endfor %}
+    {% endfor %}
+    {% else %}
+    <li class="list-group-item">No errors</li>  
+    {% endif %}
+
+    <li class="list-group-item active" aria-current="true">Logs</li>
+    {% if log and log|length > 0 %}
+     <li class="list-group-item list-group-item-danger" style="overflow: auto;white-space: nowrap;">{{ log|nl2br }}</li>  
+    {% else %}
+    <li class="list-group-item">No logs</li>  
+    {% endif %}
+</ul>
