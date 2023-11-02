@@ -6,6 +6,9 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const cron = require('cron-validator');
 const { authenticate } = require('ldap-authentication');
+const axios = require('axios');
+const zlib = require('zlib');
+const sleep = require('sleep');
 const { TwingEnvironment, TwingLoaderFilesystem } = require("twing");
 
 require('dotenv').config();
@@ -248,14 +251,24 @@ app.use("/backup/new", async (request, response) => {
             }
         }
         if(!errors.length){
+            let labels = {};
+            if(bodyRequest.backuplabels && bodyRequest.backuplabels.trim().length > 0) {
+                let i, element, input = bodyRequest.backuplabels.trim().split(',');
+                for(i in input){
+                    element = input[i].trim().split('=');
+                    if(element.length === 2){
+                        labels[element[0]] = element[1];
+                    }
+                }
+            }
             // create backup
-            var body = {
+            let body = {
                 "apiVersion": "velero.io/v1",
                 "kind": "Backup",
                 "metadata": {
                     "name": bodyRequest.name,
                     "namespace": VELERO_NAMESPACE,
-                    "labels": bodyRequest.backuplabels ? bodyRequest.backuplabels.split(',') : {}
+                    "labels": labels
                 },
                 "spec": {
                     "defaultVolumesToFsBackup": bodyRequest.fsbackup === '1' ? true : false,
@@ -319,6 +332,76 @@ app.use("/backup/new", async (request, response) => {
     });
 });
 
+
+app.get("/backups/result/:name", async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    try {
+        // filtering
+        let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups', request.params.name);
+        let user = request.session.user;
+        let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
+        if(!user.admin && process.env.NAMESPACE_FILTERING){
+            let hasAccess = true;
+            for(let i in backup.body.spec.includedNamespaces){
+                if(user.namespaces.indexOf(backup.body.spec.includedNamespaces[i]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(!hasAccess || !backup.body.spec.includedNamespaces || !backup.body.spec.includedNamespaces.length > 0){
+                return response.status(403).json({});
+            }
+        }
+        // create download request
+        let body = {
+            "apiVersion": "velero.io/v1",
+            "kind": "DownloadRequest",
+            "metadata": {
+                "namespace": VELERO_NAMESPACE,
+                "name": downloadRequestName,
+            },
+            "spec": {
+                "target": {
+                    "kind": "BackupResults",
+                    "name": request.params.name
+                }
+            }
+        }
+        let downloadRequest = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', body);
+        let isProcessed = false, retry = 0, downloadLink = null;
+        while(!isProcessed && retry < 3){
+            let downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
+            console.debug(downloadRequest.response.body);
+            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadLink = downloadRequest.response.body.status.downloadURL;
+            }else{
+                sleep.sleep(5);
+            }
+            retry++;
+        }
+        // download result file
+        var result = '';
+        if(downloadLink){
+            downloadLink = 'http://localhost:3000/qrcode-backup-results.gz';            
+            let { data } = await axios.get(downloadLink, { responseType: 'arraybuffer', 'decompress': true });
+            console.debug(data.toString());
+            console.debug(zlib.inflateSync(data).toString());
+            return twing.render("backup.result.html.twig", { 
+                result: JSON.parse('{}')
+            }).then(output => {
+                response.end(output);
+            });
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+
+    return twing.render("backup.result.html.twig").then(output => {
+        response.end(output);
+    });
+});
 
 app.use("/schedule/new", async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
@@ -431,6 +514,16 @@ app.use("/schedule/new", async (request, response) => {
         }
         
         if(!errors.length){
+            let labels = {};
+            if(bodyRequest.backuplabels && bodyRequest.backuplabels.trim().length > 0) {
+                let i, element, input = bodyRequest.backuplabels.trim().split(',');
+                for(i in input){
+                    element = input[i].trim().split('=');
+                    if(element.length === 2){
+                        labels[element[0]] = element[1];
+                    }
+                }
+            }
             // create schedule
             var body = {
                 "apiVersion": "velero.io/v1",
@@ -438,7 +531,7 @@ app.use("/schedule/new", async (request, response) => {
                 "metadata": {
                     "name": bodyRequest.name,
                     "namespace": VELERO_NAMESPACE,
-                    "labels": bodyRequest.schedulelabels ? bodyRequest.schedulelabels.split(',') : {}
+                    "labels": labels
                 },
                 "spec": {
                     "template": {
@@ -506,59 +599,7 @@ app.use("/schedule/new", async (request, response) => {
     });
 });
 
-
-app.get('/api/status', async (request, response) => {
-    if(!request.session.user) return response.status(403).json({});
-    const deployStatus = await k8sAppsApi.readNamespacedDeploymentStatus('velero', VELERO_NAMESPACE);
-    const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
-    const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
-   
-    var backupStorageLocationStatus = "uncknown";
-    var backupStorageLocationLastSync = null;
-    
-    for(var i in backupStorageLocations.body.items){
-        if(backupStorageLocations.body.items[i].spec.default){
-            backupStorageLocationStatus = backupStorageLocations.body.items[i].status.phase;
-            backupStorageLocationLastSync = backupStorageLocations.body.items[i].status.lastSyncedTime
-            break;
-        }
-    }
-
-    response.send({
-        isReady: (deployStatus.body.status.replicas - deployStatus.body.status.readyReplicas) == 0,
-        StorageStatus: backupStorageLocationStatus, 
-        lastSync: backupStorageLocationLastSync,
-        volumeSnapshot: volumeSnapshotLocations.body.items.length > 0
-    });
-});
-
-app.get('/api/backups', async (request, response) => {
-    if(!request.session.user) return response.status(403).json({});
-    let backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups');
-    // filter
-    let user = request.session.user;
-    if(!user.admin && process.env.NAMESPACE_FILTERING){
-        let availableBackups = [];
-        let allBAckups = backups.body.items;
-        for(let i in allBAckups){
-            var hasAccess = true;
-            for(var j in allBAckups[i].spec.includedNamespaces){
-                if(user.namespaces.indexOf(allBAckups[i].spec.includedNamespaces[j]) === -1){
-                    hasAccess = false;
-                    break;
-                }
-            }
-            if(hasAccess && allBAckups[i].spec.includedNamespaces && allBAckups[i].spec.includedNamespaces.length > 0){
-                availableBackups.push(allBAckups[i]);
-            }
-        }
-        response.send(availableBackups);
-        return;
-    }
-    response.send(backups.body.items);
-});
-
-app.post('/api/backups', async (request, response) => {
+app.post('/schedules/execute', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     try {
         // filtering
@@ -585,13 +626,7 @@ app.post('/api/backups', async (request, response) => {
                 "name": request.body.name,
                 "namespace": VELERO_NAMESPACE
             },
-            "spec": {
-                "defaultVolumesToFsBackup": USE_FSBACKUP,
-                "includedNamespaces": schedule.body.spec.template.includedNamespaces,
-                "storageLocation": "default",
-                "volumeSnapshotLocations": ["default"],
-                "ttl": schedule.body.spec.template.ttl
-            }
+            "spec": schedule.body.spec.template
         }
         var returned = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups', body);
         response.send({'status': true, 'backup': returned.response.body});
@@ -601,7 +636,58 @@ app.post('/api/backups', async (request, response) => {
     }
 });
 
-app.delete('/api/backups', async (request, response) => {
+app.get('/status', async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    const deployStatus = await k8sAppsApi.readNamespacedDeploymentStatus('velero', VELERO_NAMESPACE);
+    const backupStorageLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backupstoragelocations');
+    const volumeSnapshotLocations  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'volumesnapshotlocations');
+   
+    var backupStorageLocationStatus = "uncknown";
+    var backupStorageLocationLastSync = null;
+    
+    for(var i in backupStorageLocations.body.items){
+        if(backupStorageLocations.body.items[i].spec.default){
+            backupStorageLocationStatus = backupStorageLocations.body.items[i].status.phase;
+            backupStorageLocationLastSync = backupStorageLocations.body.items[i].status.lastSyncedTime
+            break;
+        }
+    }
+
+    response.send({
+        isReady: (deployStatus.body.status.replicas - deployStatus.body.status.readyReplicas) == 0,
+        StorageStatus: backupStorageLocationStatus, 
+        lastSync: backupStorageLocationLastSync,
+        volumeSnapshot: volumeSnapshotLocations.body.items.length > 0
+    });
+});
+
+app.get('/backups', async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    let backups = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'backups');
+    // filter
+    let user = request.session.user;
+    if(!user.admin && process.env.NAMESPACE_FILTERING){
+        let availableBackups = [];
+        let allBAckups = backups.body.items;
+        for(let i in allBAckups){
+            var hasAccess = true;
+            for(var j in allBAckups[i].spec.includedNamespaces){
+                if(user.namespaces.indexOf(allBAckups[i].spec.includedNamespaces[j]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(hasAccess && allBAckups[i].spec.includedNamespaces && allBAckups[i].spec.includedNamespaces.length > 0){
+                availableBackups.push(allBAckups[i]);
+            }
+        }
+        response.send(availableBackups);
+        return;
+    }
+    response.send(backups.body.items);
+});
+
+app.delete('/backups', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     try {
         // filtering
@@ -641,7 +727,7 @@ app.delete('/api/backups', async (request, response) => {
     }
 });
 
-app.get('/api/restores', async (request, response) => {
+app.get('/restores', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     let restores  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'restores');
     // filter
@@ -667,7 +753,7 @@ app.get('/api/restores', async (request, response) => {
     response.send(restores.body.items);
 });
 
-app.post('/api/restores', async (request, response) => {
+app.post('/restores', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     try {
         // filtering
@@ -685,7 +771,6 @@ app.post('/api/restores', async (request, response) => {
                 return response.status(403).json({});
             }
         }
-        
         // create restore
         var body = {
             "apiVersion": "velero.io/v1",
@@ -699,7 +784,7 @@ app.post('/api/restores', async (request, response) => {
                 "defaultVolumesToFsBackup": USE_FSBACKUP,
                 "includedNamespaces": backup.body.spec.includedNamespaces,
                 "storageLocation": "default",
-                "excludedResources": ["nodes", "events", "events.events.k8s.io", "backups.velero.io", "restores.velero.io", "resticrepositories.velero.io"],
+                "excludedResources": ["nodes", "events", "events.events.k8s.io", "backups.velero.io", "restores.velero.io", "resticrepositories.velero.io", "csinodes.storage.k8s.io", "volumeattachments.storage.k8s.io", "backuprepositories.velero.io"],
                 "ttl": "720h0m0s"
             }
         }
@@ -711,7 +796,7 @@ app.post('/api/restores', async (request, response) => {
     }
 });
 
-app.get('/api/schedules', async (request, response) => {
+app.get('/schedules', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     let schedules  = await customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules');
     // filter
@@ -738,7 +823,7 @@ app.get('/api/schedules', async (request, response) => {
     response.send(schedules.body.items);
 });
 
-app.delete('/api/schedules', async (request, response) => {
+app.delete('/schedules', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     try {
         // filtering
@@ -764,7 +849,7 @@ app.delete('/api/schedules', async (request, response) => {
     }
 });
 
-app.post('/api/schedules', async (request, response) => {
+app.post('/schedules', async (request, response) => {
     if(!request.session.user || !request.session.user.admin) return response.status(403).json({});
     try {
         var body = {

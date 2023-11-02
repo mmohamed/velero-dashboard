@@ -177,7 +177,7 @@ $(document).ready(function() {
         $.ajax({
                url: '/backup/new',
                beforeSend: function(){
-                $('#form-modal-label').html('New backup')
+                $('#form-modal-label').html('New backup');
                },
                success: function(response){ 
                     $('#form-modal .modal-body').html(response);

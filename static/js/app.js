@@ -3,7 +3,7 @@ $(document).ready(function() {
     /*** Status ****/
 
     $.ajax({
-        url: "/api/status",
+        url: "/status",
         type: "GET",
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
@@ -61,7 +61,16 @@ $(document).ready(function() {
         columns : [
             { "data" : null },
             { "data" : "name" },
-            { "data" : "status" },
+            { 
+                "data" : "status",
+                render: function(data, type, row){
+                    if(row.errors > 0 || row.warning > 0){
+                        return '<button type="button" class="btn btn-link result-action" data-name="'+row.name+'">'+data+'</button>'
+                    }
+                    return data;
+                }
+            
+            },
             { "data" : "errors" },
             { "data" : "warnings" },
             { 
@@ -90,6 +99,27 @@ $(document).ready(function() {
         ]
     });
     
+    $(document).on('click', 'button.result-action', function(){
+        let name = $(this).attr('data-name');
+        $.ajax({
+            url: "/backups/result/"+name,
+            beforeSend: function() {  
+                $('#form-modal').modal('show'); 
+                $('#form-modal').block();  
+                $('#form-modal-label').html('Backup "'+name+'"result');
+            },
+            success: function(response) {
+                $('#form-modal .modal-body').html(response);
+            },
+            error: function(error) {
+                console.log("Get backup result : ", error);
+            },
+            complete: function(){
+                $('#form-modal').unblock();
+            }
+        });
+    });
+
     $(document).on('click', 'button.restore-action', function(){
         let name = $(this).attr('data-name');
         $.confirm({
@@ -105,7 +135,7 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/api/restores",
+                            url: "/restores",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
@@ -161,7 +191,7 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/api/backups",
+                            url: "/backups",
                             type: "DELETE",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
@@ -218,7 +248,7 @@ $(document).ready(function() {
         var backupTableApi = $('#list-backups').dataTable().api();
 
         $.ajax({
-            url: "/api/backups",
+            url: "/backups",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
@@ -335,7 +365,7 @@ $(document).ready(function() {
         var restoreTableApi = $('#list-restores').dataTable().api();
 
         $.ajax({
-            url: "/api/restores",
+            url: "/restores",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
@@ -453,7 +483,7 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/api/backups",
+                            url: "/schedules/execute",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
@@ -509,7 +539,7 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/api/schedules",
+                            url: "/schedules",
                             type: "DELETE",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
@@ -554,7 +584,7 @@ $(document).ready(function() {
         var scheduleTableApi = $('#list-schedules').dataTable().api();
 
         $.ajax({
-            url: "/api/schedules",
+            url: "/schedules",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
