@@ -1,22 +1,18 @@
 <ul class="list-group list-group-flush">
     <li class="list-group-item active" aria-current="true">Warnings</li>
-    {% if result and result.warnings and result.warnings|json_encode() != '[]' %}
-    {% for categoryName, categories in result.warnings %}
-         {% for warning in categories %}
-          <li class="list-group-item list-group-item-warning">[{{ categoryName }}] - {{ warning }}</li>  
+    {% if warnings and warnings|json_encode() != '[]' %}
+         {% for warning in warnings %}
+          <li class="list-group-item list-group-item-warning">{{ warning }}</li>
          {% endfor %}
-    {% endfor %}
     {% else %}
     <li class="list-group-item">No warnings</li>  
     {% endif %}
 
     <li class="list-group-item active" aria-current="true">Errors</li>
-    {% if result and result.errors and result.errors|json_encode() != '[]' %}
-    {% for categoryName, categories in result.errors %}
-         {% for error in categories %}
-          <li class="list-group-item list-group-item-danger">[{{ categoryName }}] - {{ error }}</li>  
+    {% if errors and errors|json_encode() != '[]' %}
+         {% for error in errors %}
+          <li class="list-group-item list-group-item-danger">{{ error }}</li>  
          {% endfor %}
-    {% endfor %}
     {% else %}
     <li class="list-group-item">No errors</li>  
     {% endif %}

@@ -64,8 +64,8 @@ $(document).ready(function() {
             { 
                 "data" : "status",
                 render: function(data, type, row){
-                    if(row.errors > 0 || row.warning > 0){
-                        return '<button type="button" class="btn btn-link result-action" data-name="'+row.name+'">'+data+'</button>'
+                    if(row.errors > 0 || row.warnings > 0){
+                        return '<button type="button" class="btn btn-link backup-result-action" data-name="'+row.name+'">'+data+'</button>'
                     }
                     return data;
                 }
@@ -99,7 +99,7 @@ $(document).ready(function() {
         ]
     });
     
-    $(document).on('click', 'button.result-action', function(){
+    $(document).on('click', 'button.backup-result-action', function(){
         let name = $(this).attr('data-name');
         $.ajax({
             url: "/backups/result/"+name,
@@ -331,7 +331,16 @@ $(document).ready(function() {
                     return dt.toLocaleDateString('en-EN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'});
                 }
             },
-            { "data" : "status" },
+            { 
+                "data" : "status",
+                render: function(data, type, row){
+                    if(row.errors > 0 || row.warnings > 0){
+                        return '<button type="button" class="btn btn-link restore-result-action" data-name="'+row.name+'">'+data+'</button>'
+                    }
+                    return data;
+                }
+            
+            },
             { "data" : "errors" },
             { "data" : "warnings" },
             { 
@@ -355,6 +364,33 @@ $(document).ready(function() {
         ]
     });
     
+    $(document).on('click', 'button.restore-result-action', function(){
+        let name = $(this).attr('data-name');
+        $.ajax({
+            url: "/restores/result/"+name,
+            beforeSend: function() {
+                $.blockUI({baseZ: 9999});
+                $('#result-modal-label').html('Restore "'+name+'" result');
+            },
+            success: function(response) {
+                $('#result-modal').modal('show'); 
+                $('#result-modal .modal-body').html(response);
+            },
+            error: function(error) {
+                console.log("Get restore result : ", error);
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to get the restore result, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
+            },
+            complete: function(){
+                $.unblockUI();
+            }
+        });
+    });
+
     restoreTable.on('click', 'td.dt-control', function (e) {
         let tr = e.target.closest('tr');
         let row = restoreTable.row(tr);
@@ -387,7 +423,7 @@ $(document).ready(function() {
                         name: response[i].metadata.name,
                         status: response[i].status ? response[i].status.phase: 'Unknown',
                         errors: response[i].status ? response[i].status.errors | 0: 'Unknown',
-                        warnings: response[i].status ? response[i].status.warning | 0: 'Unknown',
+                        warnings: response[i].status ? response[i].status.warnings | 0: 'Unknown',
                         created: response[i].metadata.creationTimestamp,
                         start: response[i].status ? response[i].status.startTimestamp : '',
                         end: response[i].status ? response[i].status.completionTimestamp : '',
@@ -453,9 +489,11 @@ $(document).ready(function() {
             },
             {
                 data: "name",
+                width: '190px',
                 render: function (data, type, row) {
                     var btn = '<button type="button" class="btn btn-outline-primary btn-sm backup-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Execute now</button>';
                     btn += '<button type="button" class="btn btn-outline-danger btn-sm delete-schedule-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>Delete</button>';
+                    btn += '<button type="button" class="btn btn-outline-info btn-sm toggle-schedule-action" data-name="'+data+'" '+( $('#list-schedules').attr('data-readonly') === 'true' ? 'disabled' : '')+'>'+ (row.status === 'Paused' ? 'Unpause' : 'Pause')+'</button>';
                     return btn;
                 }
             }
@@ -472,6 +510,43 @@ $(document).ready(function() {
             var desc = JSON.stringify({spec: row.data().raw.spec, status: row.data().raw.status}, undefined, 2);
             row.child('<pre>'+desc+'</pre>').show();
         }
+    });
+
+    $(document).on('click', 'button.toggle-schedule-action', function(){
+        let name = $(this).attr('data-name');
+        $.ajax({
+            url: "/schedules/toggle",
+            type: "POST",
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({schedule: name}),
+            beforeSend: function() {  
+                $('.schedule-bloc').block();  
+            },
+            success: function(response) {
+                $.toast({
+                    heading: 'Information',
+                    text: 'Schedule "'+name+'" is '+(!response.state ? 'unpaused' : 'paused'),
+                    icon: 'info',
+                    loader: true,        
+                    loaderBg: '#9EC600'         
+                });
+                __loadSchedules();
+                $('html, body').scrollTop($('.schedule-bloc').offset().top);
+            },
+            error: function(error) {
+                $.toast({
+                    heading: 'Error',
+                    text: 'Unable to pause/unpause a schedule, please contact the administrator.',
+                    showHideTransition: 'plain',
+                    icon: 'warning'
+                });
+                console.log("Toggle schedule error : ", error);
+            },
+            complete: function(){
+                $('.schedule-bloc').unblock();
+            }
+        });
     });
 
     $(document).on('click', 'button.backup-action', function(){
@@ -604,7 +679,7 @@ $(document).ready(function() {
                 for(var i in response){
                     scheduleTableApi.rows.add([{
                         name: response[i].metadata.name,
-                        status: response[i].status ? response[i].status.phase: 'Unknown',
+                        status: response[i].spec.paused && response[i].spec.paused ? 'Paused' : 'Enabled',
                         ttl: response[i].spec.template.ttl,
                         schedule: response[i].spec.schedule,
                         last: response[i].status ? response[i].status.lastBackup: '',

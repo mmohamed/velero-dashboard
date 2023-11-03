@@ -9,6 +9,7 @@ const { authenticate } = require('ldap-authentication');
 const axios = require('axios');
 const zlib = require('zlib');
 const { TwingEnvironment, TwingLoaderFilesystem } = require("twing");
+const { version } = require('./package.json');
 
 require('dotenv').config();
 
@@ -34,6 +35,22 @@ const loader = new TwingLoaderFilesystem("./templates");
 const twing = new TwingEnvironment(loader);
 
 function delay(time) { return new Promise(resolve => setTimeout(resolve, time)); } 
+function toArray(data) {
+    var array = [];
+    if(typeof data != 'object' && typeof data != 'array'){
+        return data;
+    }
+    if(typeof data == 'object' && !Array.isArray(data)){
+        for(var key in data){
+            array.push('['+key+'] '+toArray(data[key]));
+        }
+    }else{
+        for(var key in data){
+            array.push(toArray(data[key]));
+        }
+    }
+    return array;
+}
 
 app.use((request, response, next) => {
     if(process.env.READ_ONLY_USER === '1'){
@@ -143,7 +160,7 @@ app.get("/", async (request, response) => {
     if(!request.session.user) return response.redirect('/login');
     let user = request.session.user;
     let readOnly = process.env.READ_ONLY_USER === '1' && !user.admin;
-    twing.render("index.html.twig", { readonly: readOnly, user: user.username }).then(output => {
+    twing.render("index.html.twig", { version: version, readonly: readOnly, user: user.username }).then(output => {
         response.end(output);
     });
 });
@@ -416,7 +433,7 @@ app.get("/backups/result/:name", async (request, response) => {
         let jsonResult = null;
         if(downloadResultLink){          
             let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': false });
-            jsonResult = zlib.unzipSync(data).toString();
+            jsonResult = JSON.parse(zlib.unzipSync(data).toString());
         }
         // download log file
         let logResult = null;
@@ -425,8 +442,9 @@ app.get("/backups/result/:name", async (request, response) => {
             logResult = zlib.unzipSync(data).toString();
         }
         
-        return twing.render("backup.result.html.twig", { 
-            result: jsonResult ? JSON.parse(jsonResult) : null,
+        return twing.render("result.html.twig", { 
+            errors: jsonResult && jsonResult.errors ? toArray(jsonResult.errors) : null,
+            warnings: jsonResult && jsonResult.warnings ? toArray(jsonResult.warnings) : null,
             log: logResult,
         }).then(output => {
             response.end(output);
@@ -436,7 +454,7 @@ app.get("/backups/result/:name", async (request, response) => {
         console.error(err);
     }
 
-    return twing.render("backup.result.html.twig").then(output => {
+    return twing.render("result.html.twig").then(output => {
         response.end(output);
     });
 });
@@ -637,6 +655,115 @@ app.use("/schedule/new", async (request, response) => {
     });
 });
 
+app.get("/restores/result/:name", async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    try {
+        // filtering
+        let restore  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'restores', request.params.name);
+        if(!restore) return response.status(404).json({});
+        let user = request.session.user;
+        let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
+        if(!user.admin && process.env.NAMESPACE_FILTERING){
+            let hasAccess = true;
+            for(let i in restore.body.spec.includedNamespaces){
+                if(user.namespaces.indexOf(restore.body.spec.includedNamespaces[i]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(!hasAccess || !restore.body.spec.includedNamespaces || !restore.body.spec.includedNamespaces.length > 0){
+                return response.status(403).json({});
+            }
+        }
+        // create download request for result
+        let body = {
+            "apiVersion": "velero.io/v1",
+            "kind": "DownloadRequest",
+            "metadata": {
+                "namespace": VELERO_NAMESPACE,
+                "name": downloadRequestName,
+            },
+            "spec": {
+                "target": {
+                    "kind": "RestoreResults",
+                    "name": request.params.name
+                }
+            }
+        }
+        let downloadRequest = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', body);
+        
+        let isProcessed = false, retry = 0, downloadResultLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
+            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadResultLink = downloadRequest.response.body.status.downloadURL;
+            }else{
+                await delay(1000);
+            }
+            retry++;
+        }
+
+        downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
+        // create download request for log
+        body = {
+            "apiVersion": "velero.io/v1",
+            "kind": "DownloadRequest",
+            "metadata": {
+                "namespace": VELERO_NAMESPACE,
+                "name": downloadRequestName,
+            },
+            "spec": {
+                "target": {
+                    "kind": "RestoreLog",
+                    "name": request.params.name
+                }
+            }
+        }
+        downloadRequest = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', body);
+        isProcessed = false, retry = 0;
+        let downloadLogLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'downloadrequests', downloadRequestName);
+            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadLogLink = downloadRequest.response.body.status.downloadURL;
+            }else{
+                await delay(1000);
+            }
+            retry++;
+        }
+
+        // download result file
+        let jsonResult = null;
+        if(downloadResultLink){          
+            let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': false });
+            jsonResult = JSON.parse(zlib.unzipSync(data).toString());
+        }
+        // download log file
+        let logResult = null;
+        if(downloadLogLink){          
+            let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
+            logResult = zlib.unzipSync(data).toString();
+        }
+        
+        return twing.render("result.html.twig", { 
+            errors: jsonResult && jsonResult.errors ? toArray(jsonResult.errors) : null,
+            warnings: jsonResult && jsonResult.warnings ? toArray(jsonResult.warnings) : null,
+            log: logResult,
+        }).then(output => {
+            response.end(output);
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+
+    return twing.render("result.html.twig").then(output => {
+        response.end(output);
+    });
+});
+
 app.post('/schedules/execute', async (request, response) => {
     if(!request.session.user) return response.status(403).json({});
     try {
@@ -670,6 +797,40 @@ app.post('/schedules/execute', async (request, response) => {
         response.send({'status': true, 'backup': returned.response.body});
     } catch (err) {
         console.error(err);
+        response.send({'status': false});
+    }
+});
+
+app.post('/schedules/toggle', async (request, response) => {
+    if(!request.session.user) return response.status(403).json({});
+    try {
+        // filtering
+        let schedule  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules', request.body.schedule);
+        let user = request.session.user;
+        if(!user.admin && process.env.NAMESPACE_FILTERING){
+            var hasAccess = true;
+            for(var i in schedule.body.spec.template.includedNamespaces){
+                if(user.namespaces.indexOf(schedule.body.spec.template.includedNamespaces[i]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(!hasAccess || !schedule.body.spec.template.includedNamespaces || !schedule.body.spec.template.includedNamespaces.length > 0){
+                return response.status(403).json({});
+            }
+        }
+        
+        // patch schedule
+        var patch = [{
+              "op": schedule.body.spec.paused ? "remove" : "replace",
+              "path":"/spec/paused",
+              "value": true
+        }];
+        var options = { "headers": { "Content-type": k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH}};
+        var returned = await customObjectsApi.patchNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules', request.body.schedule, patch, undefined, undefined, undefined, options);
+        response.send({'status': false, 'state': returned.response.body.spec.paused});
+    } catch (err) {
+        console.error('Error patching shcedule : '+err.body.message);
         response.send({'status': false});
     }
 });
@@ -880,34 +1041,6 @@ app.delete('/schedules', async (request, response) => {
         }
         var returned = await customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules', request.body.schedule);
         response.send({'status': true, 'backup': returned.response.body});
-    } catch (err) {
-        console.error(err);
-        response.send({'status': false});
-    }
-});
-
-app.post('/schedules', async (request, response) => {
-    if(!request.session.user || !request.session.user.admin) return response.status(403).json({});
-    try {
-        var body = {
-            "apiVersion": "velero.io/v1",
-            "kind": "Schedule",
-            "metadata": {
-                "namespace": VELERO_NAMESPACE,
-                "name": request.body.name,
-            },
-            "spec": {
-                "schedule": request.body.schedule,
-                "template": {
-                    "ttl": request.body.ttl ? request.body.ttl : "360h0m0s",
-                    "includedNamespaces": ["ovpn"],
-                    "defaultVolumesToFsBackup": USE_FSBACKUP
-                },
-                "useOwnerReferencesInBackup": false
-            }
-        }
-        var returned = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'schedules', body);
-        response.send({'status': true, 'schedules': returned});
     } catch (err) {
         console.error(err);
         response.send({'status': false});
