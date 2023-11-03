@@ -23,7 +23,7 @@
 
     <li class="list-group-item active" aria-current="true">Logs</li>
     {% if log and log|length > 0 %}
-     <li class="list-group-item list-group-item-danger" style="overflow: auto;white-space: nowrap;">{{ log|nl2br }}</li>  
+     <li class="list-group-item list-group-item-info" style="overflow: auto;white-space: nowrap;">{{ log|nl2br }}</li>  
     {% else %}
     <li class="list-group-item">No logs</li>  
     {% endif %}
