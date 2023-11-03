@@ -8,7 +8,6 @@ const cron = require('cron-validator');
 const { authenticate } = require('ldap-authentication');
 const axios = require('axios');
 const zlib = require('zlib');
-const sleep = require('sleep');
 const { TwingEnvironment, TwingLoaderFilesystem } = require("twing");
 
 require('dotenv').config();
@@ -33,6 +32,8 @@ app.use(express.static(__dirname+'/static'));
 
 const loader = new TwingLoaderFilesystem("./templates");
 const twing = new TwingEnvironment(loader);
+
+function delay(time) { return new Promise(resolve => setTimeout(resolve, time)); } 
 
 app.use((request, response, next) => {
     if(process.env.READ_ONLY_USER === '1'){
@@ -376,7 +377,7 @@ app.get("/backups/result/:name", async (request, response) => {
                 isProcessed = true;
                 downloadResultLink = downloadRequest.response.body.status.downloadURL;
             }else{
-                sleep.sleep(1);
+                await delay(1000);
             }
             retry++;
         }
@@ -406,7 +407,7 @@ app.get("/backups/result/:name", async (request, response) => {
                 isProcessed = true;
                 downloadLogLink = downloadRequest.response.body.status.downloadURL;
             }else{
-                sleep.sleep(1);
+                await delay(1000);
             }
             retry++;
         }
@@ -756,7 +757,6 @@ app.delete('/backups', async (request, response) => {
             }
         }
         var returned = await customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', VELERO_NAMESPACE, 'deletebackuprequests', body);
-        console.debug(returned);
         response.send({'status': true, 'backup': returned.response.body});
     } catch (err) {
         console.error(err);
