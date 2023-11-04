@@ -21,8 +21,8 @@ const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 const app = express();
 const VELERO_NAMESPACE = process.env.VELERO_NAMESPACE ?  process.env.VELERO_NAMESPACE : 'velero'
-const USE_FSBACKUP = process.env.USE_FSBACKUP==="1" ? true : false;
-const DEBUG_MODE = process.env.DEBUG==="1" ? true : false;
+const USE_FSBACKUP = process.env.USE_FSBACKUP === "1";
+const DEBUG_MODE = process.env.DEBUG === "1";
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -94,7 +94,7 @@ app.post('/login', async function(request, response){
               }
         }
 
-        if(process.env.LDAP_HOST){
+        if(process.env.LDAP_HOST && process.env.LDAP_HOST.substring(0, 4) === 'ldap'){
             
             try{
                 let authenticated = await authenticate({
@@ -1045,10 +1045,6 @@ app.delete('/schedules', async (request, response) => {
         console.error(err);
         response.send({'status': false});
     }
-});
-
-app.listen(process.env.APP_PORT | 3000, () => {
-  console.log('Application started...')
 });
 
 module.exports = app;

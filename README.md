@@ -19,3 +19,6 @@ npm start
 ```bash
 docker buildx build --push --platform linux/arm64,linux/arm/v7,linux/amd64 --tag medinvention/my-velero-dashboard:latest .
 ```
+
+## Links
+- Velero Compatibility Matrix : https://github.com/vmware-tanzu/velero#velero-compatibility-matrix
