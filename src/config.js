@@ -44,7 +44,7 @@ const config = {
             return {
                 ldapOpts: {
                     url: process.env.LDAP_HOST.trim(),
-                    tlsOptions: { rejectUnauthorized: process.env.LDAP_SKIP_SSL && process.env.LDAP_SKIP_SSL === '1' }
+                    tlsOptions: { rejectUnauthorized: process.env.LDAP_SKIP_SSL && process.env.LDAP_SKIP_SSL === '1' ? false : true }
                 },
                 starttls: process.env.LDAP_START_TLS && process.env.LDAP_START_TLS === '1',
                 adminDn: process.env.LDAP_BIND_DN || '',
@@ -55,9 +55,9 @@ const config = {
         }
         return false;
     },
-    debug: function(message){
+    debug: function(...message){
         if(process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true'){
-            console.debug(message);
+            console.debug(...message);
         }
     },
     delay: function(time) { 

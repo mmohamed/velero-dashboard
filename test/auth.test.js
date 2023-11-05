@@ -11,6 +11,11 @@ describe('Login page', () => {
         expect(res.status).toEqual(302);
         expect(res.get('Location')).toEqual('/login');
     });
+    it('should display error message to missing credentials', async () => {
+        const res = (await requestWithSupertest.post('/login').send());
+        expect(res.status).toEqual(200);
+        expect(res.text).toEqual(expect.stringContaining('Please enter both username and password'));
+    });
 });
 
 describe('Admin Login / Logout actions', () => {

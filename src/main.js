@@ -27,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(session({secret: config.secretKey(), resave: true, saveUninitialized: true}));
-app.use(express.static(__dirname+'/static'));
+app.use(express.static(__dirname+'/../static'));
 
 const loader = new TwingLoaderFilesystem("./templates");
 const twing = new TwingEnvironment(loader);
@@ -85,8 +85,8 @@ app.post('/login', async function(request, response){
                 ldapConfig.userPassword = request.body.password;
                 ldapConfig.username = request.body.username,
                 ldapConfig.attributes = ['groups', 'givenName', 'sn', 'sAMAccountName', 'userPrincipalName', 'memberOf', 'gecos' ]
-
-                let authenticated = await authenticate({ldapConfig});
+                
+                let authenticated = await authenticate(ldapConfig);
                 config.debug('Authenticated user : ',authenticated);
 
                 if(authenticated){
