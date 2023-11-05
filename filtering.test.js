@@ -1,3 +1,25 @@
+jest.mock('@kubernetes/client-node', ()=> {
+    return {
+        KubeConfig : jest.fn().mockImplementation(() => {
+        return {
+            loadFromDefault: function(){},
+            makeApiClient: function(){
+                return {
+                    listNamespacedCustomObject: function(){
+                        return {
+                            body: {
+                                items: require('./test.data.js').backups()
+                            }
+                        }
+                    }
+                }
+            }
+        } })
+    }
+});
+process.env.DEBUG = '0';
+
+const k8s = require('@kubernetes/client-node');
 const supertest = require('supertest');
 const server = require('./main.js')
 const requestWithSupertest = supertest(server);
@@ -7,6 +29,7 @@ describe('Admin full access', () => {
         process.env.LDAP_HOST = false;
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ["ns1","ns2","ns3"]}]);
     });
     it('should have access to resources', async () => {
         var res = (await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin'}));
@@ -16,6 +39,7 @@ describe('Admin full access', () => {
         const cookie = res.get('set-cookie');
         res = (await requestWithSupertest.get('/backups').set('cookie', cookie));
         expect(res.status).toEqual(200);
-        expect(res.text).toEqual(expect.stringContaining('Hello admin'));
+        expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
+        expect(res.body.length).toEqual(2);
     });
 });
