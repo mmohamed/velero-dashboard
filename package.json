@@ -14,7 +14,9 @@
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       "/node_modules/"
-    ]
+    ],
+    "collectCoverage": true,
+    "coverageReporters": ["json", "html"]
   },
   "author": "Marouan MOHAMED",
   "license": "Apache-2.0",

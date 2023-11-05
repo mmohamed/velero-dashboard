@@ -12,7 +12,7 @@ const config = {
                 try {
                     filtering = JSON.parse(process.env.NAMESPACE_FILTERING);
                 } catch (e) {
-                    console.error('Decding filtering namespace config : ',e);
+                    console.error('Error decoding filtering namespace config : ',e);
                 }
             }
         }
