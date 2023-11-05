@@ -1,9 +1,8 @@
 jest.mock('ldap-authentication');
-process.env.DEBUG = '0';
 
 const { authenticate } = require('ldap-authentication');
 const supertest = require('supertest');
-const server = require('./main.js')
+const server = require('./../src/main.js')
 const requestWithSupertest = supertest(server);
 
 describe('Login page', () => {
@@ -17,6 +16,7 @@ describe('Login page', () => {
 describe('Admin Login / Logout actions', () => {
     beforeAll(() => {
         process.env.LDAP_HOST = false;
+        process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
     });
