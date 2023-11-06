@@ -3,6 +3,9 @@ const k8s = {
         jest.mock('@kubernetes/client-node', ()=> {
             const data = require('./test.data.js');
             return {
+                PatchUtils: {
+                    PATCH_FORMAT_JSON_PATCH: 'json'
+                },
                 KubeConfig : jest.fn().mockImplementation(() => {
                 return {
                     loadFromDefault: function(){},
@@ -19,8 +22,11 @@ const k8s = {
                                 if(name == 'volumesnapshotlocations'){
                                     items = data.volumesnapshotlocations();
                                 }
-                                if(name == 'downloadrequests'){
-                                    items = data.downloadrequests();
+                                if(name == 'restores'){
+                                    items = data.restores();
+                                }
+                                if(name == 'schedules'){
+                                    items = data.schedules();
                                 }
                                 return {
                                     body: {
@@ -32,6 +38,12 @@ const k8s = {
                                 var items = [];
                                 if(type == 'backups'){
                                     items = data.backups();
+                                }
+                                if(type == 'restores'){
+                                    items = data.restores();
+                                }
+                                if(type == 'schedules'){
+                                    items = data.schedules();
                                 }
                                 if(type == 'downloadrequests'){
                                     items = data.downloadrequests();
@@ -58,6 +70,30 @@ const k8s = {
                                 return {
                                     response: { 
                                         body: object
+                                    }
+                                }
+                            },
+                            readNamespacedDeploymentStatus: function(){
+                                return {
+                                    body: { 
+                                        status: {
+                                            replicas: 2,
+                                            readyReplicas: 2
+                                        }
+                                    }
+                                }
+                            },
+                            deleteNamespacedCustomObject: function(){
+                                return true;
+                            },
+                            patchNamespacedCustomObject: function(){
+                                return {
+                                    response: {
+                                        body: {
+                                            spec: {
+                                                paused: false
+                                            }
+                                        }
                                     }
                                 }
                             }

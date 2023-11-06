@@ -469,8 +469,7 @@ app.use("/schedule/new", async (request, response) => {
         }
         if(!bodyRequest.cron || bodyRequest.cron.trim().length == 0){
             errors.push('cron');
-        }
-        if(!cron.isValidCron(bodyRequest.cron)){
+        }else if(!cron.isValidCron(bodyRequest.cron)){
             errors.push('cron');
         }
         // includenamespace
@@ -636,7 +635,7 @@ app.get("/restores/result/:name", async (request, response) => {
     try {
         // filtering
         let restore  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'restores', request.params.name);
-        if(!restore) return response.status(404).json({});
+        if(!restore.body) return response.status(404).json({});
         let user = request.session.user;
         let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
         if(!user.isAdmin && config.filtering()){
@@ -741,9 +740,15 @@ app.get("/restores/result/:name", async (request, response) => {
 });
 
 app.post('/schedules/execute', async (request, response) => {
+    if(!request.body.schedule){
+        return response.status(404).json({});
+    }
     try {
         // filtering
         let schedule  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+        if(!schedule.body){
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         if(!user.isAdmin && config.filtering()){
             var hasAccess = true;
@@ -777,9 +782,15 @@ app.post('/schedules/execute', async (request, response) => {
 });
 
 app.post('/schedules/toggle', async (request, response) => {
+    if(!request.body.schedule){
+        return response.status(404).json({});
+    }
     try {
         // filtering
         let schedule  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+        if(!schedule.body){
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         if(!user.isAdmin && config.filtering()){
             var hasAccess = true;
@@ -802,7 +813,7 @@ app.post('/schedules/toggle', async (request, response) => {
         }];
         var options = { "headers": { "Content-type": k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH}};
         var returned = await customObjectsApi.patchNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule, patch, undefined, undefined, undefined, options);
-        response.send({'status': false, 'state': returned.response.body.spec.paused});
+        response.send({'status': true, 'state': returned.response.body.spec.paused});
     } catch (err) {
         console.error('Error patching shcedule : '+err.body.message);
         response.send({'status': false});
@@ -928,9 +939,15 @@ app.get('/restores', async (request, response) => {
 });
 
 app.post('/restores', async (request, response) => {
+    if(!request.body.backup){
+        return response.status(404).json({});
+    }
     try {
         // filtering
         let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', request.body.backup);
+        if(!backup.body){
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         if(!user.isAdmin && config.filtering()){
             var hasAccess = true;
@@ -956,7 +973,7 @@ app.post('/restores', async (request, response) => {
                 "backupName": request.body.backup,
                 "defaultVolumesToFsBackup": config.useFSBackup(),
                 "includedNamespaces": backup.body.spec.includedNamespaces,
-                "storageLocation": "default",
+                "storageLocation": "default", // @TODO get default storage location
                 "excludedResources": ["nodes", "events", "events.events.k8s.io", "backups.velero.io", "restores.velero.io", "resticrepositories.velero.io", "csinodes.storage.k8s.io", "volumeattachments.storage.k8s.io", "backuprepositories.velero.io"],
                 "ttl": "720h0m0s"
             }
@@ -996,9 +1013,15 @@ app.get('/schedules', async (request, response) => {
 });
 
 app.delete('/schedules', async (request, response) => {
+    if(!request.body.schedule){
+        return response.status(404).json({});
+    }
     try {
         // filtering
         let schedule  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+        if(!schedule.body){
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         if(!user.isAdmin && config.filtering()){
             var hasAccess = true;
@@ -1012,8 +1035,8 @@ app.delete('/schedules', async (request, response) => {
                 return response.status(403).json({});
             }
         }
-        var returned = await customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
-        response.send({'status': true, 'backup': returned.response.body});
+        await customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+        response.send({'status': true});
     } catch (err) {
         console.error(err);
         response.send({'status': false});
