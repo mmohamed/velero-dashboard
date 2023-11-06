@@ -51,6 +51,18 @@ describe('User filtred access', () => {
         expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
         expect(res.body.length).toEqual(1);
         expect(res.body[0].metadata.name).toEqual('backup-second');
+
+        res = (await requestWithSupertest.get('/restores').set('cookie', cookie));
+        expect(res.status).toEqual(200);
+        expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
+        expect(res.body.length).toEqual(1);
+        expect(res.body[0].metadata.name).toEqual('second-restore-from-backup-second');
+
+        res = (await requestWithSupertest.get('/schedules').set('cookie', cookie));
+        expect(res.status).toEqual(200);
+        expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
+        expect(res.body.length).toEqual(1);
+        expect(res.body[0].metadata.name).toEqual('second-schedules');
     });
 });
 
