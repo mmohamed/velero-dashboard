@@ -1,22 +1,4 @@
-jest.mock('@kubernetes/client-node', ()=> {
-    return {
-        KubeConfig : jest.fn().mockImplementation(() => {
-        return {
-            loadFromDefault: function(){},
-            makeApiClient: function(){
-                return {
-                    listNamespacedCustomObject: function(){
-                        return {
-                            body: {
-                                items: require('./test.data.js').backups()
-                            }
-                        }
-                    }
-                }
-            }
-        } })
-    }
-});
+require('./k8s.mock').mock();
 jest.mock('ldap-authentication');
 
 const k8s = require('@kubernetes/client-node');

@@ -249,7 +249,7 @@ app.use('/backup/new', async (request, response) => {
             if(bodyRequest.backuplabels && bodyRequest.backuplabels.trim().length > 0) {
                 let i, element, input = bodyRequest.backuplabels.trim().split(',');
                 for(i in input){
-                    element = input[i].trim().split('=');
+                    element = input[i].trim().split(':');
                     if(element.length === 2){
                         labels[element[0]] = element[1];
                     }
@@ -327,10 +327,13 @@ app.use('/backup/new', async (request, response) => {
 });
 
 
-app.get("/backups/result/:name", async (request, response) => {
+app.get('/backups/result/:name', async (request, response) => {
     try {
         // filtering
         let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', request.params.name);
+        if(!backup.body) {
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
         if(!user.isAdmin && config.filtering()){
@@ -365,9 +368,9 @@ app.get("/backups/result/:name", async (request, response) => {
         let isProcessed = false, retry = 0, downloadResultLink = null;
         while(!isProcessed && retry < 15){
             downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
-            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+            if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                 isProcessed = true;
-                downloadResultLink = downloadRequest.response.body.status.downloadURL;
+                downloadResultLink = downloadRequest.body.status.downloadURL;
             }else{
                 await config.delay(1000);
             }
@@ -395,9 +398,9 @@ app.get("/backups/result/:name", async (request, response) => {
         let downloadLogLink = null;
         while(!isProcessed && retry < 15){
             downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
-            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+            if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                 isProcessed = true;
-                downloadLogLink = downloadRequest.response.body.status.downloadURL;
+                downloadLogLink = downloadRequest.body.status.downloadURL;
             }else{
                 await config.delay(1000);
             }
@@ -668,9 +671,9 @@ app.get("/restores/result/:name", async (request, response) => {
         let isProcessed = false, retry = 0, downloadResultLink = null;
         while(!isProcessed && retry < 15){
             downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
-            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+            if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                 isProcessed = true;
-                downloadResultLink = downloadRequest.response.body.status.downloadURL;
+                downloadResultLink = downloadRequest.body.status.downloadURL;
             }else{
                 await config.delay(1000);
             }
@@ -698,9 +701,9 @@ app.get("/restores/result/:name", async (request, response) => {
         let downloadLogLink = null;
         while(!isProcessed && retry < 15){
             downloadRequest  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
-            if(downloadRequest.response.body.status && downloadRequest.response.body.status.phase == 'Processed'){
+            if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                 isProcessed = true;
-                downloadLogLink = downloadRequest.response.body.status.downloadURL;
+                downloadLogLink = downloadRequest.body.status.downloadURL;
             }else{
                 await config.delay(1000);
             }
@@ -856,9 +859,15 @@ app.get('/backups', async (request, response) => {
 });
 
 app.delete('/backups', async (request, response) => {
+    if(!request.body.backup){
+        return response.status(404).json({});
+    }
     try {
         // filtering
         let backup  = await customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', request.body.backup);
+        if(!backup.body){
+            return response.status(404).json({});
+        }
         let user = request.session.user;
         if(!user.isAdmin && config.filtering()){
             var hasAccess = true;
