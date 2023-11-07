@@ -1,6 +1,9 @@
-const { all } = require("./main");
+const { version } = require('./../package.json');
 
 const config = {
+    version: function(){
+        return version;
+    },
     namespace: function(){
         if(process.env.VELERO_NAMESPACE && process.env.VELERO_NAMESPACE.trim().length > 0){
             return process.env.VELERO_NAMESPACE.trim();
