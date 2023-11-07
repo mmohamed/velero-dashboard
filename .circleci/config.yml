@@ -16,6 +16,8 @@ jobs:
       - run:
           name: Run tests
           command: npm install && npm test
+      - store_artifacts:
+          path: coverage
   build-and-publish:
     docker:
       - image: circleci/buildpack-deps:stretch
