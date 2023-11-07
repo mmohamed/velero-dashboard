@@ -16,23 +16,16 @@ jobs:
       - run:
           name: Run tests
           command: npm install && npm test
-  build:
+  build-and-publish:
     docker:
       - image: circleci/buildpack-deps:stretch
     steps:
       - checkout
       - setup_remote_docker
       - run:
-          name: Build Docker image
-          command: docker build -t medinvention/my-velero-dashboard:dev .
-  publish:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    steps:
-      - setup_remote_docker
-      - run:
-          name: Publish Docker Image to Docker Hub
+          name: Build & Publish Docker Image to Docker Hub
           command: |
+            docker build -t medinvention/my-velero-dashboard:dev .
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push medinvention/my-velero-dashboard:dev
 
@@ -40,9 +33,6 @@ workflows:
   sample:
     jobs:
       - test
-      - build:
+      - build-and-publish:
           requires:
             - test
-      - publish:
-          requires:
-            - build
