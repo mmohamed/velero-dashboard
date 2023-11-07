@@ -16,8 +16,13 @@ jobs:
       - run:
           name: Run tests
           command: npm install && npm test
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+            JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
       - store_artifacts:
           path: coverage
+      - store_test_results:
+          path: ./reports/
   build-and-publish:
     docker:
       - image: circleci/buildpack-deps:stretch

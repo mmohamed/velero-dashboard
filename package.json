@@ -19,7 +19,8 @@
     "coverageReporters": [
       "json",
       "html"
-    ]
+    ],
+    "reporters": [ "default", "jest-junit" ]
   },
   "author": "Marouan MOHAMED",
   "license": "Apache-2.0",
@@ -39,6 +40,7 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
     "jsdom": "^21.1.2",
     "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
