@@ -15,7 +15,7 @@ jobs:
           pkg-manager: npm
       - run:
           name: Run tests
-          command: npm test
+          command: npm install && npm test
   build:
     docker:
       - image: circleci/buildpack-deps:stretch
