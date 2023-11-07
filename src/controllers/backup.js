@@ -313,14 +313,14 @@ class BackupController {
             
             // create delete backup request
             var body = {
-                "apiVersion": "velero.io/v1",
-                "kind": "DeleteBackupRequest",
-                "metadata": {
-                    "name": request.body.name,
-                    "namespace": config.namespace()
+                'apiVersion': 'velero.io/v1',
+                'kind': 'DeleteBackupRequest',
+                'metadata': {
+                    'name': request.body.name,
+                    'namespace': config.namespace()
                 },
-                "spec": {
-                    "backupName": request.body.backup
+                'spec': {
+                    'backupName': request.body.backup
                 }
             }
             var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'deletebackuprequests', body);

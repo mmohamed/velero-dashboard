@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { TwingEnvironment, TwingLoaderFilesystem } = require("twing");
+const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
 const config = require('./config');
 require('dotenv').config();
 
@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(session({secret: config.secretKey(), resave: true, saveUninitialized: true}));
 app.use(express.static(__dirname+'/../static'));
 
-const loader = new TwingLoaderFilesystem("./templates");
+const loader = new TwingLoaderFilesystem('./templates');
 const twing = new TwingEnvironment(loader);
 
 const authController = new AuthController(twing);
@@ -52,13 +52,13 @@ app.get('/backups/result/:name', (req, res, next) => backupController.resultView
 app.get('/backups', (req, res, next) => backupController.listAction(req, res, next));
 app.delete('/backups', (req, res, next) => backupController.deleteAction(req, res, next));
 
-app.use("/schedule/new", (req, res, next) => scheduleController.createViewAction(req, res, next));
+app.use('/schedule/new', (req, res, next) => scheduleController.createViewAction(req, res, next));
 app.post('/schedules/execute', (req, res, next) => scheduleController.executeAction(req, res, next));
 app.post('/schedules/toggle', (req, res, next) => scheduleController.toggleAction(req, res, next));
 app.get('/schedules', (req, res, next) => scheduleController.listAction(req, res, next));
 app.delete('/schedules', (req, res, next) => scheduleController.deleteAction(req, res, next));
 
-app.get("/restores/result/:name", (req, res, next) => restoreController.resultView(req, res, next));
+app.get('/restores/result/:name', (req, res, next) => restoreController.resultView(req, res, next));
 app.get('/restores', (req, res, next) => restoreController.listAction(req, res, next));
 app.post('/restores', (req, res, next) => restoreController.restoreAction(req, res, next));
 

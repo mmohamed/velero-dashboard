@@ -12,7 +12,7 @@ class HomeController {
         if(!request.session.user) return response.redirect('/login');
         let user = request.session.user;
         let readOnly = config.readOnlyMode() && !user.isAdmin;
-        this.twing.render("index.html.twig", { version: config.version(), readonly: readOnly, user: user.username }).then(output => {
+        this.twing.render('index.html.twig', { version: config.version(), readonly: readOnly, user: user.username }).then(output => {
             response.end(output);
         });
     }
@@ -22,7 +22,7 @@ class HomeController {
         const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backupstoragelocations');
         const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'volumesnapshotlocations');
     
-        var backupStorageLocationStatus = "uncknown";
+        var backupStorageLocationStatus = 'uncknown';
         var backupStorageLocationLastSync = null;
         
         for(var i in backupStorageLocations.body.items){
