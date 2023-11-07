@@ -32,9 +32,9 @@ jobs:
       - run:
           name: Build & Publish Docker Image to Docker Hub
           command: |
-            docker build -t medinvention/my-velero-dashboard:dev .
+            export DOCKER_CLI_EXPERIMENTAL=enabled
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push medinvention/my-velero-dashboard:dev
+            docker buildx build --push --platform linux/arm64,linux/arm/v7,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
 
 workflows:
   sample:
