@@ -1,3 +1,5 @@
+const { all } = require("./main");
+
 const config = {
     namespace: function(){
         if(process.env.VELERO_NAMESPACE && process.env.VELERO_NAMESPACE.trim().length > 0){
@@ -78,6 +80,55 @@ const config = {
             }
         }
         return array;
+    },
+    availableNamespaces: function(user, allNamespaces){
+        let availableNamespaces = [];
+        if(!user.isAdmin && this.filtering()){
+            for(let i in allNamespaces){
+                if(user.namespaces.indexOf(allNamespaces[i].metadata.name) != -1){
+                    availableNamespaces.push(allNamespaces[i]);
+                }
+            }
+        }
+        return allNamespaces;
+    },
+    userNamespace: function(groups){
+        let userNamespaces = [];
+        try{
+            var filtering = this.filtering();
+            if(filtering){
+                for (var i in groups){
+                    for(var j in filtering){
+                        if(filtering[j].group === groups[i]){
+                            for(var k in filtering[j].namespaces){
+                                if(userNamespaces.indexOf(filtering[j].namespaces[k]) === -1){
+                                    userNamespaces.push(filtering[j].namespaces[k]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }catch (err) {
+            console.error(err);
+        }
+        return userNamespaces;
+    },
+    hasAccess: function(user, body){
+        let includedNamespaces = body.spec.template ? body.spec.template.includedNamespaces : body.spec.includedNamespaces;
+        if(!user.isAdmin && this.filtering()){
+            let hasAccess = true;
+            for(let i in includedNamespaces){
+                if(user.namespaces.indexOf(includedNamespaces[i]) === -1){
+                    hasAccess = false;
+                    break;
+                }
+            }
+            if(!hasAccess || !includedNamespaces || !includedNamespaces.length > 0){
+                return false;
+            }
+        }
+        return true;
     }
 }
 
