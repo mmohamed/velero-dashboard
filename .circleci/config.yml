@@ -25,10 +25,11 @@ jobs:
           path: ./reports/
   build-and-publish:
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: cimg/base:stable
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 19.03.14
       - run:
           name: Build & Publish Docker Image to Docker Hub
           command: |
