@@ -24,16 +24,16 @@ const config = {
         return filtering;
     },
     secretKey: function(){
-        return process.env.SECRET_KEY || '';
+        return process.env.SECRET_KEY || 'default-secret-mut-be-changed';
     },
     useFSBackup: function(){
-        if(process.env.USE_FSBACKUP.trim() === '1' || process.env.USE_FSBACKUP.trim().toLowerCase() === 'true'){
+        if(process.env.USE_FSBACKUP && (process.env.USE_FSBACKUP.trim() === '1' || process.env.USE_FSBACKUP.trim().toLowerCase() === 'true')){
             return true;
         }
         return false;
     },
     readOnlyMode: function(){
-        if(process.env.READ_ONLY_USER.trim() === '1' || process.env.READ_ONLY_USER.trim().toLowerCase() === 'true'){
+        if(process.env.READ_ONLY_USER && (process.env.READ_ONLY_USER.trim() === '1' || process.env.READ_ONLY_USER.trim().toLowerCase() === 'true')){
             return true;
         }
         return false;

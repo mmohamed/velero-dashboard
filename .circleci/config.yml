@@ -40,5 +40,9 @@ workflows:
   sample:
     jobs:
       - test
-      - build
-      - publish
+      - build:
+          requires:
+            - test
+      - publish:
+          requires:
+            - build
