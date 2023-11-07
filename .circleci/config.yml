@@ -5,28 +5,40 @@ version: 2.1
 orbs:
   node: circleci/node@4.7
   
+jobs:
+  test:
+    docker:
+      - image: cimg/node:16.10
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Run tests
+          command: npm test
+  build:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: docker build -t medinvention/my-velero-dashboard:dev .
+  publish:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - setup_remote_docker
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push medinvention/my-velero-dashboard:dev
+
 workflows:
   sample:
     jobs:
-      - node/test:
-          version: '16.10'
-          pkg-manager: npm
-      -  build:
-          docker:
-            - image: circleci/buildpack-deps:stretch
-          steps:
-            - checkout
-            - setup_remote_docker
-            - run:
-                name: Build Docker image
-                command: docker build -t medinvention/my-velero-dashboard:dev .
-      - publish:
-          docker:
-            - image: circleci/buildpack-deps:stretch
-          steps:
-            - setup_remote_docker
-            - run:
-                name: Publish Docker Image to Docker Hub
-                command: |
-                  echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-                  docker push medinvention/my-velero-dashboard:dev
+      - test
+      - build
+      - publish
