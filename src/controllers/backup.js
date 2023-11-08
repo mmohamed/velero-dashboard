@@ -1,4 +1,4 @@
-const config = require('./../config');
+const tools = require('./../tools');
 const axios = require('axios');
 const zlib = require('zlib');
 
@@ -12,15 +12,15 @@ class BackupController {
 
     async createViewAction(request, response){
         let user = request.session.user;
-        let readOnly = config.readOnlyMode() && !user.isAdmin;
+        let readOnly = tools.readOnlyMode() && !user.isAdmin;
         if(readOnly) return response.status(403).json({});
     
         const namespaces = await this.k8sApi.listNamespace();
-        const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backupstoragelocations');
-        const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'volumesnapshotlocations');
+        const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backupstoragelocations');
+        const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'volumesnapshotlocations');
         
         // filter
-        let availableNamespaces = config.availableNamespaces(user, namespaces.body.items);
+        let availableNamespaces = tools.availableNamespaces(user, namespaces.body.items);
     
         if (request.method === 'POST') {
             let errors = [];
@@ -119,7 +119,7 @@ class BackupController {
                     'kind': 'Backup',
                     'metadata': {
                         'name': bodyRequest.name,
-                        'namespace': config.namespace(),
+                        'namespace': tools.namespace(),
                         'labels': labels
                     },
                     'spec': {
@@ -150,7 +150,7 @@ class BackupController {
                 }
                 
                 try {
-                    await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', body);
+                    await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
                 } catch (err) {
                     console.error(err);
                     errors.push('global');
@@ -178,7 +178,7 @@ class BackupController {
             volumeSnapshotLocations: volumeSnapshotLocations.body.items,
             namespaces: availableNamespaces,
             user: user,
-            defaultVolumesToFsBackup: config.useFSBackup()
+            defaultVolumesToFsBackup: tools.useFSBackup()
         }).then(output => {
             response.end(output);
         });
@@ -186,13 +186,13 @@ class BackupController {
 
     async resultView(request, response){
         try {
-            let backup  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', request.params.name);
+            let backup  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', request.params.name);
             if(!backup.body) {
                 return response.status(404).json({});
             }
             let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
             // access
-            if(!config.hasAccess(request.session.user, backup.body)){
+            if(!tools.hasAccess(request.session.user, backup.body)){
                 return response.status(403).json({});
             }
             // create download request for result
@@ -200,7 +200,7 @@ class BackupController {
                 'apiVersion': 'velero.io/v1',
                 'kind': 'DownloadRequest',
                 'metadata': {
-                    'namespace': config.namespace(),
+                    'namespace': tools.namespace(),
                     'name': downloadRequestName,
                 },
                 'spec': {
@@ -210,16 +210,16 @@ class BackupController {
                     }
                 }
             }
-            let downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', body);
+            let downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', body);
             
             let isProcessed = false, retry = 0, downloadResultLink = null;
             while(!isProcessed && retry < 15){
-                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
+                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', downloadRequestName);
                 if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                     isProcessed = true;
                     downloadResultLink = downloadRequest.body.status.downloadURL;
                 }else{
-                    await config.delay(1000);
+                    await tools.delay(1000);
                 }
                 retry++;
             }
@@ -230,7 +230,7 @@ class BackupController {
                 'apiVersion': 'velero.io/v1',
                 'kind': 'DownloadRequest',
                 'metadata': {
-                    'namespace': config.namespace(),
+                    'namespace': tools.namespace(),
                     'name': downloadRequestName,
                 },
                 'spec': {
@@ -240,16 +240,16 @@ class BackupController {
                     }
                 }
             }
-            downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', body);
+            downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', body);
             isProcessed = false, retry = 0;
             let downloadLogLink = null;
             while(!isProcessed && retry < 15){
-                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'downloadrequests', downloadRequestName);
+                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', downloadRequestName);
                 if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
                     isProcessed = true;
                     downloadLogLink = downloadRequest.body.status.downloadURL;
                 }else{
-                    await config.delay(1000);
+                    await tools.delay(1000);
                 }
                 retry++;
             }
@@ -268,8 +268,8 @@ class BackupController {
             }
             
             return this.twing.render('result.html.twig', { 
-                errors: jsonResult && jsonResult.errors ? config.toArray(jsonResult.errors) : null,
-                warnings: jsonResult && jsonResult.warnings ? config.toArray(jsonResult.warnings) : null,
+                errors: jsonResult && jsonResult.errors ? tools.toArray(jsonResult.errors) : null,
+                warnings: jsonResult && jsonResult.warnings ? tools.toArray(jsonResult.warnings) : null,
                 log: logResult,
             }).then(output => {
                 response.end(output);
@@ -285,11 +285,11 @@ class BackupController {
     }
 
     async listAction(request, response){
-        let backups = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups');
+        let backups = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups');
         // filter
         let availableBackups = [];
         for(let i in backups.body.items){
-            if(config.hasAccess(request.session.user, backups.body.items[i])){
+            if(tools.hasAccess(request.session.user, backups.body.items[i])){
                 availableBackups.push(backups.body.items[i]);
             }
         }
@@ -302,12 +302,12 @@ class BackupController {
         }
         try {
             // filtering
-            let backup  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', request.body.backup);
+            let backup  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', request.body.backup);
             if(!backup.body){
                 return response.status(404).json({});
             }
             // access
-            if(!config.hasAccess(request.session.user, backup.body)){
+            if(!tools.hasAccess(request.session.user, backup.body)){
                 return response.status(403).json({});
             }
             
@@ -317,13 +317,13 @@ class BackupController {
                 'kind': 'DeleteBackupRequest',
                 'metadata': {
                     'name': request.body.name,
-                    'namespace': config.namespace()
+                    'namespace': tools.namespace()
                 },
                 'spec': {
                     'backupName': request.body.backup
                 }
             }
-            var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'deletebackuprequests', body);
+            var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'deletebackuprequests', body);
             response.send({'status': true, 'backup': returned.response.body});
         } catch (err) {
             console.error(err);

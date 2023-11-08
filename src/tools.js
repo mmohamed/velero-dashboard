@@ -1,6 +1,6 @@
-const { version } = require('./../package.json');
+const { version } = require('../package.json');
 
-const config = {
+const tools = {
     version: function(){
         return version;
     },
@@ -135,4 +135,4 @@ const config = {
     }
 }
 
-module.exports = config;
+module.exports = tools;

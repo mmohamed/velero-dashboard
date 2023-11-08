@@ -1,5 +1,4 @@
-const config = require('./../config');
-const axios = require('axios');
+const tools = require('./../tools');
 const k8s = require('@kubernetes/client-node');
 const cron = require('cron-validator');
 
@@ -13,15 +12,15 @@ class ScheduleController {
 
     async createViewAction(request, response){
         let user = request.session.user;
-        let readOnly = config.readOnlyMode() && !user.isAdmin;
+        let readOnly = tools.readOnlyMode() && !user.isAdmin;
         if(readOnly) return response.status(403).json({});
 
         const namespaces = await this.k8sApi.listNamespace();
-        const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backupstoragelocations');
-        const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'volumesnapshotlocations');
+        const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backupstoragelocations');
+        const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'volumesnapshotlocations');
 
         // filter
-        let availableNamespaces = config.availableNamespaces(user, namespaces.body.items);
+        let availableNamespaces = tools.availableNamespaces(user, namespaces.body.items);
 
         if (request.method === 'POST') {
             let errors = [];
@@ -126,7 +125,7 @@ class ScheduleController {
                     'kind': 'Schedule',
                     'metadata': {
                         'name': bodyRequest.name,
-                        'namespace': config.namespace(),
+                        'namespace': tools.namespace(),
                         'labels': labels
                     },
                     'spec': {
@@ -161,7 +160,7 @@ class ScheduleController {
                 }
                 
                 try {
-                    await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', body);
+                    await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', body);
                 } catch (err) {
                     console.error(err);
                     errors.push('global');
@@ -187,18 +186,18 @@ class ScheduleController {
             volumeSnapshotLocations: volumeSnapshotLocations.body.items,
             namespaces: availableNamespaces,
             user: user,
-            defaultVolumesToFsBackup: config.useFSBackup()
+            defaultVolumesToFsBackup: tools.useFSBackup()
         }).then(output => {
             response.end(output);
         });
     }
 
     async listAction(request, response){
-        let schedules  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules');
+        let schedules  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules');
         // filter
         let availableSchedules = [];
         for(let i in schedules.body.items){
-            if(config.hasAccess(request.session.user, schedules.body.items[i])){
+            if(tools.hasAccess(request.session.user, schedules.body.items[i])){
                 availableSchedules.push(schedules.body.items[i]);
             }
         }
@@ -211,15 +210,15 @@ class ScheduleController {
         }
         try {
             // filtering
-            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule);
             if(!schedule.body){
                 return response.status(404).json({});
             }
             // access
-            if(!config.hasAccess(request.session.user, schedule.body)){
+            if(!tools.hasAccess(request.session.user, schedule.body)){
                 return response.status(403).json({});
             }
-            await this.customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+            await this.customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule);
             response.send({'status': true});
         } catch (err) {
             console.error(err);
@@ -233,12 +232,12 @@ class ScheduleController {
         }
         try {
             // filtering
-            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule);
             if(!schedule.body){
                 return response.status(404).json({});
             }
             // access
-            if(!config.hasAccess(request.session.user, schedule.body)){
+            if(!tools.hasAccess(request.session.user, schedule.body)){
                 return response.status(403).json({});
             }
             
@@ -249,7 +248,7 @@ class ScheduleController {
                   'value': true
             }];
             var options = { 'headers': { 'Content-type': k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH}};
-            var returned = await this.customObjectsApi.patchNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule, patch, undefined, undefined, undefined, options);
+            var returned = await this.customObjectsApi.patchNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule, patch, undefined, undefined, undefined, options);
             response.send({'status': true, 'state': returned.response.body.spec.paused});
         } catch (err) {
             console.error('Error patching shcedule : '+err.body.message);
@@ -262,12 +261,12 @@ class ScheduleController {
             return response.status(404).json({});
         }
         try {
-            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'schedules', request.body.schedule);
+            let schedule  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule);
             if(!schedule.body){
                 return response.status(404).json({});
             }
             // access
-            if(!config.hasAccess(request.session.user, schedule.body)){
+            if(!tools.hasAccess(request.session.user, schedule.body)){
                 return response.status(403).json({});
             }
             // create backup
@@ -276,11 +275,11 @@ class ScheduleController {
                 'kind': 'Backup',
                 'metadata': {
                     'name': request.body.name,
-                    'namespace': config.namespace()
+                    'namespace': tools.namespace()
                 },
                 'spec': schedule.body.spec.template
             }
-            var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', config.namespace(), 'backups', body);
+            var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
             response.send({'status': true, 'backup': returned.response.body});
         } catch (err) {
             console.error(err);

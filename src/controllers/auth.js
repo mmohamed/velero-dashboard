@@ -1,4 +1,4 @@
-const config = require('./../config');
+const tools = require('./../tools');
 const { authenticate } = require('ldap-authentication');
 
 class AuthController {
@@ -13,7 +13,7 @@ class AuthController {
                 return response.status(403).end('Forbidden');
             }
         }
-        if(config.readOnlyMode()){
+        if(tools.readOnlyMode()){
             if(request.method != 'GET' && request.url !== '/login'){
                 if(!request.session || !request.session.user || !request.session.user.isAdmin){
                     return response.status(405).end('Method Not Allowed');
@@ -31,7 +31,7 @@ class AuthController {
 
     logoutAction(request, response){
         request.session.destroy(function(){
-            config.debug('user logged out.');
+            tools.debug('user logged out.');
         });
         response.redirect('/login');
     }
@@ -43,7 +43,7 @@ class AuthController {
             });
         } 
         
-        let adminAccount = config.admin();
+        let adminAccount = tools.admin();
         if(adminAccount){
             if(adminAccount.username === request.body.username && adminAccount.password === request.body.password){
                 request.session.user = {
@@ -55,7 +55,7 @@ class AuthController {
             }
         }
 
-        let ldapConfig = config.ldap();
+        let ldapConfig = tools.ldap();
 
         if(ldapConfig){
             try{
@@ -64,11 +64,11 @@ class AuthController {
                 ldapConfig.attributes = ['groups', 'givenName', 'sn', 'sAMAccountName', 'userPrincipalName', 'memberOf', 'gecos' ]
                 
                 let authenticated = await authenticate(ldapConfig);
-                config.debug('Authenticated user : ',authenticated);
+                tools.debug('Authenticated user : ',authenticated);
 
                 if(authenticated){
                     let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups.split('|');
-                    let availableNamespaces = config.userNamespace(groups);
+                    let availableNamespaces = tools.userNamespace(groups);
 
                     request.session.user = {
                         isAdmin: false,
