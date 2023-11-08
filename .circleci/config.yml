@@ -1,0 +1,49 @@
+version: 2.1
+
+# Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
+# See: https://circleci.com/docs/orb-intro/
+orbs:
+  node: circleci/node@4.7
+  
+jobs:
+  test:
+    docker:
+      - image: cimg/node:16.10
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Run tests
+          command: npm install && npm test
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+            JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
+      - store_artifacts:
+          path: coverage
+      - store_test_results:
+          path: ./reports/
+  build-and-publish:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.14
+      - run:
+          name: Build & Publish Docker Image to Docker Hub
+          command: |
+            sed -i.back "s/-beta-/-$CIRCLE_BRANCH-/g" package.json && rm package.json.back
+            export DOCKER_CLI_EXPERIMENTAL=enabled
+            docker context create buildx-build
+            docker buildx create --use buildx-build
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker buildx build --push --platform linux/arm64,linux/arm/v7,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
+
+workflows:
+  sample:
+    jobs:
+      - test
+      - build-and-publish:
+          requires:
+            - test

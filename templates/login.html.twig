@@ -34,7 +34,7 @@ body {
 
 {% block content %}
 <main class="form-signin w-100 m-auto">
-  <form action="/login" method="post">
+  <form action="/login" method="post" id="login-form">
     <h1 class="h3 mb-3 fw-normal">Sign in</h1>
     {% if message is defined %}
     <div class="alert alert-danger" role="alert">{{ message }}</div>

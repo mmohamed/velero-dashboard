@@ -68,12 +68,12 @@
     
     <div class="col-md-6">
         <label for="backuplabels" class="form-label">Backup labels</label>
-        <input type="text" class="form-control {% if errors is defined and 'backuplabels' in errors %}is-invalid{% endif %}" id="backuplabels" placeholder="Labels"  value="{{ backup ? backup.backuplabels : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'backuplabels' in errors %}is-invalid{% endif %}" id="backuplabels" placeholder="label:value,otherlabel:othervalue"  value="{{ backup ? backup.backuplabels : '' }}">
         <div class="invalid-feedback">Please provide a valid backup labels (can be list).</div>
     </div>
     <div class="col-md-6">
         <label for="useselector" class="form-label">Use selector</label>
-        <input type="text" class="form-control {% if errors is defined and 'useselector' in errors %}is-invalid{% endif %}" id="useselector" placeholder="Selectors"  value="{{ backup ? backup.useselector : '' }}">
+        <input type="text" class="form-control {% if errors is defined and 'useselector' in errors %}is-invalid{% endif %}" id="useselector" placeholder="label:value,otherlabel:othervalue"  value="{{ backup ? backup.useselector : '' }}">
         <div class="invalid-feedback">Please provide a valid selectors (can be list).</div>
     </div>
     

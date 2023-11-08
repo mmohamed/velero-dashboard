@@ -53,7 +53,7 @@ spec:
       serviceAccountName: myvelero-sa
       containers:
       - name: my-velero
-        image: medinvention/my-velero-dashboard:latest
+        image: medinvention/my-velero-dashboard:dev
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
