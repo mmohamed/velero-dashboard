@@ -33,6 +33,7 @@ jobs:
       - run:
           name: Build & Publish Docker Image to Docker Hub
           command: |
+            sed -i.back "s/-beta-/-$CIRCLE_BRANCH-/g" package.json && rm package.json.back
             export DOCKER_CLI_EXPERIMENTAL=enabled
             docker context create buildx-build
             docker buildx create --use buildx-build

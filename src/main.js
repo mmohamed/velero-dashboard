@@ -5,7 +5,6 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
-const config = require('./config');
 require('dotenv').config();
 
 const AuthController = require('./controllers/auth');
@@ -26,7 +25,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(session({secret: config.secretKey(), resave: true, saveUninitialized: true}));
+app.use(session({secret: require('./config').secretKey(), resave: true, saveUninitialized: true}));
 app.use(express.static(__dirname+'/../static'));
 
 const loader = new TwingLoaderFilesystem('./templates');
