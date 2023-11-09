@@ -18,7 +18,7 @@ kc.loadFromDefault();
 
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
+const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi);
 const app = express();
 
 app.use(cors());
