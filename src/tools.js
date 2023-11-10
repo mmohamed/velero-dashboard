@@ -4,6 +4,16 @@ const tools = {
     version: function(){
         return version;
     },
+    audit: function(actor, origin, action, label, object, description){
+        if(process.env.AUDIT_LOG && (process.env.AUDIT_LOG.trim() === '1' || process.env.AUDIT_LOG.trim().toLowerCase() === 'true')){
+            var auditlog = JSON.stringify({actor: actor, origin: origin, action: action, label: label, object: object, description: description});
+            if(process.env.NODE_ENV !== 'test'){
+                console.log(auditlog);
+                return true;
+            }
+        }
+        return false;
+    },
     namespace: function(){
         if(process.env.VELERO_NAMESPACE && process.env.VELERO_NAMESPACE.trim().length > 0){
             return process.env.VELERO_NAMESPACE.trim();

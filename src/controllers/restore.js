@@ -118,6 +118,9 @@ class RestoreController {
                 availableRestores.push(restores.body.items[i]);
             }
         }
+        // audit
+        tools.audit(request.session.user.username, 'RestoreController', 'LIST', '', 'Restore');
+
         response.send(availableRestores);
     }
 
@@ -155,6 +158,8 @@ class RestoreController {
             }
             var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores', body);
             response.send({'status': true, 'restore': returned.response.body});
+            // audit
+            tools.audit(request.session.user.username, 'RestoreController', 'CREATE', request.body.name, 'Restore', 'Origin backup : '+request.body.backup);
         } catch (err) {
             console.error(err);
             response.send({'status': false});

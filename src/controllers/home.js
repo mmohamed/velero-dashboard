@@ -18,6 +18,8 @@ class HomeController {
     }
 
     async statusView(request, response){
+        tools.audit(request.session.user.username, 'HomeController', 'STATUS');
+        
         const deployStatus = await this.k8sAppsApi.readNamespacedDeploymentStatus('velero', tools.namespace());
         const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backupstoragelocations');
         const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'volumesnapshotlocations');

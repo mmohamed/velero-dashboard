@@ -16,6 +16,7 @@ describe('Restores get', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have access to 2 restores', async () => {
@@ -37,6 +38,7 @@ describe('Restores create from backup', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and delete a valid backup', async () => {
@@ -62,6 +64,7 @@ describe('Restores result show', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and get a valid restore result and log', async () => {

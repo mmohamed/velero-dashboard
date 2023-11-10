@@ -151,6 +151,7 @@ class BackupController {
                 
                 try {
                     await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
+                    tools.audit(user.username, 'BackupController', 'CREATE', bodyRequest.name, 'Backup');
                 } catch (err) {
                     console.error(err);
                     errors.push('global');
@@ -278,6 +279,8 @@ class BackupController {
         } catch (err) {
             console.error(err);
         }
+        // audit
+        tools.audit(request.session.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
     
         return this.twing.render('result.html.twig').then(output => {
             response.end(output);
@@ -293,6 +296,9 @@ class BackupController {
                 availableBackups.push(backups.body.items[i]);
             }
         }
+        // audit
+        tools.audit(request.session.user.username, 'BackupController', 'LIST', '', 'Backup');
+
         response.send(availableBackups);
     }
 
@@ -325,6 +331,8 @@ class BackupController {
             }
             var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'deletebackuprequests', body);
             response.send({'status': true, 'backup': returned.response.body});
+            // audit
+            tools.audit(request.session.user.username, 'BackupController', 'DELETE', request.params.name, 'Backup');
         } catch (err) {
             console.error(err);
             response.send({'status': false});

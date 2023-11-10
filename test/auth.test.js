@@ -124,6 +124,7 @@ describe('Read only mode', () => {
         process.env.ADMIN_USERNAME = '';
         process.env.ADMIN_PASSWORD = '';
         process.env.READ_ONLY_USER = 'true';
+        process.env.AUDIT_LOG = 'true';
     });
     it('should refuse other that get request', async () => {
         authenticate.mockReturnValue({

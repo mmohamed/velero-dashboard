@@ -161,6 +161,8 @@ class ScheduleController {
                 
                 try {
                     await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', body);
+                    // audit
+                    tools.audit(request.session.user.username, 'ScheduleController', 'CREATE', bodyRequest.name, 'Schedule', 'Origin backup : '+request.body.backup);
                 } catch (err) {
                     console.error(err);
                     errors.push('global');
@@ -201,6 +203,8 @@ class ScheduleController {
                 availableSchedules.push(schedules.body.items[i]);
             }
         }
+        // audit
+        tools.audit(request.session.user.username, 'ScheduleController', 'LIST', '', 'Schedule');
         response.send(availableSchedules);
     }
 
@@ -220,6 +224,8 @@ class ScheduleController {
             }
             await this.customObjectsApi.deleteNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule);
             response.send({'status': true});
+            // audit
+            tools.audit(request.session.user.username, 'ScheduleController', 'DELETE', request.body.schedule, 'Schedule');
         } catch (err) {
             console.error(err);
             response.send({'status': false});
@@ -250,6 +256,8 @@ class ScheduleController {
             var options = { 'headers': { 'Content-type': k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH}};
             var returned = await this.customObjectsApi.patchNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', request.body.schedule, patch, undefined, undefined, undefined, options);
             response.send({'status': true, 'state': returned.response.body.spec.paused});
+            // audit
+            tools.audit(request.session.user.username, 'ScheduleController', 'TOGGLE', request.body.schedule, 'Schedule', 'Schedule '+(schedule.body.spec.paused ? 'unpaused' : 'paused'));
         } catch (err) {
             console.error('Error patching shcedule : '+err.body.message);
             response.send({'status': false});
@@ -281,6 +289,8 @@ class ScheduleController {
             }
             var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
             response.send({'status': true, 'backup': returned.response.body});
+            // audit
+            tools.audit(request.session.user.username, 'ScheduleController', 'EXECUTE', request.body.schedule, 'Schedule', 'Created backup : '+request.body.name);
         } catch (err) {
             console.error(err);
             response.send({'status': false});

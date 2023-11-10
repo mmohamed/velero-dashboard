@@ -30,8 +30,10 @@ class AuthController {
     }
 
     logoutAction(request, response){
+        const actor = request.session.user.username;
         request.session.destroy(function(){
             tools.debug('user logged out.');
+            tools.audit(actor, 'AuthController', 'LOGOUT');
         });
         response.redirect('/login');
     }
@@ -78,6 +80,8 @@ class AuthController {
                         namespaces: availableNamespaces
                     };
 
+                    tools.audit(request.session.user.username, 'AuthController', 'LOGIN');
+
                     return response.redirect('/');
                 }
             } catch (err) {
@@ -85,6 +89,8 @@ class AuthController {
             }
         }
         
+        tools.audit(request.body.username, 'AuthController', 'LOGINFAILED');
+
         this.twing.render('login.html.twig', {message:'Invalid credentials!'}).then(output => {
             response.end(output);
         });

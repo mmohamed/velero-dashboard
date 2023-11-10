@@ -19,6 +19,7 @@ describe('Backups get', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have access to 2 backups', async () => {
@@ -40,6 +41,7 @@ describe('Backups create', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = '';
         process.env.ADMIN_PASSWORD = '';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and create a valid backup', async () => {
@@ -102,6 +104,7 @@ describe('Backups delete', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and delete a valid backup', async () => {
@@ -127,6 +130,7 @@ describe('Backups result show', () => {
         process.env.DEBUG = '0';
         process.env.ADMIN_USERNAME = 'admin';
         process.env.ADMIN_PASSWORD = 'admin';
+        process.env.AUDIT_LOG = 'true';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and get a valid backup result and log', async () => {
