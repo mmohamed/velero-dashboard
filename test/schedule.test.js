@@ -63,7 +63,7 @@ describe('Schedules create', () => {
             includeresources: 'deployments,secrets',
             excludenamespace:  ['ns3'],
             excluderesources: 'job',
-            cron: '* * * * *',
+            cron: '-1',
             ownerreferences: '1',
             retention: '90',
             snapshot: '1',
@@ -74,6 +74,14 @@ describe('Schedules create', () => {
             backuplocation: 'default',
             snapshotlocation: 'default'
         }
+        res = (await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', cookie));
+        expect(res.status).toEqual(200);
+        dom = new JSDOM(res.text);
+        const cronErrors = dom.window.document.getElementsByClassName('is-invalid');
+        expect(cronErrors.length).toEqual(1);
+        expect(cronErrors[0].getAttribute('id')).toEqual('cron');
+        
+        scheduleData.cron= '* * * * *';
         res = (await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', cookie));
         expect(res.status).toEqual(201);
         dom = new JSDOM(res.text);

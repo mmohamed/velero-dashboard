@@ -148,7 +148,7 @@ class RestoreController {
                     'backupName': request.body.backup,
                     'defaultVolumesToFsBackup': tools.useFSBackup(),
                     'includedNamespaces': backup.body.spec.includedNamespaces,
-                    'storageLocation': 'default', // @TODO get default storage location
+                    'storageLocation': backup.body.spec.storageLocation,
                     'excludedResources': ['nodes', 'events', 'events.events.k8s.io', 'backups.velero.io', 'restores.velero.io', 'resticrepositories.velero.io', 'csinodes.storage.k8s.io', 'volumeattachments.storage.k8s.io', 'backuprepositories.velero.io'],
                     'ttl': '720h0m0s'
                 }

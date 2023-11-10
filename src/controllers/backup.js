@@ -21,7 +21,7 @@ class BackupController {
         
         // filter
         let availableNamespaces = tools.availableNamespaces(user, namespaces.body.items);
-    
+
         if (request.method === 'POST') {
             let errors = [];
             let message;

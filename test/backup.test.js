@@ -1,6 +1,9 @@
 require('./k8s.mock').mock();
+jest.mock('ldap-authentication');
+
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
+const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
@@ -33,14 +36,19 @@ describe('Backups get', () => {
 
 describe('Backups create', () => {
     beforeAll(() => {
-        process.env.LDAP_HOST = false;
+        process.env.LDAP_HOST = 'ldap://fake:636';
         process.env.DEBUG = '0';
-        process.env.ADMIN_USERNAME = 'admin';
-        process.env.ADMIN_PASSWORD = 'admin';
+        process.env.ADMIN_USERNAME = '';
+        process.env.ADMIN_PASSWORD = '';
         process.env.NAMESPACE_FILTERING = JSON.stringify([{group: "group1", namespaces: ['ns1','ns3']}]);
     });
     it('should have check and create a valid backup', async () => {
-        var res = (await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin'}));
+        authenticate.mockReturnValue({
+            memberOf: ['group1', 'group2'],
+            gecos: 'username'
+        });
+
+        var res = (await requestWithSupertest.post('/login').send({ username: 'username', password: 'username'}));
         expect(res.status).toEqual(302);
         expect(res.get('Location')).toEqual('/');
 
@@ -72,6 +80,14 @@ describe('Backups create', () => {
             backuplocation: 'default',
             snapshotlocation: 'default'
         }
+        res = (await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', cookie));
+        expect(res.status).toEqual(200);
+        dom = new JSDOM(res.text);
+        const filteringErrors = dom.window.document.getElementsByClassName('is-invalid');
+        expect(filteringErrors.length).toEqual(1);
+        expect(filteringErrors[0].getAttribute('id')).toEqual('includenamespace');
+        
+        backupData.includenamespace= ['ns1', 'ns3'];
         res = (await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', cookie));
         expect(res.status).toEqual(201);
         dom = new JSDOM(res.text);

@@ -92,6 +92,7 @@ const tools = {
                     availableNamespaces.push(allNamespaces[i]);
                 }
             }
+            return availableNamespaces;
         }
         return allNamespaces;
     },
