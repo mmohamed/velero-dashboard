@@ -48,6 +48,10 @@ USE_FSBACKUP=true #default false
 ```ini
 DEBUG=true #default false
 ```
+- AuditLog mode: if is enabled, audit information (actor, action, object time, ...) will be written to stdout.
+```ini
+AUDIT_LOG=true #default false
+```
 - Web app options : to define Web app listening port ,  a secret key for session encryption and the admin credentials
 ```ini
 SECRET_KEY=random-secret-key #default default-secret-mut-be-changed
