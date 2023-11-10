@@ -92,6 +92,9 @@ class RestoreController {
                 logResult = zlib.unzipSync(data).toString();
             }
             
+            // audit
+            tools.audit(request.session.user.username, 'RestoreController', 'DOWNLOAD', request.params.name, 'Restore');
+    
             return this.twing.render('result.html.twig', { 
                 errors: jsonResult && jsonResult.errors ? tools.toArray(jsonResult.errors) : null,
                 warnings: jsonResult && jsonResult.warnings ? tools.toArray(jsonResult.warnings) : null,

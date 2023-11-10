@@ -267,7 +267,9 @@ class BackupController {
                 let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
                 logResult = zlib.unzipSync(data).toString();
             }
-            
+            // audit
+            tools.audit(request.session.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
+    
             return this.twing.render('result.html.twig', { 
                 errors: jsonResult && jsonResult.errors ? tools.toArray(jsonResult.errors) : null,
                 warnings: jsonResult && jsonResult.warnings ? tools.toArray(jsonResult.warnings) : null,
@@ -279,9 +281,7 @@ class BackupController {
         } catch (err) {
             console.error(err);
         }
-        // audit
-        tools.audit(request.session.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
-    
+        
         return this.twing.render('result.html.twig').then(output => {
             response.end(output);
         });
