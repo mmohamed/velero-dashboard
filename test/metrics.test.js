@@ -21,7 +21,6 @@ describe('Enabled metrics', () => {
     beforeAll(() => {
         process.env.METRICS = true;
         process.env.METRICS_PORT = '3002';
-        process.env.METRICS_PATH = 'internal-metrics';
     });
     it('should have good response', async () => {
         var res = (await requestWithSupertest.get('/internal-metrics'));

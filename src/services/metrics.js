@@ -32,7 +32,9 @@ class MetricsService {
             let backup =  backups.body.items[i];
             let namespace = tools.namespace();
             if(backup.spec.includedNamespaces.length ===1 && backup.spec.includedNamespaces[0] !== '*'){
-                namespace = backup.spec.includedNamespaces[0];
+                if(tools.filtering() && tools.ldap()){
+                    namespace = backup.spec.includedNamespaces[0];
+                }
             }
             this.backupGauge.labels({ 
                 name: backup.metadata.name, 
@@ -51,7 +53,9 @@ class MetricsService {
             let restore =  restores.body.items[i];
             let namespace = tools.namespace();
             if(restore.spec.includedNamespaces.length ===1 && restore.spec.includedNamespaces[0] !== '*'){
-                namespace = restore.spec.includedNamespaces[0];
+                if(tools.filtering() && tools.ldap()){
+                    namespace = restore.spec.includedNamespaces[0];
+                }
             }
             this.restoreGauge.labels({ 
                 name: restore.metadata.name, 

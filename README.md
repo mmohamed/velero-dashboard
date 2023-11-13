@@ -44,6 +44,13 @@ NAMESPACE_FILTERING='[{"group": "group-it", "namespaces": ["ns1","ns2","ns3"]}]'
 VELERO_NAMESPACE=myvelero #default velero
 USE_FSBACKUP=true #default false
 ```
+- Metrics for Prometheus: if is enabled, Backup and Restore status metrics will be available for Prometheus scraper.
+```ini
+METRICS=true #default false (prometheus.io/scrape)
+METRICS_PORT=9000 #default 3001 (prometheus.io/port)
+METRICS_PATH=internal-metrics #default metrics (prometheus.io/path)
+```
+*Important : If user filtering is enabled and Restore/Backup include one namespace, the metrci label 'namespace' will be overrided by the target namespace of the Restore/Backup.*
 - Debug mode: if is enabled, debug information will be written to stdout.
 ```ini
 DEBUG=true #default false

@@ -50,9 +50,9 @@ spec:
       labels:
         app: myvelero
       annotations:
-        prometheus.io/scrape: true
-        prometheus.io/path: /metrics
-        prometheus.io/port: 3001
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/metrics'
+        prometheus.io/port: '3001'
     spec:
       serviceAccountName: myvelero-sa
       containers:
@@ -61,6 +61,8 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
+          protocol: TCP
+        - containerPort: 3001
           protocol: TCP
         resources:
             limits:
