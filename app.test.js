@@ -3,9 +3,11 @@ jest.mock('express');
 const express = require('express');
 const ports = [];
 
+console.log = function(){}
+
 express.mockReturnValue({
     use: function(){},
-    listen: function(port){ports.push(port)},
+    listen: function(port, fn){ports.push(port), fn.call()},
     get: function(){},
     post: function(){},
     delete: function(){}
