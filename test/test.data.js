@@ -4,13 +4,15 @@ const data = {
     backups: function(){
         return [
             {spec: {includedNamespaces: ['ns1', 'ns2']}, metadata: {name: 'backup-first'}},
-            {spec: {includedNamespaces: ['ns1', 'ns3']}, metadata: {name: 'backup-second'}}
+            {spec: {includedNamespaces: ['ns1', 'ns3']}, metadata: {name: 'backup-second'}},
+            {spec: {includedNamespaces: ['ns4']}, metadata: {name: 'backup-third'}}
         ]
     },
     restores: function(){
         return [
             {spec: {includedNamespaces: ['ns1', 'ns2']}, metadata: {name: 'first-restore-from-backup-first'}},
-            {spec: {includedNamespaces: ['ns1', 'ns3']}, metadata: {name: 'second-restore-from-backup-second'}}
+            {spec: {includedNamespaces: ['ns1', 'ns3']}, metadata: {name: 'second-restore-from-backup-second'}},
+            {spec: {includedNamespaces: ['ns4']}, metadata: {name: 'third-restore-from-backup-third'}}
         ]
     },
     schedules: function(){

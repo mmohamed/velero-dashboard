@@ -49,6 +49,10 @@ spec:
     metadata:
       labels:
         app: myvelero
+      annotations:
+        prometheus.io/scrape: true
+        prometheus.io/path: /metrics
+        prometheus.io/port: 3001
     spec:
       serviceAccountName: myvelero-sa
       containers:

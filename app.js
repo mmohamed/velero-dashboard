@@ -1,5 +1,12 @@
-const app = require('./src/main.js');
+const server = require('./src/main');
+const tools = require('./src/tools');
 
-app.listen(process.env.APP_PORT | 3000, () => {
+server.app.listen(tools.port(), () => {
   console.log('Application started...')
 });
+
+if(tools.metrics()){
+  server.metrics.listen(tools.metricsPort(), () => {
+    console.log('Metrics server started...')
+  });
+}

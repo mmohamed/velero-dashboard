@@ -4,7 +4,7 @@ const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server);
+const requestWithSupertest = supertest(server.app);
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
@@ -28,7 +28,7 @@ describe('Restores get', () => {
         res = (await requestWithSupertest.get('/restores').set('cookie', cookie));
         expect(res.status).toEqual(200);
         expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-        expect(res.body.length).toEqual(2);
+        expect(res.body.length).toEqual(3);
     });
 });
 

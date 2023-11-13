@@ -5,7 +5,7 @@ const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const supertest = require('supertest');
 const server = require('./../src/main.js')
-const requestWithSupertest = supertest(server);
+const requestWithSupertest = supertest(server.app);
 
 describe('Admin full access', () => {
     beforeAll(() => {
@@ -24,7 +24,7 @@ describe('Admin full access', () => {
         res = (await requestWithSupertest.get('/backups').set('cookie', cookie));
         expect(res.status).toEqual(200);
         expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-        expect(res.body.length).toEqual(2);
+        expect(res.body.length).toEqual(3);
     });
 });
 
@@ -87,6 +87,6 @@ describe('User with filtering feature disabled', () => {
         res = (await requestWithSupertest.get('/backups').set('cookie', cookie));
         expect(res.status).toEqual(200);
         expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-        expect(res.body.length).toEqual(2);
+        expect(res.body.length).toEqual(3);
     });
 });

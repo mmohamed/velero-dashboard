@@ -12,6 +12,8 @@ const BackupController = require('./controllers/backup');
 const ScheduleController = require('./controllers/schedule');
 const RestoreController = require('./controllers/restore');
 const HomeController = require('./controllers/home');
+const MetricsService = require('./services/metrics');
+const tools = require('./tools');
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -20,6 +22,7 @@ const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 const app = express();
+const metrics = express();
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -61,5 +64,8 @@ app.get('/restores/result/:name', (req, res, next) => restoreController.resultVi
 app.get('/restores', (req, res, next) => restoreController.listAction(req, res, next));
 app.post('/restores', (req, res, next) => restoreController.restoreAction(req, res, next));
 
+const metricsService =  new MetricsService(k8sAppsApi, customObjectsApi);
 
-module.exports = app;
+metrics.get('/'+tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
+
+module.exports = {app: app, metrics: metrics};

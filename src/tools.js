@@ -4,6 +4,24 @@ const tools = {
     version: function(){
         return version;
     },
+    port: function(){
+        return process.env.APP_PORT | 3000;
+    },
+    metrics: function(){
+        if(process.env.METRICS && (process.env.METRICS.trim() === '1' || process.env.METRICS.trim().toLowerCase() === 'true')){
+            return true;
+        }
+        return false;
+    },
+    metricsPort: function(){
+        return process.env.METRICS_PORT | 3001;
+    },
+    metricsPath: function(){
+        if(process.env.METRICS_PATH && process.env.METRICS_PATH.trim().length > 0){
+            return process.env.METRICS_PATH.trim();
+        }
+        return 'metrics';
+    },
     audit: function(actor, origin, action, label, object, description){
         if(process.env.AUDIT_LOG && (process.env.AUDIT_LOG.trim() === '1' || process.env.AUDIT_LOG.trim().toLowerCase() === 'true')){
             var auditlog = JSON.stringify({timestamp: (new Date()).toISOString(), actor: actor, origin: origin, action: action, label: label, object: object, description: description});

@@ -20,7 +20,10 @@
       "json",
       "html"
     ],
-    "reporters": [ "default", "jest-junit" ]
+    "reporters": [
+      "default",
+      "jest-junit"
+    ]
   },
   "author": "Marouan MOHAMED",
   "license": "Apache-2.0",
@@ -35,6 +38,7 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "ldap-authentication": "^2.3.3",
+    "prom-client": "^15.0.0",
     "twing": "^6.0.0-alpha.1"
   },
   "devDependencies": {

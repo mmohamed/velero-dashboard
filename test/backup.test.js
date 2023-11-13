@@ -7,7 +7,7 @@ const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server);
+const requestWithSupertest = supertest(server.app);
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
@@ -31,7 +31,7 @@ describe('Backups get', () => {
         res = (await requestWithSupertest.get('/backups').set('cookie', cookie));
         expect(res.status).toEqual(200);
         expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-        expect(res.body.length).toEqual(2);
+        expect(res.body.length).toEqual(3);
     });
 });
 
