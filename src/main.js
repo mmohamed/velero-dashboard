@@ -1,5 +1,4 @@
 const express = require('express');
-const k8s = require('@kubernetes/client-node');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
@@ -13,14 +12,9 @@ const ScheduleController = require('./controllers/schedule');
 const RestoreController = require('./controllers/restore');
 const HomeController = require('./controllers/home');
 const MetricsService = require('./services/metrics');
+const KubeService = require('./services/kube');
 const tools = require('./tools');
 
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
-
-const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
 const app = express();
 const metrics = express();
 
@@ -34,11 +28,13 @@ app.use(express.static(__dirname+'/../static'));
 const loader = new TwingLoaderFilesystem('./templates');
 const twing = new TwingEnvironment(loader);
 
+const kubeService = new KubeService();
+
 const authController = new AuthController(twing);
-const backupController = new BackupController(twing, k8sApi, customObjectsApi);
-const scheduleController = new ScheduleController(twing, k8sApi, customObjectsApi);
-const restoreController =  new RestoreController(twing, customObjectsApi);
-const homeController =  new HomeController(twing, k8sAppsApi, customObjectsApi);
+const backupController = new BackupController(kubeService, twing);
+const scheduleController = new ScheduleController(kubeService, twing);
+const restoreController =  new RestoreController(kubeService, twing);
+const homeController =  new HomeController(kubeService, twing);
 
 
 app.use((req, res, next) => authController.globalSecureAction(req, res, next));
@@ -64,7 +60,7 @@ app.get('/restores/result/:name', (req, res, next) => restoreController.resultVi
 app.get('/restores', (req, res, next) => restoreController.listAction(req, res, next));
 app.post('/restores', (req, res, next) => restoreController.restoreAction(req, res, next));
 
-const metricsService =  new MetricsService(k8sAppsApi, customObjectsApi);
+const metricsService =  new MetricsService(kubeService);
 
 metrics.get('/'+tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 

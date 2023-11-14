@@ -3,7 +3,8 @@ const client = require('prom-client');
 
 class MetricsService {
 
-    constructor(k8sApi, customObjectsApi) {
+    constructor(kubeService, k8sApi, customObjectsApi) {
+        this.kubeService = kubeService;
         client.register.setContentType(client.Registry.OPENMETRICS_CONTENT_TYPE);
 
         this.backupGauge =  new client.Gauge({
@@ -27,9 +28,9 @@ class MetricsService {
             return response.status(404).send();
         }
 
-        let backups = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups');
-        for(let i in backups.body.items){
-            let backup =  backups.body.items[i];
+        let backups = await this.kubeService.listBackups();
+        for(let i in backups){
+            let backup =  backups[i];
             let namespace = tools.namespace();
             if(backup.spec.includedNamespaces.length ===1 && backup.spec.includedNamespaces[0] !== '*'){
                 if(tools.filtering() && tools.ldap()){
@@ -48,9 +49,9 @@ class MetricsService {
             }).set(backup.status && backup.status.phase === 'Completed' ? 1 : 0);  
         }
 
-        let restores = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores');
-        for(let i in restores.body.items){
-            let restore =  restores.body.items[i];
+        let restores = await this.kubeService.listRestores();
+        for(let i in restores){
+            let restore =  restores[i];
             let namespace = tools.namespace();
             if(restore.spec.includedNamespaces.length ===1 && restore.spec.includedNamespaces[0] !== '*'){
                 if(tools.filtering() && tools.ldap()){

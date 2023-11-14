@@ -86,6 +86,8 @@ spec:
             value: "1"
           - name: DEBUG
             value: "1"
+          - name: METRICS
+            value: "1"
           - name: LDAP_HOST
             value: ldaps://my-velero-ldap-svc.velero.svc.cluster.local:636
           - name: LDAP_SKIP_SSL

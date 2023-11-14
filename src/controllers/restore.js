@@ -4,81 +4,53 @@ const zlib = require('zlib');
 
 class RestoreController {
 
-    constructor(twing, customObjectsApi) {
+    constructor(kubeService, twing) {
+        this.kubeService = kubeService;
         this.twing = twing;
-        this.customObjectsApi = customObjectsApi;
     }
 
     async resultView(request, response){
+        let restore  = await this.kubeService.getRestore(request.params.name);
+        if(!restore) return response.status(404).json({});
+        let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
+
+        // access
+        if(!tools.hasAccess(request.session.user, restore)){
+            return response.status(403).json({});
+        }
+
+        let downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreResults');
+
+        let isProcessed = false, retry = 0, downloadResultLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
+            if(downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadResultLink = downloadRequest.status.downloadURL;
+            }else{
+                await tools.delay(1000);
+            }
+            retry++;
+        }
+
+        downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
+        // create download request for log
+        downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreLog');
+
+        isProcessed = false, retry = 0;
+        let downloadLogLink = null;
+        while(!isProcessed && retry < 15){
+            downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
+            if(downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed'){
+                isProcessed = true;
+                downloadLogLink = downloadRequest.status.downloadURL;
+            }else{
+                await tools.delay(1000);
+            }
+            retry++;
+        }
+
         try {
-            let restore  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores', request.params.name);
-            if(!restore.body) return response.status(404).json({});
-            let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
-    
-            // access
-            if(!tools.hasAccess(request.session.user, restore.body)){
-                return response.status(403).json({});
-            }
-    
-            // create download request for result
-            let body = {
-                'apiVersion': 'velero.io/v1',
-                'kind': 'DownloadRequest',
-                'metadata': {
-                    'namespace': tools.namespace(),
-                    'name': downloadRequestName,
-                },
-                'spec': {
-                    'target': {
-                        'kind': 'RestoreResults',
-                        'name': request.params.name
-                    }
-                }
-            }
-            let downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', body);
-            
-            let isProcessed = false, retry = 0, downloadResultLink = null;
-            while(!isProcessed && retry < 15){
-                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', downloadRequestName);
-                if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
-                    isProcessed = true;
-                    downloadResultLink = downloadRequest.body.status.downloadURL;
-                }else{
-                    await tools.delay(1000);
-                }
-                retry++;
-            }
-    
-            downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
-            // create download request for log
-            body = {
-                'apiVersion': 'velero.io/v1',
-                'kind': 'DownloadRequest',
-                'metadata': {
-                    'namespace': tools.namespace(),
-                    'name': downloadRequestName,
-                },
-                'spec': {
-                    'target': {
-                        'kind': 'RestoreLog',
-                        'name': request.params.name
-                    }
-                }
-            }
-            downloadRequest = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', body);
-            isProcessed = false, retry = 0;
-            let downloadLogLink = null;
-            while(!isProcessed && retry < 15){
-                downloadRequest  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'downloadrequests', downloadRequestName);
-                if(downloadRequest.body && downloadRequest.body.status && downloadRequest.body.status.phase == 'Processed'){
-                    isProcessed = true;
-                    downloadLogLink = downloadRequest.body.status.downloadURL;
-                }else{
-                    await tools.delay(1000);
-                }
-                retry++;
-            }
-    
             // download result file
             let jsonResult = null;
             if(downloadResultLink){          
@@ -113,12 +85,12 @@ class RestoreController {
     }
 
     async listAction(request, response){
-        let restores  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores');
+        let restores  = await this.kubeService.listRestores();
         // filter
         let availableRestores = [];
-        for(let i in restores.body.items){
-            if(tools.hasAccess(request.session.user, restores.body.items[i])){
-                availableRestores.push(restores.body.items[i]);
+        for(let i in restores){
+            if(tools.hasAccess(request.session.user, restores[i])){
+                availableRestores.push(restores[i]);
             }
         }
         // audit
@@ -131,42 +103,21 @@ class RestoreController {
         if(!request.body.backup){
             return response.status(404).json({});
         }
-        try {
-            // filtering
-            let backup  = await this.customObjectsApi.getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', request.body.backup);
-            if(!backup.body){
-                return response.status(404).json({});
-            }
-            // access
-            if(!tools.hasAccess(request.session.user, backup.body)){
-                return response.status(403).json({});
-            }
-            
-            // create restore
-            var body = {
-                'apiVersion': 'velero.io/v1',
-                'kind': 'Restore',
-                'metadata': {
-                    'namespace': tools.namespace(),
-                    'name': request.body.name,
-                },
-                'spec': {
-                    'backupName': request.body.backup,
-                    'defaultVolumesToFsBackup': tools.useFSBackup(),
-                    'includedNamespaces': backup.body.spec.includedNamespaces,
-                    'storageLocation': backup.body.spec.storageLocation,
-                    'excludedResources': ['nodes', 'events', 'events.events.k8s.io', 'backups.velero.io', 'restores.velero.io', 'resticrepositories.velero.io', 'csinodes.storage.k8s.io', 'volumeattachments.storage.k8s.io', 'backuprepositories.velero.io'],
-                    'ttl': '720h0m0s'
-                }
-            }
-            var returned = await this.customObjectsApi.createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores', body);
-            response.send({'status': true, 'restore': returned.response.body});
-            // audit
-            tools.audit(request.session.user.username, 'RestoreController', 'CREATE', request.body.name, 'Restore', 'Origin backup : '+request.body.backup);
-        } catch (err) {
-            console.error(err);
-            response.send({'status': false});
+        // filtering
+        let backup  = await this.kubeService.getBackup(request.body.backup);
+        if(!backup){
+            return response.status(404).json({});
         }
+        // access
+        if(!tools.hasAccess(request.session.user, backup)){
+            return response.status(403).json({});
+        }
+        
+        const newRestore = await this.kubeService.createRestore(request.body, backup);
+        // audit
+        tools.audit(request.session.user.username, 'RestoreController', 'CREATE', request.body.name, 'Restore', 'Origin backup : '+request.body.backup);
+
+        response.send({'status': newRestore ? true : false});
     }
 }
 

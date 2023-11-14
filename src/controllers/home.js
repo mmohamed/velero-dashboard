@@ -2,10 +2,9 @@ const tools = require('./../tools');
 
 class HomeController {
 
-    constructor(twing, k8sAppsApi, customObjectsApi) {
+    constructor(kubeService, twing) {
+        this.kubeService = kubeService;
         this.twing = twing;
-        this.k8sAppsApi = k8sAppsApi;
-        this.customObjectsApi = customObjectsApi;
     }
 
     async homeView(request, response){
@@ -18,28 +17,28 @@ class HomeController {
     }
 
     async statusView(request, response){
-        tools.audit(request.session.user.username, 'HomeController', 'STATUS');
-        
-        const deployStatus = await this.k8sAppsApi.readNamespacedDeploymentStatus('velero', tools.namespace());
-        const backupStorageLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backupstoragelocations');
-        const volumeSnapshotLocations  = await this.customObjectsApi.listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'volumesnapshotlocations');
+        const deployStatus = await this.kubeService.getVeleroDeploymentStatus();
+        const backupStorageLocations = await this.kubeService.listBackupStorageLocations();
+        const volumeSnapshotLocations = await this.kubeService.listVolumeSnapshotLocations();
     
         var backupStorageLocationStatus = 'uncknown';
         var backupStorageLocationLastSync = null;
         
-        for(var i in backupStorageLocations.body.items){
-            if(backupStorageLocations.body.items[i].spec.default){
-                backupStorageLocationStatus = backupStorageLocations.body.items[i].status.phase;
-                backupStorageLocationLastSync = backupStorageLocations.body.items[i].status.lastSyncedTime
+        for(var i in backupStorageLocations){
+            if(backupStorageLocations[i].spec.default){
+                backupStorageLocationStatus = backupStorageLocations[i].status.phase;
+                backupStorageLocationLastSync = backupStorageLocations[i].status.lastSyncedTime
                 break;
             }
         }
 
+        tools.audit(request.session.user.username, 'HomeController', 'STATUS');
+
         response.send({
-            isReady: (deployStatus.body.status.replicas - deployStatus.body.status.readyReplicas) == 0,
+            isReady: (deployStatus.status.replicas - deployStatus.status.readyReplicas) == 0,
             StorageStatus: backupStorageLocationStatus, 
             lastSync: backupStorageLocationLastSync,
-            volumeSnapshot: volumeSnapshotLocations.body.items.length > 0
+            volumeSnapshot: volumeSnapshotLocations.length > 0
         });
     }
 }
