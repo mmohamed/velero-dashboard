@@ -31,11 +31,15 @@ class HomeController {
                 break;
             }
         }
-
+        // audit
         tools.audit(request.session.user.username, 'HomeController', 'STATUS');
-
+        // check ready
+        let isReady = false;
+        if(deployStatus && deployStatus.status && (deployStatus.status.replicas - deployStatus.status.readyReplicas) == 0){
+            isReady = true;
+        }
         response.send({
-            isReady: deployStatus && deployStatus.status ? ((deployStatus.status.replicas - deployStatus.status.readyReplicas) == 0) : false,
+            isReady: isReady,
             StorageStatus: backupStorageLocationStatus, 
             lastSync: backupStorageLocationLastSync,
             volumeSnapshot: volumeSnapshotLocations.length > 0
