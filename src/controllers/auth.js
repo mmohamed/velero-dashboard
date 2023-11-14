@@ -63,13 +63,15 @@ class AuthController {
             try{
                 ldapConfig.userPassword = request.body.password;
                 ldapConfig.username = request.body.username,
-                ldapConfig.attributes = ['groups', 'givenName', 'sn', 'sAMAccountName', 'userPrincipalName', 'memberOf', 'gecos' ]
-                
+                ldapConfig.attributes = ['groups', 'givenName', 'sn', 'userPrincipalName', 'memberOf', 'gecos' ]
+                if(ldapConfig.attributes.indexOf(ldapConfig.usernameAttribute) === -1){
+                    ldapConfig.attributes.push(ldapConfig.usernameAttribute);
+                }
                 let authenticated = await authenticate(ldapConfig);
-                tools.debug('Authenticated user : ',authenticated);
+                tools.debug('LDAP : Authenticated user : ',authenticated);
 
                 if(authenticated){
-                    let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups.split('|');
+                    let groups = authenticated.memberOf ? authenticated.memberOf : (authenticated.groups ? authenticated.groups.split('|'): []);
                     let availableNamespaces = tools.userNamespace(groups);
 
                     request.session.user = {
