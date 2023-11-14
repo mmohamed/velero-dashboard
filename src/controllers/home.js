@@ -35,7 +35,7 @@ class HomeController {
         tools.audit(request.session.user.username, 'HomeController', 'STATUS');
 
         response.send({
-            isReady: (deployStatus.status.replicas - deployStatus.status.readyReplicas) == 0,
+            isReady: deployStatus && deployStatus.status ? ((deployStatus.status.replicas - deployStatus.status.readyReplicas) == 0) : false,
             StorageStatus: backupStorageLocationStatus, 
             lastSync: backupStorageLocationLastSync,
             volumeSnapshot: volumeSnapshotLocations.length > 0

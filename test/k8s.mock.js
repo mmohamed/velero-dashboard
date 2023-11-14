@@ -12,6 +12,7 @@ const k8s = {
                     makeApiClient: function(){
                         return {
                             listNamespacedCustomObject: function(group, version, namespace, name){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 var items = [];
                                 if(name == 'backups'){
                                     items = data.backups();
@@ -35,6 +36,7 @@ const k8s = {
                                 }
                             },
                             getNamespacedCustomObject: function(group, version, namespace, type, name){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 var items = [];
                                 if(type == 'backups'){
                                     items = data.backups();
@@ -60,6 +62,7 @@ const k8s = {
                                 }
                             },
                             listNamespace: function(){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 return {
                                     body: {
                                         items: data.namespaces()
@@ -67,6 +70,7 @@ const k8s = {
                                 }
                             },
                             createNamespacedCustomObject: function(group, version, namespace, type, object){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 return {
                                     response: { 
                                         body: object
@@ -74,6 +78,7 @@ const k8s = {
                                 }
                             },
                             readNamespacedDeploymentStatus: function(){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 return {
                                     body: { 
                                         status: {
@@ -84,9 +89,11 @@ const k8s = {
                                 }
                             },
                             deleteNamespacedCustomObject: function(){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 return true;
                             },
                             patchNamespacedCustomObject: function(){
+                                if(process.env.TEST_THROW_ERROR) throw Error('Fake error');
                                 return {
                                     response: {
                                         body: {
