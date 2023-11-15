@@ -197,7 +197,7 @@ class BackupController {
             // download log file
             let logResult = '';
             if(downloadLogLink){          
-                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
+                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': true });
                 try{
                     logResult = zlib.gunzipSync(data).toString();
                 }catch(err){
