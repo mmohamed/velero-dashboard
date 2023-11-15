@@ -183,7 +183,7 @@ class BackupController {
             // download result file
             let jsonResult = null;
             if(downloadResultLink){          
-                let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': false });
+                let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': true });
                 let content;
                 try{
                     content = zlib.gunzipSync(data).toString();
@@ -197,7 +197,7 @@ class BackupController {
             // download log file
             let logResult = '';
             if(downloadLogLink){          
-                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': true });
+                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
                 try{
                     logResult = zlib.gunzipSync(data).toString();
                 }catch(err){
