@@ -270,7 +270,7 @@ $(document).ready(function() {
                         name: response[i].metadata.name,
                         status: response[i].status ? response[i].status.phase: 'Unknown',
                         errors: response[i].status ? response[i].status.errors | 0: 'Unknown',
-                        warnings: response[i].status ? response[i].status.warning | 0: 'Unknown',
+                        warnings: response[i].status ? response[i].status.warnings | 0: 'Unknown',
                         created: response[i].metadata.creationTimestamp,
                         expires: response[i].status ? response[i].status.expiration: '',
                         raw: response[i]
