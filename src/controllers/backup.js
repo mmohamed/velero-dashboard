@@ -184,27 +184,16 @@ class BackupController {
             let jsonResult = null;
             if(downloadResultLink){          
                 let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': true });
-                let content;
-                try{
-                    content = zlib.gunzipSync(data).toString();
-                }catch(err){
-                    tools.debug('backup result download decompress faild by gzip, trying zip');
-                    content = zlib.unzipSync(data).toString();
-                }
-                tools.debug('backup result download : '+content);
+                let content = zlib.unzipSync(data).toString();
+                tools.debug('backup result download : '+content.substring(0, 120)+'...');
                 jsonResult = JSON.parse(content);
             }
             // download log file
-            let logResult = '';
+            let logResult = null;
             if(downloadLogLink){          
-                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
-                try{
-                    logResult = zlib.gunzipSync(data).toString();
-                }catch(err){
-                    tools.debug('backup log download decompress faild by gzip, trying zip');
-                    logResult = zlib.unzipSync(data).toString();
-                }
-                tools.debug('backup log download : '+logResult.substring(0, 120));
+                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': true });
+                logResult = zlib.unzipSync(data).toString();
+                tools.debug('backup log download : '+(logResult ? logResult.substring(0, 120) : '')+'...');
             }
             // audit
             tools.audit(request.session.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
