@@ -55,13 +55,16 @@ class RestoreController {
             let jsonResult = null;
             if(downloadResultLink){          
                 let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': false });
-                jsonResult = JSON.parse(zlib.unzipSync(data).toString());
+                let content = zlib.unzipSync(data).toString();
+                tools.debug('restore result download : '+content);
+                jsonResult = JSON.parse(content);
             }
             // download log file
             let logResult = null;
             if(downloadLogLink){          
                 let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': false });
                 logResult = zlib.unzipSync(data).toString();
+                tools.debug('restore log download : '+logResult);
             }
             
             // audit
