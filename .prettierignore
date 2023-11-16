@@ -1,0 +1,12 @@
+# Ignore artifacts:
+build
+coverage
+# Ignore lib
+node_modules
+# Ignore other
+.circleci
+static
+templates
+
+
+
