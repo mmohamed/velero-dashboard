@@ -61,8 +61,8 @@ class AuthController {
     if (ldapConfig) {
       try {
         ldapConfig.userPassword = request.body.password;
-        (ldapConfig.username = request.body.username),
-          (ldapConfig.attributes = ['groups', 'givenName', 'sn', 'userPrincipalName', 'memberOf', 'gecos']);
+        ldapConfig.username = request.body.username;
+        ldapConfig.attributes = ['groups', 'givenName', 'sn', 'userPrincipalName', 'memberOf', 'gecos'];
         if (ldapConfig.attributes.indexOf(ldapConfig.usernameAttribute) === -1) {
           ldapConfig.attributes.push(ldapConfig.usernameAttribute);
         }

@@ -3,6 +3,7 @@
 This is a very simplified Velero dashboard for backup, restore and schedule management inside a K8S cluster.
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/mmohamed/velero-dashboard/tree/dev.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/mmohamed/velero-dashboard/tree/dev)
+[![Known Vulnerabilities](https://snyk.io/test/github/mmohamed/velero-dashboard/badge.svg)](https://snyk.io/test/github/mmohamed/velero-dashboard)
 
 <img src="doc/home-demo.png" width="900">
 
