@@ -10,7 +10,6 @@ data:
   password: YWRtaW5wd2Q=
 
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -18,7 +17,6 @@ metadata:
   namespace: velero
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -28,9 +26,9 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: ServiceAccount
-  name: myvelero-sa
-  namespace: velero
+  - kind: ServiceAccount
+    name: myvelero-sa
+    namespace: velero
 
 ---
 apiVersion: apps/v1
@@ -56,54 +54,54 @@ spec:
     spec:
       serviceAccountName: myvelero-sa
       containers:
-      - name: my-velero
-        image: medinvention/my-velero-dashboard:dev
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-          protocol: TCP
-        - containerPort: 3001
-          protocol: TCP
-        resources:
+        - name: my-velero
+          image: medinvention/my-velero-dashboard:dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+            - containerPort: 3001
+              protocol: TCP
+          resources:
             limits:
               cpu: 1000m
               memory: 1024Mi
             requests:
               cpu: 500m
               memory: 512Mi
-        env:
-          - name: ADMIN_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: myvelero-secret
-                key: username
-          - name: ADMIN_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: myvelero-secret
-                key: password
-          - name: USE_FSBACKUP
-            value: "1"
-          - name: DEBUG
-            value: "1"
-          - name: METRICS
-            value: "1"
-          - name: LDAP_HOST
-            value: ldaps://my-velero-ldap-svc.velero.svc.cluster.local:636
-          - name: LDAP_SKIP_SSL
-            value: "1"
-          - name: LDAP_START_TLS
-            value: "0"
-          - name: LDAP_BIND_DN
-            value: "CN=admin,OU=users,DC=mtr,DC=com"
-          - name: LDAP_BIND_PASSWORD
-            value: itachi
-          - name: LDAP_SEARCH_BASE
-            value: "OU=users,DC=mtr,DC=com"
-          - name: LDAP_SEARCH_FILTER
-            value: sAMAccountName
-          - name: NAMESPACE_FILTERING
-            value: '[{"group": "IT", "namespaces": ["ovpn","ovpn-dev","ovpn-prd"]}]'
+          env:
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: myvelero-secret
+                  key: username
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: myvelero-secret
+                  key: password
+            - name: USE_FSBACKUP
+              value: '1'
+            - name: DEBUG
+              value: '1'
+            - name: METRICS
+              value: '1'
+            - name: LDAP_HOST
+              value: ldaps://my-velero-ldap-svc.velero.svc.cluster.local:636
+            - name: LDAP_SKIP_SSL
+              value: '1'
+            - name: LDAP_START_TLS
+              value: '0'
+            - name: LDAP_BIND_DN
+              value: 'CN=admin,OU=users,DC=mtr,DC=com'
+            - name: LDAP_BIND_PASSWORD
+              value: itachi
+            - name: LDAP_SEARCH_BASE
+              value: 'OU=users,DC=mtr,DC=com'
+            - name: LDAP_SEARCH_FILTER
+              value: sAMAccountName
+            - name: NAMESPACE_FILTERING
+              value: '[{"group": "IT", "namespaces": ["ovpn","ovpn-dev","ovpn-prd"]}]'
 
 ---
 apiVersion: v1
@@ -113,9 +111,9 @@ metadata:
   namespace: velero
 spec:
   ports:
-  - name: http
-    port: 80
-    targetPort: 3000
+    - name: http
+      port: 80
+      targetPort: 3000
   selector:
     app: myvelero
 
@@ -141,5 +139,5 @@ spec:
             path: /
   tls:
     - hosts:
-      - myvelero.medinvention.dev
+        - myvelero.medinvention.dev
       secretName: myvelero-tls

@@ -16,14 +16,14 @@ spec:
         app: myveleroldap
     spec:
       containers:
-      - name: my-velero-ldap
-        image: medinvention/simple-ldap-test-server:0.0.1-beta
-        ports:
-          - containerPort: 636
-            name: ldap 
-          - containerPort: 389
-            name: ldaps  
-        resources:
+        - name: my-velero-ldap
+          image: medinvention/simple-ldap-test-server:0.0.1-beta
+          ports:
+            - containerPort: 636
+              name: ldap
+            - containerPort: 389
+              name: ldaps
+          resources:
             limits:
               cpu: 1000m
               memory: 1024Mi

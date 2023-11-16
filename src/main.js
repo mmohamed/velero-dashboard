@@ -22,8 +22,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(session({secret: require('./tools').secretKey(), resave: true, saveUninitialized: true}));
-app.use(express.static(__dirname+'/../static'));
+app.use(session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true }));
+app.use(express.static(__dirname + '/../static'));
 
 const loader = new TwingLoaderFilesystem('./templates');
 const twing = new TwingEnvironment(loader);
@@ -33,9 +33,8 @@ const kubeService = new KubeService();
 const authController = new AuthController(twing);
 const backupController = new BackupController(kubeService, twing);
 const scheduleController = new ScheduleController(kubeService, twing);
-const restoreController =  new RestoreController(kubeService, twing);
-const homeController =  new HomeController(kubeService, twing);
-
+const restoreController = new RestoreController(kubeService, twing);
+const homeController = new HomeController(kubeService, twing);
 
 app.use((req, res, next) => authController.globalSecureAction(req, res, next));
 app.get('/login', (req, res, next) => authController.loginView(req, res, next));
@@ -60,8 +59,8 @@ app.get('/restores/result/:name', (req, res, next) => restoreController.resultVi
 app.get('/restores', (req, res, next) => restoreController.listAction(req, res, next));
 app.post('/restores', (req, res, next) => restoreController.restoreAction(req, res, next));
 
-const metricsService =  new MetricsService(kubeService);
+const metricsService = new MetricsService(kubeService);
 
-metrics.get('/'+tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
+metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-module.exports = {app: app, metrics: metrics};
+module.exports = { app: app, metrics: metrics };

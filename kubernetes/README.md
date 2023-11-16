@@ -1,7 +1,7 @@
-
 # Deploy testing My-Velero instance
 
 ## Install
+
 ```bash
 kubectl create namespace velero
 # Deploy local MinIO for Velero backup location
@@ -22,7 +22,9 @@ kubectl apply -f my-velero.yaml --namespace velero
 ```
 
 ## Tips
+
 - Restore CRD validation error for v1.12 [@see](https://github.com/vmware-tanzu/velero/issues/6382)
+
 ```bash
 kubectl patch crd restores.velero.io --type json -p='[{"op": "remove", "path": "/spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/hooks/properties/resources/items/properties/postHooks/items/properties/init/properties/initContainers/x-kubernetes-preserve-unknown-fields"}]'
 ```
