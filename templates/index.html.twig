@@ -87,7 +87,7 @@
 
 
 <div class="backup-bloc">
-    <h1 class="mt-5">Backups <button id="new-backup" type="button" class="btn btn-outline-primary" style="float: right"><i class="bi bi-plus-circle-fill"></i> New backup</button></h1>
+    <h1 class="mt-5">Backups <button id="new-backup" type="button" class="btn btn-outline-primary" style="float: right" {% if readonly %}disabled="disabled"{% endif %}><i class="bi bi-plus-circle-fill"></i> New backup</button></h1>
     <hr/>
     <table id="list-backups" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle small job-list">
         <thead>
@@ -131,7 +131,7 @@
 </div>
 
 <div class="schedule-bloc">
-    <h1 class="mt-5">Schedules <button id="new-schedule" type="button" class="btn btn-outline-primary" style="float: right"><i class="bi bi-plus-circle-fill"></i> New schedule</button></h1>
+    <h1 class="mt-5">Schedules <button id="new-schedule" type="button" class="btn btn-outline-primary" style="float: right" {% if readonly %}disabled="disabled"{% endif %}><i class="bi bi-plus-circle-fill"></i> New schedule</button></h1>
     <hr/>
     <table id="list-schedules" {% if readonly %}data-readonly="true"{% endif %} class="table table-striped align-middle job-list">
         <thead>
