@@ -1,127 +1,145 @@
 const tools = require('./../tools');
+const https = require('https');
 const axios = require('axios');
 const zlib = require('zlib');
 
 class RestoreController {
+  constructor(kubeService, twing) {
+    this.kubeService = kubeService;
+    this.twing = twing;
+  }
 
-    constructor(kubeService, twing) {
-        this.kubeService = kubeService;
-        this.twing = twing;
+  async resultView(request, response) {
+    let restore = await this.kubeService.getRestore(request.params.name);
+    if (!restore) return response.status(404).json({});
+    let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
+
+    // access
+    if (!tools.hasAccess(request.session.user, restore)) {
+      return response.status(403).json({});
     }
 
-    async resultView(request, response){
-        let restore  = await this.kubeService.getRestore(request.params.name);
-        if(!restore) return response.status(404).json({});
-        let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
+    let downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreResults');
 
-        // access
-        if(!tools.hasAccess(request.session.user, restore)){
-            return response.status(403).json({});
-        }
+    let isProcessed = false,
+      retry = 0,
+      downloadResultLink = null;
+    while (!isProcessed && retry < 15) {
+      downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
+      if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
+        isProcessed = true;
+        downloadResultLink = downloadRequest.status.downloadURL;
+      } else {
+        await tools.delay(1000);
+      }
+      retry++;
+    }
 
-        let downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreResults');
+    downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
+    // create download request for log
+    downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreLog');
 
-        let isProcessed = false, retry = 0, downloadResultLink = null;
-        while(!isProcessed && retry < 15){
-            downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
-            if(downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed'){
-                isProcessed = true;
-                downloadResultLink = downloadRequest.status.downloadURL;
-            }else{
-                await tools.delay(1000);
-            }
-            retry++;
-        }
+    (isProcessed = false), (retry = 0);
+    let downloadLogLink = null;
+    while (!isProcessed && retry < 15) {
+      downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
+      if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
+        isProcessed = true;
+        downloadLogLink = downloadRequest.status.downloadURL;
+      } else {
+        await tools.delay(1000);
+      }
+      retry++;
+    }
 
-        downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
-        // create download request for log
-        downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'RestoreLog');
+    try {
+      // download result file
+      let jsonResult = null;
+      let httpsAgent = null;
+      let backup = await this.kubeService.getBackup(restore.spec.backupName);
+      let storageBackupLocation = await this.kubeService.getBackupStorageLocation(backup.spec.storageLocation);
+      if (storageBackupLocation && storageBackupLocation.spec.objectStorage && storageBackupLocation.spec.objectStorage.caCert) {
+        let buff = Buffer.from(storageBackupLocation.spec.objectStorage.caCert, 'base64');
+        let caCert = buff.toString('ascii');
+        httpsAgent = new https.Agent({ ca: caCert, keepAlive: false });
+      }
+      if (downloadResultLink) {
+        let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', decompress: true, httpsAgent: httpsAgent });
+        let content = zlib.unzipSync(data).toString();
+        tools.debug('restore result download : ' + content.substring(0, 120) + '...');
+        jsonResult = JSON.parse(content);
+      }
+      // download log file
+      let logResult = null;
+      if (downloadLogLink) {
+        let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', decompress: true, httpsAgent: httpsAgent });
+        logResult = zlib.unzipSync(data).toString();
+        tools.debug('restore log download : ' + (logResult ? logResult.substring(0, 120) : '') + '...');
+      }
 
-        isProcessed = false, retry = 0;
-        let downloadLogLink = null;
-        while(!isProcessed && retry < 15){
-            downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
-            if(downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed'){
-                isProcessed = true;
-                downloadLogLink = downloadRequest.status.downloadURL;
-            }else{
-                await tools.delay(1000);
-            }
-            retry++;
-        }
+      // audit
+      tools.audit(request.session.user.username, 'RestoreController', 'DOWNLOAD', request.params.name, 'Restore');
 
-        try {
-            // download result file
-            let jsonResult = null;
-            if(downloadResultLink){          
-                let { data } = await axios.get(downloadResultLink, { responseType: 'arraybuffer', 'decompress': true });
-                let content = zlib.unzipSync(data).toString();
-                tools.debug('restore result download : '+content.substring(0, 120)+'...');
-                jsonResult = JSON.parse(content);
-            }
-            // download log file
-            let logResult = null;
-            if(downloadLogLink){          
-                let { data } = await axios.get(downloadLogLink, { responseType: 'arraybuffer', 'decompress': true });
-                logResult = zlib.unzipSync(data).toString();
-                tools.debug('restore log download : '+(logResult ? logResult.substring(0, 120) : '')+'...');
-            }
-            
-            // audit
-            tools.audit(request.session.user.username, 'RestoreController', 'DOWNLOAD', request.params.name, 'Restore');
-    
-            return this.twing.render('result.html.twig', { 
-                errors: jsonResult && jsonResult.errors ? tools.toArray(jsonResult.errors) : null,
-                warnings: jsonResult && jsonResult.warnings ? tools.toArray(jsonResult.warnings) : null,
-                log: logResult,
-            }).then(output => {
-                response.end(output);
-            });
-    
-        } catch (err) {
-            console.error(err);
-        }
-    
-        return this.twing.render('result.html.twig').then(output => {
-            response.end(output);
+      return this.twing
+        .render('result.html.twig', {
+          errors: jsonResult && jsonResult.errors ? tools.toArray(jsonResult.errors) : null,
+          warnings: jsonResult && jsonResult.warnings ? tools.toArray(jsonResult.warnings) : null,
+          log: logResult
+        })
+        .then((output) => {
+          response.end(output);
         });
+    } catch (err) {
+      console.error(err);
     }
 
-    async listAction(request, response){
-        let restores  = await this.kubeService.listRestores();
-        // filter
-        let availableRestores = [];
-        for(let i in restores){
-            if(tools.hasAccess(request.session.user, restores[i])){
-                availableRestores.push(restores[i]);
-            }
-        }
-        // audit
-        tools.audit(request.session.user.username, 'RestoreController', 'LIST', '', 'Restore');
+    return this.twing.render('result.html.twig').then((output) => {
+      response.end(output);
+    });
+  }
 
-        response.send(availableRestores);
+  async listAction(request, response) {
+    let restores = await this.kubeService.listRestores();
+    // filter
+    let availableRestores = [];
+    for (let i in restores) {
+      if (tools.hasAccess(request.session.user, restores[i])) {
+        availableRestores.push(restores[i]);
+      }
+    }
+    // audit
+    tools.audit(request.session.user.username, 'RestoreController', 'LIST', '', 'Restore');
+
+    response.send(availableRestores);
+  }
+
+  async restoreAction(request, response) {
+    if (!request.body.backup) {
+      return response.status(404).json({});
+    }
+    // filtering
+    let backup = await this.kubeService.getBackup(request.body.backup);
+    if (!backup) {
+      return response.status(404).json({});
+    }
+    // access
+    if (!tools.hasAccess(request.session.user, backup)) {
+      return response.status(403).json({});
     }
 
-    async restoreAction(request, response){
-        if(!request.body.backup){
-            return response.status(404).json({});
-        }
-        // filtering
-        let backup  = await this.kubeService.getBackup(request.body.backup);
-        if(!backup){
-            return response.status(404).json({});
-        }
-        // access
-        if(!tools.hasAccess(request.session.user, backup)){
-            return response.status(403).json({});
-        }
-        
-        const newRestore = await this.kubeService.createRestore(request.body, backup);
-        // audit
-        tools.audit(request.session.user.username, 'RestoreController', 'CREATE', request.body.name, 'Restore', 'Origin backup : '+request.body.backup);
+    const newRestore = await this.kubeService.createRestore(request.body, backup);
+    // audit
+    tools.audit(
+      request.session.user.username,
+      'RestoreController',
+      'CREATE',
+      request.body.name,
+      'Restore',
+      'Origin backup : ' + request.body.backup
+    );
 
-        response.send({'status': newRestore ? true : false});
-    }
+    response.send({ status: newRestore ? true : false });
+  }
 }
 
 module.exports = RestoreController;

@@ -4,7 +4,7 @@ version: 2.1
 # See: https://circleci.com/docs/orb-intro/
 orbs:
   node: circleci/node@4.7
-  
+
 jobs:
   test:
     docker:
@@ -18,7 +18,7 @@ jobs:
           command: npm install && npm test
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
-            JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
+            JEST_JUNIT_ADD_FILE_ATTRIBUTE: 'true'
       - store_artifacts:
           path: coverage
       - store_test_results:
