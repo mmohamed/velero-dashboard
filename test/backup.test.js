@@ -42,6 +42,7 @@ describe('Backups create', () => {
     process.env.ADMIN_USERNAME = '';
     process.env.ADMIN_PASSWORD = '';
     process.env.AUDIT_LOG = 'true';
+    process.env.READ_ONLY_USER = 'false';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {

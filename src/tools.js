@@ -34,7 +34,7 @@ const tools = {
         description: description
       });
       if (process.env.NODE_ENV !== 'test') {
-        console.log(auditlog);
+        console.log(new Date(), ': ',auditlog);
         return true;
       }
     }
@@ -53,7 +53,7 @@ const tools = {
         try {
           filtering = JSON.parse(process.env.NAMESPACE_FILTERING);
         } catch (e) {
-          console.error('Error decoding filtering namespace config : ', e);
+          console.error(new Date(), ': Error decoding filtering namespace config : ', e);
         }
       }
     }
@@ -106,7 +106,7 @@ const tools = {
   },
   debug: function (...message) {
     if (process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true') {
-      console.debug(...message);
+      console.debug(new Date(), ': ',...message);
     }
   },
   delay: function (time) {
@@ -158,7 +158,7 @@ const tools = {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error(new Date(), ': Error calculating filtering namespace config ',err);
     }
     return userNamespaces;
   },
