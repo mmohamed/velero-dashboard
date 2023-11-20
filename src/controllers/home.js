@@ -8,9 +8,13 @@ class HomeController {
 
   async homeView(request, response) {
     if (!request.session.user) return response.redirect('/login');
+    
     let user = request.session.user;
     let readOnly = tools.readOnlyMode() && !user.isAdmin;
-    this.twing.render('index.html.twig', { version: tools.version(), readonly: readOnly, user: user.username }).then((output) => {
+    let contexts = this.kubeService.getContexts();
+    let currentContext = this.kubeService.getCurrentContext();
+
+    this.twing.render('index.html.twig', { version: tools.version(), readonly: readOnly, user: user.username, contexts: contexts, current: currentContext }).then((output) => {
       response.end(output);
     });
   }

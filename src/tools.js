@@ -46,6 +46,12 @@ const tools = {
     }
     return 'velero';
   },
+  multiClusterConfigDir: function () {
+    if (process.env.MULTI_CLUSTER_CONFIG_DIR && process.env.MULTI_CLUSTER_CONFIG_DIR.trim().length > 0) {
+      return process.env.MULTI_CLUSTER_CONFIG_DIR.trim();
+    }
+    return false;
+  },
   filtering: function () {
     var filtering = false;
     if (process.env.NAMESPACE_FILTERING && process.env.NAMESPACE_FILTERING.trim().length > 0) {

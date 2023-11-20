@@ -4,7 +4,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
-require('dotenv').config();
+require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'  });
 
 const AuthController = require('./controllers/auth');
 const BackupController = require('./controllers/backup');
@@ -30,7 +30,7 @@ const twing = new TwingEnvironment(loader);
 
 const kubeService = new KubeService();
 
-const authController = new AuthController(twing);
+const authController = new AuthController(kubeService, twing);
 const backupController = new BackupController(kubeService, twing);
 const scheduleController = new ScheduleController(kubeService, twing);
 const restoreController = new RestoreController(kubeService, twing);
