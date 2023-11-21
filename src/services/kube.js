@@ -29,16 +29,25 @@ class KubeService {
     let idx = 0;
     let globalConfig = null;
     tools.debug('Try to load configuration of multi-cluster from directory : ', remoteClusterConfigPath);
-    fs.readdirSync(remoteClusterConfigPath).forEach((file) => {
-      let filepath = remoteClusterConfigPath + '/' + file;
-      if (!fs.lstatSync(filepath).isFile()) return;
+    fs.readdirSync(remoteClusterConfigPath, { withFileTypes: true }).forEach((file) => {
+      let filepath = remoteClusterConfigPath + '/' + file.name;
+      if (!file.isFile() && !file.isSymbolicLink()) {
+        return;
+      }
+      if (file.isSymbolicLink()) {
+        let target = fs.readlinkSync(filepath, { withFileTypes: true });
+        let targetStat = fs.lstatSync(path.isAbsolute(target) ? target : remoteClusterConfigPath + '/' + target);
+        if (!targetStat.isFile()) {
+          return;
+        }
+      }
       tools.debug('Try to load configuration file from : ', filepath);
-      config = k8s.loadYaml(fs.readFileSync(remoteClusterConfigPath + '/' + file, { flag: 'r' }));
+      config = k8s.loadYaml(fs.readFileSync(filepath, { flag: 'r' }));
       if (!globalConfig) {
         globalConfig = config;
         for (var i in globalConfig.contexts) {
           // update context
-          globalConfig.contexts[i].name = path.parse(file).name + (i != 0 ? '-' + globalConfig.contexts[i].name : '');
+          globalConfig.contexts[i].name = path.parse(filepath).name + (i != 0 ? '-' + globalConfig.contexts[i].name : '');
         }
       } else {
         for (var i in config.clusters) {
@@ -65,7 +74,7 @@ class KubeService {
         }
         for (var i in config.contexts) {
           // update context
-          config.contexts[i].name = path.parse(file).name + (i != 0 ? '-' + config.contexts[i].name : '');
+          config.contexts[i].name = path.parse(filepath).name + (i != 0 ? '-' + config.contexts[i].name : '');
           globalConfig.contexts.push(config.contexts[i]);
         }
       }

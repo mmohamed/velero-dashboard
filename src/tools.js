@@ -111,7 +111,7 @@ const tools = {
     return false;
   },
   debug: function (...message) {
-    if (process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true') {
+    if (process.env.DEBUG && (process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true')) {
       console.debug(new Date(), ': ', ...message);
     }
   },
