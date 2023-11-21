@@ -1,6 +1,6 @@
 const k8s = {
-  multi: function(){
-    process.env.MULTI_CLUSTER_CONFIG_DIR = __dirname+'/data';
+  multi: function () {
+    process.env.MULTI_CLUSTER_CONFIG_DIR = __dirname + '/data';
   },
   mock: function () {
     jest.mock('@kubernetes/client-node', () => {
@@ -11,16 +11,24 @@ const k8s = {
         PatchUtils: {
           PATCH_FORMAT_JSON_PATCH: 'json'
         },
-        loadYaml: function(content){
+        loadYaml: function (content) {
           return require('js-yaml').load(content);
         },
         KubeConfig: jest.fn().mockImplementation(() => {
           return {
-            loadFromString: function(string){ this.config = JSON.parse(string) },
+            loadFromString: function (string) {
+              this.config = JSON.parse(string);
+            },
             loadFromDefault: function () {},
-            setCurrentContext: function(context){ this.currentContext = context},
-            getContexts: function(){ return this.config ? this.config.contexts : []},
-            getCurrentContext: function(){ return this.currentContext },
+            setCurrentContext: function (context) {
+              this.currentContext = context;
+            },
+            getContexts: function () {
+              return this.config ? this.config.contexts : [];
+            },
+            getCurrentContext: function () {
+              return this.currentContext;
+            },
             makeApiClient: function () {
               var that = this;
               return {
@@ -28,9 +36,9 @@ const k8s = {
                   if (process.env.TEST_THROW_READ_ERROR === 'true') throw Error('Fake error');
                   var items = [];
                   if (name == 'backups') {
-                    if(that.currentContext == 'second'){
+                    if (that.currentContext == 'second') {
                       items = [];
-                    }else{
+                    } else {
                       items = data.backups();
                     }
                   }

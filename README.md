@@ -83,6 +83,7 @@ AUDIT_LOG=true #default false
 ```ini
 MULTI_CLUSTER_CONFIG_DIR=/absolut/path/config/dir #default false
 ```
+
 _Important : If metrics is enabled, a cluster label will contain the context name of the metric._
 
 - Web app options : to define Web app listening port , a secret key for session encryption and the admin credentials

@@ -21,13 +21,13 @@ class AuthController {
       }
     }
     // switch context for each request
-    if(this.kubeService.isMultiCluster()) {
+    if (this.kubeService.isMultiCluster()) {
       let newContext = request.query.context;
-      if(newContext){
+      if (newContext) {
         request.session.context = newContext;
       }
       let userContext = request.session.context;
-      if(!userContext){
+      if (!userContext) {
         userContext = this.kubeService.getCurrentContext();
         request.session.context = userContext;
       }

@@ -4,7 +4,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
-require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'  });
+require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
 
 const AuthController = require('./controllers/auth');
 const BackupController = require('./controllers/backup');

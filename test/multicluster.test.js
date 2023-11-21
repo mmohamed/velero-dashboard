@@ -46,5 +46,3 @@ describe('Multi cluster view and switch', () => {
     expect(res.body.length).toEqual(0);
   });
 });
-
-

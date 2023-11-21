@@ -7,99 +7,102 @@ class KubeService {
   constructor() {
     this.kc = new k8s.KubeConfig();
     let remoteClusterConfigPath = tools.multiClusterConfigDir();
-    if(remoteClusterConfigPath){
-        let globalConfig;
-        try{
-          globalConfig = this.loadMultiClusterConfig(remoteClusterConfigPath);
-        }catch(err){
-          console.error('Unable to load multi-cluster configurations file : ', err);
-        }
-        if(!globalConfig){
-          throw Error('Multi-cluster configuration, but without any cluster config file !');
-        }
-        this.kc.loadFromString(JSON.stringify(globalConfig));
-        this.kc.setCurrentContext(this.kc.getContexts()[0].name);
-    }else{
-        this.kc.loadFromDefault();
+    if (remoteClusterConfigPath) {
+      let globalConfig;
+      try {
+        globalConfig = this.loadMultiClusterConfig(remoteClusterConfigPath);
+      } catch (err) {
+        console.error('Unable to load multi-cluster configurations file : ', err);
+      }
+      if (!globalConfig) {
+        throw Error('Multi-cluster configuration, but without any cluster config file !');
+      }
+      this.kc.loadFromString(JSON.stringify(globalConfig));
+      this.kc.setCurrentContext(this.kc.getContexts()[0].name);
+    } else {
+      this.kc.loadFromDefault();
     }
   }
 
-  loadMultiClusterConfig(remoteClusterConfigPath){
+  loadMultiClusterConfig(remoteClusterConfigPath) {
     let config;
     let idx = 0;
     let globalConfig = null;
-    fs.readdirSync(remoteClusterConfigPath).forEach(file => {
-        config = k8s.loadYaml(fs.readFileSync(remoteClusterConfigPath+'/'+file, {flag: 'r' }));
-        if(!globalConfig) {
-          globalConfig = config;
-          for(var i in globalConfig.contexts){
-            // update context
-            globalConfig.contexts[i].name = path.parse(file).name + ((i != 0) ? ('-'+globalConfig.contexts[i].name) : '');
-          }
-        } else{
-          for(var i in config.clusters){
-              // update contexts
-              for(var j in config.contexts){
-                  if(config.contexts[j].context.cluster === config.clusters[i].name){
-                      config.contexts[j].context.cluster = config.clusters[i].name+'-'+idx;
-                  } 
-              }
-              // update cluster name
-              config.clusters[i].name = config.clusters[i].name+'-'+idx;
-              globalConfig.clusters.push(config.clusters[i]);
-            
-          }
-          for(var i in config.users){
-            // update contexts
-            for(var j in config.contexts){
-                if(config.contexts[j].context.user === config.users[i].name){
-                    config.contexts[j].context.user = config.users[i].name+'-'+idx;
-                }
-            }
-            // update user
-            config.users[i].name = config.users[i].name+'-'+idx;
-            globalConfig.users.push(config.users[i]);
-          }
-          for(var i in config.contexts){
-            // update context
-            config.contexts[i].name = path.parse(file).name + ((i != 0) ? ('-'+config.contexts[i].name) : '');
-            globalConfig.contexts.push(config.contexts[i]);
-          }
+    tools.debug('Try to load configuration of multi-cluster from directory : ', remoteClusterConfigPath);
+    fs.readdirSync(remoteClusterConfigPath).forEach((file) => {
+      let filepath = remoteClusterConfigPath + '/' + file;
+      if (!fs.lstatSync(filepath).isFile()) return;
+      tools.debug('Try to load configuration file from : ', filepath);
+      config = k8s.loadYaml(fs.readFileSync(remoteClusterConfigPath + '/' + file, { flag: 'r' }));
+      if (!globalConfig) {
+        globalConfig = config;
+        for (var i in globalConfig.contexts) {
+          // update context
+          globalConfig.contexts[i].name = path.parse(file).name + (i != 0 ? '-' + globalConfig.contexts[i].name : '');
         }
-        idx++;
+      } else {
+        for (var i in config.clusters) {
+          // update contexts
+          for (var j in config.contexts) {
+            if (config.contexts[j].context.cluster === config.clusters[i].name) {
+              config.contexts[j].context.cluster = config.clusters[i].name + '-' + idx;
+            }
+          }
+          // update cluster name
+          config.clusters[i].name = config.clusters[i].name + '-' + idx;
+          globalConfig.clusters.push(config.clusters[i]);
+        }
+        for (var i in config.users) {
+          // update contexts
+          for (var j in config.contexts) {
+            if (config.contexts[j].context.user === config.users[i].name) {
+              config.contexts[j].context.user = config.users[i].name + '-' + idx;
+            }
+          }
+          // update user
+          config.users[i].name = config.users[i].name + '-' + idx;
+          globalConfig.users.push(config.users[i]);
+        }
+        for (var i in config.contexts) {
+          // update context
+          config.contexts[i].name = path.parse(file).name + (i != 0 ? '-' + config.contexts[i].name : '');
+          globalConfig.contexts.push(config.contexts[i]);
+        }
+      }
+      idx++;
     });
     return globalConfig;
   }
 
-  getContexts(){
+  getContexts() {
     return this.kc.getContexts();
   }
 
-  getCurrentContext(){
+  getCurrentContext() {
     return this.kc.getCurrentContext();
   }
 
-  isMultiCluster(){
+  isMultiCluster() {
     return this.getContexts().length > 1;
   }
 
-  switchContext(userContext){
-    if(userContext && this.getCurrentContext() != userContext){
+  switchContext(userContext) {
+    if (userContext && this.getCurrentContext() != userContext) {
       let oldContext = this.kc.getCurrentContext();
       this.kc.setCurrentContext(userContext);
-      tools.debug('Switching context from "'+oldContext+'" to "'+userContext+'"');
+      tools.debug('Switching context from "' + oldContext + '" to "' + userContext + '"');
     }
   }
 
-  getAppsApi(){
+  getAppsApi() {
     return this.kc.makeApiClient(k8s.AppsV1Api);
   }
 
-  getCoreApi(){
+  getCoreApi() {
     return this.kc.makeApiClient(k8s.CoreV1Api);
   }
 
-  getCustomObjectsApi(){
+  getCustomObjectsApi() {
     return this.kc.makeApiClient(k8s.CustomObjectsApi);
   }
 
@@ -365,7 +368,13 @@ class KubeService {
       }
     };
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores', body);
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
+        'velero.io',
+        'v1',
+        tools.namespace(),
+        'restores',
+        body
+      );
       return response.response.body;
     } catch (err) {
       console.error('Create restore error : ' + err);
@@ -510,7 +519,13 @@ class KubeService {
     }
 
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', body);
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
+        'velero.io',
+        'v1',
+        tools.namespace(),
+        'schedules',
+        body
+      );
       return response.response.body;
     } catch (err) {
       console.error('Create schedule error : ' + err);
