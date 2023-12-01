@@ -140,19 +140,20 @@ $(document).ready(function() {
                 confirm: {
                     btnClass: 'btn-blue',
                     action: function () {
+                        var restoreName = name+'-restore-'+Math.floor(Date.now() / 1000);
                         $.ajax({
                             url: window.subpath+"/restores",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
+                            data: JSON.stringify({backup: name, name: restoreName}),
                             beforeSend: function() {  
                                 $('.backup-bloc').block();  
                             },
                             success: function(response) {
                                 $.toast({
                                     heading: 'Information',
-                                    text: 'New restore job "'+response.restore.metadata.name+'" is created',
+                                    text: 'New restore job "'+restoreName+'" is created',
                                     icon: 'info',
                                     loader: true,        
                                     loaderBg: '#9EC600'         
@@ -563,19 +564,20 @@ $(document).ready(function() {
                 confirm: {
                     btnClass: 'btn-blue',
                     action: function () {
+                        var backupName = name+'-backup-'+Math.floor(Date.now() / 1000);
                         $.ajax({
                             url: window.subpath+"/schedules/execute",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({schedule: name, name: name+'-backup-'+Math.floor(Date.now() / 1000)}),
+                            data: JSON.stringify({schedule: name, name: backupName}),
                             beforeSend: function() {  
                                 $('.schedule-bloc').block();  
                             },
                             success: function(response) {
                                 $.toast({
                                     heading: 'Information',
-                                    text: 'New backup job "'+response.backup.metadata.name+'" is created',
+                                    text: 'New backup job "'+backupName+'" is created',
                                     icon: 'info',
                                     loader: true,        
                                     loaderBg: '#9EC600'         
