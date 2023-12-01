@@ -30,13 +30,13 @@ class KubeService {
     let globalConfig = null;
     tools.debug('Try to load configuration of multi-cluster from directory : ', remoteClusterConfigPath);
     fs.readdirSync(remoteClusterConfigPath, { withFileTypes: true }).forEach((file) => {
-      let filepath = remoteClusterConfigPath + '/' + file.name;
+      let filepath = remoteClusterConfigPath + path.sep + file.name;
       if (!file.isFile() && !file.isSymbolicLink()) {
         return;
       }
       if (file.isSymbolicLink()) {
         let target = fs.readlinkSync(filepath, { withFileTypes: true });
-        let targetStat = fs.lstatSync(path.isAbsolute(target) ? target : remoteClusterConfigPath + '/' + target);
+        let targetStat = fs.lstatSync(path.isAbsolute(target) ? target : remoteClusterConfigPath + path.sep + target);
         if (!targetStat.isFile()) {
           return;
         }

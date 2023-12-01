@@ -1,6 +1,6 @@
 {
   "name": "my-velero",
-  "version": "1.1.2-beta-1.12.0",
+  "version": "1.1.3-beta-1.12.0",
   "description": "Velero dashboard UI",
   "main": "app.js",
   "scripts": {
@@ -29,7 +29,7 @@
   "author": "Marouan MOHAMED",
   "license": "Apache-2.0",
   "dependencies": {
-    "@kubernetes/client-node": "^0.20.0",
+    "@kubernetes/client-node": "^0.19.0",
     "axios": "^1.6.0",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
@@ -40,7 +40,7 @@
     "express-session": "^1.17.3",
     "ldap-authentication": "^2.3.3",
     "prom-client": "^15.0.0",
-    "twing": "^6.0.0-alpha.1"
+    "twing": "^5.1.6"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

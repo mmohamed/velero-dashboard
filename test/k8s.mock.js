@@ -1,6 +1,6 @@
 const k8s = {
   multi: function () {
-    process.env.MULTI_CLUSTER_CONFIG_DIR = __dirname + '/data';
+    process.env.MULTI_CLUSTER_CONFIG_DIR = __dirname + require('path').sep + 'data';
   },
   mock: function () {
     jest.mock('@kubernetes/client-node', () => {
