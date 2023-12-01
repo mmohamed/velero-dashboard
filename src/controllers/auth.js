@@ -48,7 +48,7 @@ class AuthController {
       tools.debug('user logged out.');
       tools.audit(actor, 'AuthController', 'LOGOUT');
     });
-    response.redirect('/login');
+    response.redirect(tools.subPath('/login'));
   }
 
   async loginAction(request, response) {
@@ -66,7 +66,7 @@ class AuthController {
           username: request.body.username,
           password: request.body.password
         };
-        return response.redirect('/');
+        return response.redirect(tools.subPath('/'));
       }
     }
 
@@ -97,7 +97,7 @@ class AuthController {
 
           tools.audit(request.session.user.username, 'AuthController', 'LOGIN');
 
-          return response.redirect('/');
+          return response.redirect(tools.subPath('/'));
         }
       } catch (err) {
         console.error(err);

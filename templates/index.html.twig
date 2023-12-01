@@ -186,12 +186,13 @@
 {% endblock %} 
 
 {% block javascript %}
-<script src="/js/app.js"></script>
+<script type="text/javascript">window.subpath="{{ path('') }}"</script>
+<script src="{{ path('/js/app.js') }}"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $('button#new-backup').bind('click', function(){
         $.ajax({
-               url: '/backup/new',
+               url: "{{ path('/backup/new') }}",
                beforeSend: function(){
                 $('#form-modal-label').html('New backup');
                },
@@ -203,7 +204,7 @@ $(document).ready(function() {
     });
     $('button#new-schedule').bind('click', function(){
         $.ajax({
-               url: '/schedule/new',
+               url: "{{ path('/schedule/new') }}",
                 beforeSend: function(){
                 $('#form-modal-label').html('New schedule');
                },

@@ -7,7 +7,7 @@ class HomeController {
   }
 
   async homeView(request, response) {
-    if (!request.session.user) return response.redirect('/login');
+    if (!request.session.user) return response.redirect(tools.subPath('/login'));
 
     let user = request.session.user;
     let readOnly = tools.readOnlyMode() && !user.isAdmin;

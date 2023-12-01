@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
+const { TwingEnvironment, TwingLoaderFilesystem, TwingFunction } = require('twing');
 require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
 
 const AuthController = require('./controllers/auth');
@@ -14,7 +14,6 @@ const HomeController = require('./controllers/home');
 const MetricsService = require('./services/metrics');
 const KubeService = require('./services/kube');
 const tools = require('./tools');
-
 const app = express();
 const metrics = express();
 
@@ -27,6 +26,8 @@ app.use(express.static(__dirname + '/../static'));
 
 const loader = new TwingLoaderFilesystem('./templates');
 const twing = new TwingEnvironment(loader);
+const viewPath = new TwingFunction('path', function(slug) { return Promise.resolve(tools.subPath(slug)) }, []);
+twing.addFunction(viewPath);
 
 const kubeService = new KubeService();
 
