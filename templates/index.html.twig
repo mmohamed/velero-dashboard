@@ -222,6 +222,10 @@ $(document).ready(function() {
     $('#result-modal button.btn-secondary').bind('click', function(){
         $('#result-modal').modal('hide');
     });
+    // switch context
+    $('#contextselect').on('change',function(){
+        window.location.href = '?context='+$(this).val();
+    });
 });
 </script>
 {% endblock %}

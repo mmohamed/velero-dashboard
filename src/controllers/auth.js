@@ -2,13 +2,14 @@ const tools = require('./../tools');
 const { authenticate } = require('ldap-authentication');
 
 class AuthController {
-  constructor(twing) {
+  constructor(kubeService, twing) {
+    this.kubeService = kubeService;
     this.twing = twing;
   }
 
   globalSecureAction(request, response, next) {
     if (!request.session.user) {
-      if (request.url !== '/login' && request.url !== '/') {
+      if (request.path !== '/login' && request.path !== '/') {
         return response.status(403).end('Forbidden');
       }
     }
@@ -18,6 +19,19 @@ class AuthController {
           return response.status(405).end('Method Not Allowed');
         }
       }
+    }
+    // switch context for each request
+    if (this.kubeService.isMultiCluster()) {
+      let newContext = request.query.context;
+      if (newContext) {
+        request.session.context = newContext;
+      }
+      let userContext = request.session.context;
+      if (!userContext) {
+        userContext = this.kubeService.getCurrentContext();
+        request.session.context = userContext;
+      }
+      this.kubeService.switchContext(userContext);
     }
     return next();
   }

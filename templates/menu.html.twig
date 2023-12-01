@@ -8,6 +8,15 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="d-flex" role="logout">
+                {% if contexts|length > 1 %}
+                <label for="contextselect" class="form-label" style="color: gray;margin: 8px;">Current context</label>
+                <select id="contextselect" class="form-select" style="width: auto;">
+                    {% for context in contexts %}
+                    <option value="{{ context.name }}" {% if current and current == context.name %}selected{% endif %}>{{ context.name }}</option>
+                    {% endfor %}
+                </select>
+                <hr class="vr" style="color: white; margin: 0 5px;">
+                {% endif %}
                 <a class="btn btn-outline-secondary" href="/logout">Hello {{ user }} - Logout</a>
             </div>
         </div>

@@ -34,7 +34,7 @@ const tools = {
         description: description
       });
       if (process.env.NODE_ENV !== 'test') {
-        console.log(new Date(), ': ',auditlog);
+        console.log(new Date(), ': ', auditlog);
         return true;
       }
     }
@@ -45,6 +45,12 @@ const tools = {
       return process.env.VELERO_NAMESPACE.trim();
     }
     return 'velero';
+  },
+  multiClusterConfigDir: function () {
+    if (process.env.MULTI_CLUSTER_CONFIG_DIR && process.env.MULTI_CLUSTER_CONFIG_DIR.trim().length > 0) {
+      return process.env.MULTI_CLUSTER_CONFIG_DIR.trim();
+    }
+    return false;
   },
   filtering: function () {
     var filtering = false;
@@ -105,8 +111,8 @@ const tools = {
     return false;
   },
   debug: function (...message) {
-    if (process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true') {
-      console.debug(new Date(), ': ',...message);
+    if (process.env.DEBUG && (process.env.DEBUG.trim() === '1' || process.env.DEBUG.trim().toLowerCase() === 'true')) {
+      console.debug(new Date(), ': ', ...message);
     }
   },
   delay: function (time) {
@@ -158,7 +164,7 @@ const tools = {
         }
       }
     } catch (err) {
-      console.error(new Date(), ': Error calculating filtering namespace config ',err);
+      console.error(new Date(), ': Error calculating filtering namespace config ', err);
     }
     return userNamespaces;
   },
