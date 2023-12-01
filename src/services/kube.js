@@ -35,6 +35,7 @@ class KubeService {
         return;
       }
       if (file.isSymbolicLink()) {
+        // will fail with windows env and unix link
         let target = fs.readlinkSync(filepath, { withFileTypes: true });
         let targetStat = fs.lstatSync(path.isAbsolute(target) ? target : remoteClusterConfigPath + path.sep + target);
         if (!targetStat.isFile()) {
