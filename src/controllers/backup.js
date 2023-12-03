@@ -119,7 +119,8 @@ class BackupController {
           namespaces: availableNamespaces,
           errors: errors,
           message: message,
-          user: user
+          user: user,
+          csrfToken: request.csrfToken()
         })
         .then((output) => {
           response.status(errors.length ? 200 : 201).end(output);
@@ -134,7 +135,8 @@ class BackupController {
         volumeSnapshotLocations: volumeSnapshotLocations,
         namespaces: availableNamespaces,
         user: user,
-        defaultVolumesToFsBackup: tools.useFSBackup()
+        defaultVolumesToFsBackup: tools.useFSBackup(),
+        csrfToken: request.csrfToken()
       })
       .then((output) => {
         response.end(output);

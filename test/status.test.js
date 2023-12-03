@@ -1,4 +1,5 @@
 require('./k8s.mock').mock();
+const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
@@ -20,12 +21,11 @@ describe('Status get', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should get global status', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/status').set('cookie', cookie);
+    res = await requestWithSupertest.get('/status').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.isReady).toEqual(true);

@@ -36,8 +36,17 @@ class AuthController {
     return next();
   }
 
+  globalCSRFTokenAction(error, request, response, next) {
+    if (error.code !== 'EBADCSRFTOKEN') {
+      return next(error);
+    }
+    // handle CSRF token errors
+    response.status(403);
+    response.send('CSRF Token Invalid');
+  }
+
   loginView(request, response) {
-    this.twing.render('login.html.twig').then((output) => {
+    this.twing.render('login.html.twig', { csrfToken: request.csrfToken() }).then((output) => {
       response.end(output);
     });
   }
