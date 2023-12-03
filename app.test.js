@@ -6,6 +6,7 @@ console.log = function () {};
 
 express.mockReturnValue({
   use: function () {},
+  disable: function () {},
   listen: function (port, fn) {
     ports.push(port), fn.call();
   },

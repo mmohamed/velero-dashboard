@@ -22,6 +22,12 @@ const tools = {
     }
     return 'metrics';
   },
+  isSecureHost: function(){
+    if (process.env.SECURE_HOST && (process.env.SECURE_HOST.trim() === '1' || process.env.SECURE_HOST.trim().toLowerCase() === 'true')) {
+      return true;
+    }
+    return false;
+  },
   audit: function (actor, origin, action, label, object, description) {
     if (process.env.AUDIT_LOG && (process.env.AUDIT_LOG.trim() === '1' || process.env.AUDIT_LOG.trim().toLowerCase() === 'true')) {
       var auditlog = JSON.stringify({

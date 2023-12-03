@@ -41,6 +41,7 @@ describe('Admin Login / Logout actions', () => {
     process.env.DEBUG = '0';
     process.env.ADMIN_USERNAME = 'admin';
     process.env.ADMIN_PASSWORD = 'admin';
+    process.env.SECURE_HOST = 'true';
   });
   it('should show error message', async () => {
     var auth = await util.auth(requestWithSupertest, 'admin', 'wrongpwd');

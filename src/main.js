@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
 const csrf = require('csurf');
 const xssShield = require('xss-shield');
 const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
@@ -20,12 +19,12 @@ const tools = require('./tools');
 const app = express();
 const metrics = express();
 
-app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.disable('x-powered-by');
 app.use(xssShield.default.xssShield());
-app.use(session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true }));
+app.use(session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true, cookie: {secure: tools.isSecureHost() } }));
 app.use(express.static(__dirname + '/../static'));
 
 const loader = new TwingLoaderFilesystem('./templates');
