@@ -4,6 +4,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const csrf = require('csurf');
+const xssShield = require('xss-shield');
 const { TwingEnvironment, TwingLoaderFilesystem } = require('twing');
 require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
 
@@ -23,6 +24,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(xssShield.default.xssShield());
 app.use(session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true }));
 app.use(express.static(__dirname + '/../static'));
 

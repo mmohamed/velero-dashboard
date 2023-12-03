@@ -2,6 +2,7 @@ const tools = require('./../tools');
 const https = require('https');
 const axios = require('axios');
 const zlib = require('zlib');
+const sanitizer = require('sanitizer');
 
 class BackupController {
   constructor(kubeService, twing) {
@@ -243,7 +244,7 @@ class BackupController {
     // audit
     tools.audit(request.session.user.username, 'BackupController', 'LIST', '', 'Backup');
 
-    response.send(availableBackups);
+    response.type('json').send(sanitizer.sanitize(JSON.stringify(availableBackups)));
   }
 
   async deleteAction(request, response) {

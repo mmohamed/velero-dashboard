@@ -1,5 +1,6 @@
 const tools = require('./../tools');
 const cron = require('cron-validator');
+const sanitizer = require('sanitizer');
 
 class ScheduleController {
   constructor(kubeService, twing, k8sApi, customObjectsApi) {
@@ -156,7 +157,7 @@ class ScheduleController {
     }
     // audit
     tools.audit(request.session.user.username, 'ScheduleController', 'LIST', '', 'Schedule');
-    response.send(availableSchedules);
+    response.type('json').send(sanitizer.sanitize(JSON.stringify(availableSchedules)));
   }
 
   async deleteAction(request, response) {

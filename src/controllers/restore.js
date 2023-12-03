@@ -2,6 +2,7 @@ const tools = require('./../tools');
 const https = require('https');
 const axios = require('axios');
 const zlib = require('zlib');
+const sanitizer = require('sanitizer');
 
 class RestoreController {
   constructor(kubeService, twing) {
@@ -110,7 +111,7 @@ class RestoreController {
     // audit
     tools.audit(request.session.user.username, 'RestoreController', 'LIST', '', 'Restore');
 
-    response.send(availableRestores);
+    response.type('json').send(sanitizer.sanitize(JSON.stringify(availableRestores)));
   }
 
   async restoreAction(request, response) {

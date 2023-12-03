@@ -42,7 +42,9 @@
     "express-session": "^1.17.3",
     "ldap-authentication": "^2.3.3",
     "prom-client": "^15.0.0",
-    "twing": "^5.1.6"
+    "sanitizer": "^0.1.3",
+    "twing": "^5.1.6",
+    "xss-shield": "^1.0.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
