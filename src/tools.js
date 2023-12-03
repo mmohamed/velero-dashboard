@@ -22,7 +22,7 @@ const tools = {
     }
     return 'metrics';
   },
-  isSecureHost: function(){
+  isSecureHost: function () {
     if (process.env.SECURE_HOST && (process.env.SECURE_HOST.trim() === '1' || process.env.SECURE_HOST.trim().toLowerCase() === 'true')) {
       return true;
     }

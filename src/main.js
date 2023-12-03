@@ -24,7 +24,9 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.disable('x-powered-by');
 app.use(xssShield.default.xssShield());
-app.use(session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true, cookie: {secure: tools.isSecureHost() } }));
+app.use(
+  session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true, cookie: { secure: tools.isSecureHost() } })
+);
 app.use(express.static(__dirname + '/../static'));
 
 const loader = new TwingLoaderFilesystem('./templates');
