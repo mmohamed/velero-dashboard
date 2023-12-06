@@ -33,4 +33,4 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Upgrade dependencies: @kubernetes/client-node from 0.19.0 to 0.20.0 
+- Upgrade dependencies: @kubernetes/client-node from 0.19.0 to 0.20.0

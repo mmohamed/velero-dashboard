@@ -134,7 +134,7 @@ $(document).ready(function() {
             data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';
         });
         $('#form-modal .modal-content').block();
-        $('#form-modal .modal-body').load('/schedule/new', data, function(response, status, xhr) {
+        $('#form-modal .modal-body').load("{{ path('/schedule/new') }}", data, function(response, status, xhr) {
             $('#form-modal .modal-content').unblock();
             if(xhr.status === 201) {
                 $('#form-modal').modal('hide'); 

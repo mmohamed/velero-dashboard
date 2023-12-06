@@ -7,6 +7,13 @@ const tools = {
   port: function () {
     return process.env.APP_PORT | 3000;
   },
+  subPath: function (slug) {
+    if (process.env.APP_SUB_PATH && process.env.APP_SUB_PATH.trim().length > 0) {
+      var newSlug = '/' + process.env.APP_SUB_PATH.trim() + '/' + slug;
+      return newSlug.replace(/\/{2,}/g, '/');
+    }
+    return slug;
+  },
   metrics: function () {
     if (process.env.METRICS && (process.env.METRICS.trim() === '1' || process.env.METRICS.trim().toLowerCase() === 'true')) {
       return true;
