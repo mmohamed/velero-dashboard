@@ -20,7 +20,8 @@ class HomeController {
         readonly: readOnly,
         user: user.username,
         contexts: contexts,
-        current: currentContext
+        current: currentContext,
+        csrfToken: request.csrfToken()
       })
       .then((output) => {
         response.end(output);

@@ -128,6 +128,8 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.restore-action', function(){
         let name = $(this).attr('data-name');
+        let restore = name+'-restore-'+Math.floor(Date.now() / 1000);
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -145,14 +147,15 @@ $(document).ready(function() {
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
+                            headers: { 'CSRF-Token': token },
+                            data: JSON.stringify({backup: name, name: restore}),
                             beforeSend: function() {  
                                 $('.backup-bloc').block();  
                             },
                             success: function(response) {
                                 $.toast({
                                     heading: 'Information',
-                                    text: 'New restore job "'+response.restore.metadata.name+'" is created',
+                                    text: 'New restore job "'+restore+'" is created',
                                     icon: 'info',
                                     loader: true,        
                                     loaderBg: '#9EC600'         
@@ -184,6 +187,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.delete-backup-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -201,6 +205,7 @@ $(document).ready(function() {
                             type: "DELETE",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
+                            headers: { 'CSRF-Token': token },
                             data: JSON.stringify({backup: name, name: name+'-delete-'+Math.floor(Date.now() / 1000)}),
                             beforeSend: function() {  
                                 $('.backup-bloc').block();  
@@ -514,11 +519,13 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.toggle-schedule-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.ajax({
             url: "/schedules/toggle",
             type: "POST",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
+            headers: { 'CSRF-Token': token },
             data: JSON.stringify({schedule: name}),
             beforeSend: function() {  
                 $('.schedule-bloc').block();  
@@ -551,6 +558,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.backup-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -568,6 +576,7 @@ $(document).ready(function() {
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
+                            headers: { 'CSRF-Token': token },
                             data: JSON.stringify({schedule: name, name: name+'-backup-'+Math.floor(Date.now() / 1000)}),
                             beforeSend: function() {  
                                 $('.schedule-bloc').block();  
@@ -607,6 +616,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.delete-schedule-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -625,6 +635,7 @@ $(document).ready(function() {
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify({schedule: name}),
+                            headers: { 'CSRF-Token': token },
                             beforeSend: function() {  
                                 $('.schedule-bloc').block();  
                             },

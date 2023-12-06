@@ -1,6 +1,6 @@
 require('./k8s.mock').mock();
 jest.mock('ldap-authentication');
-
+const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
@@ -23,12 +23,11 @@ describe('Backups get', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have access to 2 backups', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backups').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
@@ -51,18 +50,17 @@ describe('Backups create', () => {
       gecos: 'username'
     });
 
-    var res = await requestWithSupertest.post('/login').send({ username: 'username', password: 'username' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'username', 'username');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backup/new').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backup/new').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('new-backup-form');
 
-    res = await requestWithSupertest.post('/backup/new').set('cookie', cookie);
+    res = await await requestWithSupertest.post('/backup/new').send({ _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const inputs = dom.window.document.getElementsByClassName('is-invalid');
@@ -81,9 +79,10 @@ describe('Backups create', () => {
       backuplabels: 'app:test',
       useselector: 'app:test,ver:v1',
       backuplocation: 'default',
-      snapshotlocation: 'default'
+      snapshotlocation: 'default',
+      _csrf: auth.token
     };
-    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', cookie);
+    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const filteringErrors = dom.window.document.getElementsByClassName('is-invalid');
@@ -91,7 +90,7 @@ describe('Backups create', () => {
     expect(filteringErrors[0].getAttribute('id')).toEqual('includenamespace');
 
     backupData.includenamespace = ['ns1', 'ns3'];
-    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', cookie);
+    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', auth.cookie);
     expect(res.status).toEqual(201);
     dom = new JSDOM(res.text);
     const errors = dom.window.document.getElementsByClassName('is-invalid');
@@ -109,16 +108,15 @@ describe('Backups delete', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and delete a valid backup', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.delete('/backups').send({ backupignored: 'notfound' }).set('cookie', cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backupignored: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/backups').send({ backup: 'notfound' }).set('cookie', cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backup: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/backups').send({ backup: 'backup-first' }).set('cookie', cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backup: 'backup-first', _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -135,14 +133,13 @@ describe('Backups result show', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and get a valid backup result and log', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backups/result/').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups/result/').set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.get('/backups/result/notfound').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups/result/notfound').set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
     var data = {
       errors: ['error 1', 'error 2'],
@@ -156,7 +153,7 @@ describe('Backups result show', () => {
       }
       return Promise.resolve({ data: zlib.gzipSync('one-line-logs') });
     });
-    res = await requestWithSupertest.get('/backups/result/backup-first').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups/result/backup-first').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const warnings = dom.window.document.getElementsByClassName('list-group-item-warning');

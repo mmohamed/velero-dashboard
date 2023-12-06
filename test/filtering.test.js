@@ -1,6 +1,6 @@
 require('./k8s.mock').mock();
 jest.mock('ldap-authentication');
-
+const util = require('./test.util');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const supertest = require('supertest');
@@ -16,12 +16,11 @@ describe('Admin full access', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have access to resources', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backups').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
@@ -41,23 +40,23 @@ describe('User filtred access', () => {
       memberOf: ['group1', 'group2'],
       gecos: 'username'
     });
-    var res = await requestWithSupertest.post('/login').send({ username: 'username', password: 'username' });
-    expect(res.status).toEqual(302);
+    var auth = await util.auth(requestWithSupertest, 'username', 'username');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backups').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
     expect(res.body[0].metadata.name).toEqual('backup-second');
 
-    res = await requestWithSupertest.get('/restores').set('cookie', cookie);
+    res = await requestWithSupertest.get('/restores').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
     expect(res.body[0].metadata.name).toEqual('second-restore-from-backup-second');
 
-    res = await requestWithSupertest.get('/schedules').set('cookie', cookie);
+    res = await requestWithSupertest.get('/schedules').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
@@ -78,11 +77,11 @@ describe('User with filtering feature disabled', () => {
       memberOf: ['group1', 'group2'],
       gecos: 'username'
     });
-    var res = await requestWithSupertest.post('/login').send({ username: 'username', password: 'username' });
-    expect(res.status).toEqual(302);
+    var auth = await util.auth(requestWithSupertest, 'username', 'username');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/backups').set('cookie', cookie);
+    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);

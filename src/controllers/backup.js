@@ -2,6 +2,7 @@ const tools = require('./../tools');
 const https = require('https');
 const axios = require('axios');
 const zlib = require('zlib');
+const sanitizer = require('sanitizer');
 
 class BackupController {
   constructor(kubeService, twing) {
@@ -119,7 +120,8 @@ class BackupController {
           namespaces: availableNamespaces,
           errors: errors,
           message: message,
-          user: user
+          user: user,
+          csrfToken: request.csrfToken()
         })
         .then((output) => {
           response.status(errors.length ? 200 : 201).end(output);
@@ -134,7 +136,8 @@ class BackupController {
         volumeSnapshotLocations: volumeSnapshotLocations,
         namespaces: availableNamespaces,
         user: user,
-        defaultVolumesToFsBackup: tools.useFSBackup()
+        defaultVolumesToFsBackup: tools.useFSBackup(),
+        csrfToken: request.csrfToken()
       })
       .then((output) => {
         response.end(output);
@@ -241,7 +244,7 @@ class BackupController {
     // audit
     tools.audit(request.session.user.username, 'BackupController', 'LIST', '', 'Backup');
 
-    response.send(availableBackups);
+    response.type('json').send(sanitizer.sanitize(JSON.stringify(availableBackups)));
   }
 
   async deleteAction(request, response) {
