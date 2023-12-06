@@ -95,7 +95,7 @@
         </select>
         <div class="invalid-feedback">Please provide a valid snapshot location.</div>
     </div>
-
+    <input type="hidden" name="_csrf" id="_csrf" value="{{ csrfToken }}">
 </form>
 
 <script type="text/javascript">
@@ -109,7 +109,7 @@ $(document).ready(function() {
     $('form#new-backup-form').bind('submit', function(event){
         event.preventDefault();
         var data = {};
-        $(this).find('input[type=text]').each(function(){
+        $(this).find('input[type=text], input[type=hidden]').each(function(){
             data[$(this).attr('id')] = $(this).val();
         });
         $(this).find('select').each(function(){

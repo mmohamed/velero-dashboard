@@ -1,4 +1,5 @@
 require('./k8s.mock').mock();
+const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
@@ -20,12 +21,10 @@ describe('Schedules get', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have access to 2 schedules', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/schedules').set('cookie', cookie);
+    res = await requestWithSupertest.get('/schedules').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(2);
@@ -42,18 +41,17 @@ describe('Schedules create', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.get('/schedule/new').set('cookie', cookie);
+    res = await requestWithSupertest.get('/schedule/new').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('new-schedule-form');
 
-    res = await requestWithSupertest.post('/schedule/new').set('cookie', cookie);
+    res = await requestWithSupertest.post('/schedule/new').set('cookie', auth.cookie).send({ _csrf: auth.token });
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const inputs = dom.window.document.getElementsByClassName('is-invalid');
@@ -74,9 +72,10 @@ describe('Schedules create', () => {
       backuplabels: 'app:test',
       useselector: 'app:test,ver:v1',
       backuplocation: 'default',
-      snapshotlocation: 'default'
+      snapshotlocation: 'default',
+      _csrf: auth.token
     };
-    res = await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', cookie);
+    res = await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const cronErrors = dom.window.document.getElementsByClassName('is-invalid');
@@ -84,7 +83,7 @@ describe('Schedules create', () => {
     expect(cronErrors[0].getAttribute('id')).toEqual('cron');
 
     scheduleData.cron = '* * * * *';
-    res = await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', cookie);
+    res = await requestWithSupertest.post('/schedule/new').send(scheduleData).set('cookie', auth.cookie);
     expect(res.status).toEqual(201);
     dom = new JSDOM(res.text);
     const errors = dom.window.document.getElementsByClassName('is-invalid');
@@ -101,16 +100,21 @@ describe('Schedules delete', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and delete a valid schedule', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.delete('/schedules').send({ scheduleignored: 'notfound' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .delete('/schedules')
+      .send({ scheduleignored: 'notfound', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/schedules').send({ schedule: 'notfound' }).set('cookie', cookie);
+    res = await requestWithSupertest.delete('/schedules').send({ schedule: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/schedules').send({ schedule: 'first-schedules' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .delete('/schedules')
+      .send({ schedule: 'first-schedules', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -127,16 +131,21 @@ describe('Schedule execute', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a backup from schedule', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.post('/schedules/execute').set('cookie', cookie);
+    res = await requestWithSupertest.post('/schedules/execute').send({ _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/schedules/execute').send({ schedule: 'notfound-schedule' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .post('/schedules/execute')
+      .send({ schedule: 'notfound-schedule', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/schedules/execute').send({ schedule: 'first-schedules' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .post('/schedules/execute')
+      .send({ schedule: 'first-schedules', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -153,16 +162,21 @@ describe('Schedule toggle', () => {
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and toggle the schedule state', async () => {
-    var res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    res = await requestWithSupertest.post('/schedules/toggle').set('cookie', cookie);
+    res = await requestWithSupertest.post('/schedules/toggle').send({ _csrf: auth.token }).set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/schedules/toggle').send({ schedule: 'notfound-schedule' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .post('/schedules/toggle')
+      .send({ schedule: 'notfound-schedule', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/schedules/toggle').send({ schedule: 'first-schedules' }).set('cookie', cookie);
+    res = await requestWithSupertest
+      .post('/schedules/toggle')
+      .send({ schedule: 'first-schedules', _csrf: auth.token })
+      .set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);

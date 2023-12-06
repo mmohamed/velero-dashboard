@@ -47,6 +47,7 @@ body {
       <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password">
       <label for="floatingPassword">Password</label>
     </div>
+    <input type="hidden" name="_csrf" id="_csrf" value="{{ csrfToken }}">
     <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
     <p class="mt-5 mb-3 text-body-secondary">&copy; My Velero - <a href="https://medinvention.io" target="_blank">medinvention.io</a></p>
   </form>

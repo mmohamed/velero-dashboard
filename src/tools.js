@@ -9,7 +9,7 @@ const tools = {
   },
   subPath: function (slug) {
     if (process.env.APP_SUB_PATH && process.env.APP_SUB_PATH.trim().length > 0) {
-      var newSlug = '/'+process.env.APP_SUB_PATH.trim()+'/'+slug;
+      var newSlug = '/' + process.env.APP_SUB_PATH.trim() + '/' + slug;
       return newSlug.replace(/\/{2,}/g, '/');
     }
     return slug;
@@ -28,6 +28,12 @@ const tools = {
       return process.env.METRICS_PATH.trim();
     }
     return 'metrics';
+  },
+  isSecureHost: function () {
+    if (process.env.SECURE_HOST && (process.env.SECURE_HOST.trim() === '1' || process.env.SECURE_HOST.trim().toLowerCase() === 'true')) {
+      return true;
+    }
+    return false;
   },
   audit: function (actor, origin, action, label, object, description) {
     if (process.env.AUDIT_LOG && (process.env.AUDIT_LOG.trim() === '1' || process.env.AUDIT_LOG.trim().toLowerCase() === 'true')) {
