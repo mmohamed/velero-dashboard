@@ -15,8 +15,8 @@ describe('CSRF Token', () => {
   });
   it('should throw error for invalid/absent csrf token', async () => {
     const res = await requestWithSupertest.post('/login');
-    expect(res.status).toEqual(403);
-    expect(res.text).toEqual(expect.stringContaining('CSRF Token Invalid'));
+    expect(res.status).toEqual(302);
+    expect(res.get('Location')).toEqual('/login?csrf-error');
   });
   it('should raccpet the request with valid csrf token', async () => {
     const res = await requestWithSupertest.get('/login');
