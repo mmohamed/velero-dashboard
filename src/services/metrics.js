@@ -9,13 +9,13 @@ class MetricsService {
     this.backupGauge = new client.Gauge({
       name: 'myvelero_backup_status',
       help: 'Backup status gauge',
-      labelNames: ['name', 'namespace', 'phase', 'warnings', 'errors', 'start', 'end', 'expire']
+      labelNames: ['name', 'namespace', 'phase', 'warnings', 'errors', 'start', 'end', 'expire', 'cluster']
     });
 
     this.restoreGauge = new client.Gauge({
       name: 'myvelero_restore_status',
       help: 'Restore status gauge',
-      labelNames: ['name', 'namespace', 'phase', 'warnings', 'errors', 'start', 'end']
+      labelNames: ['name', 'namespace', 'phase', 'warnings', 'errors', 'start', 'end', 'cluster']
     });
 
     this.k8sApi = k8sApi;
@@ -45,7 +45,8 @@ class MetricsService {
           errors: backup.status ? backup.status.errors || 0 : 0,
           start: backup.status ? backup.status.startTimestamp : '',
           end: backup.status ? backup.status.completionTimestamp : '',
-          expire: backup.status ? backup.status.expiration : ''
+          expire: backup.status ? backup.status.expiration : '',
+          cluster: this.kubeService.isMultiCluster() ? this.kubeService.getCurrentContext() : 'kubernetes'
         })
         .set(backup.status && backup.status.phase === 'Completed' ? 1 : 0);
     }
@@ -67,7 +68,8 @@ class MetricsService {
           warnings: restore.status ? restore.status.warnings || 0 : 0,
           errors: restore.status ? restore.status.errors || 0 : 0,
           start: restore.status ? restore.status.startTimestamp : '',
-          end: restore.status ? restore.status.completionTimestamp : ''
+          end: restore.status ? restore.status.completionTimestamp : '',
+          cluster: this.kubeService.isMultiCluster() ? this.kubeService.getCurrentContext() : 'kubernetes'
         })
         .set(restore.status && restore.status.phase === 'Completed' ? 1 : 0);
     }

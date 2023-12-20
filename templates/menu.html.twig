@@ -1,14 +1,26 @@
 <header>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i>Beta</i> - My <img src="/img/velero_logo_white.svg" width="114" height="40" class="me-3" alt="Velero" style="margin-left:-0.7rem">
+            <a class="navbar-brand" href="{{ path('/') }}">
+                <i>Beta</i> - My <img src="{{ path('/img/velero_logo_white.svg') }}" width="114" height="40" class="me-3" alt="Velero" style="margin-left:-0.7rem">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="d-flex" role="logout">
-                <a class="btn btn-outline-secondary" href="/logout">Hello {{ user }} - Logout</a>
+                {% if contexts|length > 1 %}
+                <label for="contextselect" class="form-label" style="color: gray;margin: 8px;">Current context</label>
+                <select id="contextselect" class="form-select" style="width: auto;">
+                    {% for context in contexts %}
+                    <option value="{{ context.name }}" {% if current and current == context.name %}selected{% endif %}>{{ context.name }}</option>
+                    {% endfor %}
+                </select>
+                <hr class="vr" style="color: white; margin: 0 5px;">
+                {% endif %}
+                {% if readonly %}
+                <span style="top: 33px;left: 240px;" class="position-absolute badge translate-middle badge rounded-pill bg-danger">Read Only</span>
+                {% endif %}
+                <a class="btn btn-outline-secondary" href="{{ path('/logout') }}">Hello {{ user }} - Logout</a>
             </div>
         </div>
     </nav>

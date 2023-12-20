@@ -1,5 +1,6 @@
 jest.mock('ldap-authentication');
 require('./k8s.mock').mock();
+const util = require('./test.util');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const supertest = require('supertest');
@@ -21,12 +22,16 @@ describe('Login page', () => {
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('login-form');
     const inputs = dom.window.document.getElementsByTagName('input');
-    expect(inputs.length).toBe(2);
+    expect(inputs.length).toBe(3);
   });
   it('should display error message to missing credentials', async () => {
-    const res = await requestWithSupertest.post('/login').send();
-    expect(res.status).toEqual(200);
-    expect(res.text).toEqual(expect.stringContaining('Please enter both username and password'));
+    const res = await requestWithSupertest.get('/login');
+    const cookie = res.get('set-cookie');
+    var dom = new JSDOM(res.text);
+    const token = dom.window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const resLogin = await requestWithSupertest.post('/login').send({ _csrf: token }).set('cookie', cookie);
+    expect(resLogin.status).toEqual(200);
+    expect(resLogin.text).toEqual(expect.stringContaining('Please enter both username and password'));
   });
 });
 
@@ -36,23 +41,23 @@ describe('Admin Login / Logout actions', () => {
     process.env.DEBUG = '0';
     process.env.ADMIN_USERNAME = 'admin';
     process.env.ADMIN_PASSWORD = 'admin';
+    process.env.SECURE_HOST = 'true';
   });
   it('should show error message', async () => {
-    const res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'wrongpwd' });
-    expect(res.status).toEqual(200);
-    expect(res.text).toEqual(expect.stringContaining('Invalid credentials!'));
+    var auth = await util.auth(requestWithSupertest, 'admin', 'wrongpwd');
+    expect(auth.response.status).toEqual(200);
+    expect(auth.response.text).toEqual(expect.stringContaining('Invalid credentials!'));
   });
   it('should redirect to homepage', async () => {
-    const res = await requestWithSupertest.post('/login').send({ username: 'admin', password: 'admin' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
-    const resHome = await requestWithSupertest.get('/').set('cookie', cookie);
+    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Hello admin'));
 
-    const resLogout = await requestWithSupertest.get('/logout').set('cookie', cookie);
+    const resLogout = await requestWithSupertest.get('/logout').set('cookie', auth.cookie);
     expect(resLogout.status).toEqual(302);
     expect(resLogout.get('Location')).toEqual('/login');
   });
@@ -67,27 +72,26 @@ describe('LDAP User Login / Logout actions', () => {
   });
   it('should show error message', async () => {
     authenticate.mockReturnValue(false);
-    const res = await requestWithSupertest.post('/login').send({ username: 'username1', password: 'wrongpwd' });
+    var auth = await util.auth(requestWithSupertest, 'username1', 'wrongpwd');
     expect(authenticate).toHaveBeenCalledTimes(1);
-    expect(res.status).toEqual(200);
-    expect(res.text).toEqual(expect.stringContaining('Invalid credentials!'));
+    expect(auth.response.status).toEqual(200);
+    expect(auth.response.text).toEqual(expect.stringContaining('Invalid credentials!'));
   });
   it('should redirect to homepage', async () => {
     authenticate.mockReturnValue({
       memberOf: ['group1', 'group2'],
       gecos: 'username'
     });
-    const res = await requestWithSupertest.post('/login').send({ username: 'username', password: 'username' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'username', 'username');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
     expect(authenticate).toHaveBeenCalledTimes(1);
 
-    const cookie = res.get('set-cookie');
-    const resHome = await requestWithSupertest.get('/').set('cookie', cookie);
+    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Hello username'));
 
-    const resLogout = await requestWithSupertest.get('/logout').set('cookie', cookie);
+    const resLogout = await requestWithSupertest.get('/logout').set('cookie', auth.cookie);
     expect(resLogout.status).toEqual(302);
     expect(resLogout.get('Location')).toEqual('/login');
   });
@@ -140,11 +144,13 @@ describe('Read only mode', () => {
       memberOf: ['group1', 'group2'],
       gecos: 'username'
     });
-    const res = await requestWithSupertest.post('/login').send({ username: 'username', password: 'username' });
-    expect(res.status).toEqual(302);
-    expect(res.get('Location')).toEqual('/');
+    var auth = await util.auth(requestWithSupertest, 'username', 'username');
+    expect(auth.response.status).toEqual(302);
+    expect(auth.response.get('Location')).toEqual('/');
 
-    const cookie = res.get('set-cookie');
+    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    expect(resHome.status).toEqual(200);
+    expect(resHome.text).toEqual(expect.stringContaining('Read Only'));
 
     const okPaths = {
       get: [
@@ -165,9 +171,9 @@ describe('Read only mode', () => {
     };
 
     const calls = {
-      get: (path) => requestWithSupertest.get(path).set('cookie', cookie),
-      post: (path) => requestWithSupertest.post(path).set('cookie', cookie),
-      delete: (path) => requestWithSupertest.delete(path).set('cookie', cookie)
+      get: (path) => requestWithSupertest.get(path).set('cookie', auth.cookie),
+      post: (path) => requestWithSupertest.post(path).set('cookie', auth.cookie),
+      delete: (path) => requestWithSupertest.delete(path).set('cookie', auth.cookie)
     };
     for (let method in koPaths) {
       for (let path in koPaths[method]) {

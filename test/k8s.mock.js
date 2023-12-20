@@ -1,21 +1,46 @@
 const k8s = {
+  multi: function () {
+    process.env.MULTI_CLUSTER_CONFIG_DIR = __dirname + require('path').sep + 'data';
+  },
   mock: function () {
     jest.mock('@kubernetes/client-node', () => {
       const data = require('./test.data.js');
+      var currentContext = 'main';
+      var config;
       return {
         PatchUtils: {
           PATCH_FORMAT_JSON_PATCH: 'json'
         },
+        loadYaml: function (content) {
+          return require('js-yaml').load(content);
+        },
         KubeConfig: jest.fn().mockImplementation(() => {
           return {
+            loadFromString: function (string) {
+              this.config = JSON.parse(string);
+            },
             loadFromDefault: function () {},
+            setCurrentContext: function (context) {
+              this.currentContext = context;
+            },
+            getContexts: function () {
+              return this.config ? this.config.contexts : [];
+            },
+            getCurrentContext: function () {
+              return this.currentContext;
+            },
             makeApiClient: function () {
+              var that = this;
               return {
                 listNamespacedCustomObject: function (group, version, namespace, name) {
                   if (process.env.TEST_THROW_READ_ERROR === 'true') throw Error('Fake error');
                   var items = [];
                   if (name == 'backups') {
-                    items = data.backups();
+                    if (that.currentContext == 'second') {
+                      items = [];
+                    } else {
+                      items = data.backups();
+                    }
                   }
                   if (name == 'backupstoragelocations') {
                     items = data.backupstoragelocations();

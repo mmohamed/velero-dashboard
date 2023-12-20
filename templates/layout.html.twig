@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="msapplication-TileColor" content="#603cba">
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#031014">
+    <meta name="csrf-token" content="{{ csrfToken }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ path('/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ path('/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ path('/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ path('/site.webmanifest') }}">
+    <link rel="mask-icon" href="{{ path('/safari-pinned-tab.svg') }}" color="#031014">
     <title>My Velero - {% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="/css/jquery.toast.min.css">
-    <link rel="stylesheet" href="/css/jquery-confirm.min.css">
-    <link rel="stylesheet" href="/css/select2.min.css" />
-    <link rel="stylesheet" href="/css/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="{{ path('/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/css/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ path('/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/css/jquery.toast.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/css/jquery-confirm.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/css/select2.min.css') }}" />
+    <link rel="stylesheet" href="{{ path('/css/select2-bootstrap-5-theme.min.css') }}" />
     <style>
     main > .container {
       padding-top: 60px;
@@ -61,17 +62,17 @@
         </div>
     </footer>
     {% endblock -%}
-    <script src="/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/popper.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/jquery.dataTables.min.js"></script>
-    <script src="/js/dataTables.bootstrap5.min.js"></script>
-    <script src="/js/moment.js"></script>
-    <script src="/js/jquery.blockUI.js"></script>
-    <script src="/js/jquery.toast.min.js"></script>
-    <script src="/js/jquery-confirm.min.js"></script>
-    <script src="/js/select2.min.js"></script>
+    <script src="{{ path('/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ path('/js/popper.min.js') }}"></script>
+    <script src="{{ path('/js/bootstrap.min.js') }}"></script>
+    <script src="{{ path('/js/jquery.min.js') }}"></script>
+    <script src="{{ path('/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ path('/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ path('/js/moment.js') }}"></script>
+    <script src="{{ path('/js/jquery.blockUI.js') }}"></script>
+    <script src="{{ path('/js/jquery.toast.min.js') }}"></script>
+    <script src="{{ path('/js/jquery-confirm.min.js') }}"></script>
+    <script src="{{ path('/js/select2.min.js') }}"></script>
     {%- block javascript %}{% endblock -%}
   </body>
 </html>

@@ -3,7 +3,7 @@ $(document).ready(function() {
     /*** Status ****/
 
     $.ajax({
-        url: "/status",
+        url: window.subpath+"/status",
         type: "GET",
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
@@ -102,7 +102,7 @@ $(document).ready(function() {
     $(document).on('click', 'button.backup-result-action', function(){
         let name = $(this).attr('data-name');
         $.ajax({
-            url: "/backups/result/"+name,
+            url: window.subpath+"/backups/result/"+name,
             beforeSend: function() {
                 $.blockUI({baseZ: 9999});
                 $('#result-modal-label').html('Backup "'+name+'" result');
@@ -128,6 +128,8 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.restore-action', function(){
         let name = $(this).attr('data-name');
+        let restore = name+'-restore-'+Math.floor(Date.now() / 1000);
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -141,18 +143,19 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/restores",
+                            url: window.subpath+"/restores",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({backup: name, name: name+'-restore-'+Math.floor(Date.now() / 1000)}),
+                            headers: { 'CSRF-Token': token },
+                            data: JSON.stringify({backup: name, name: restore}),
                             beforeSend: function() {  
                                 $('.backup-bloc').block();  
                             },
                             success: function(response) {
                                 $.toast({
                                     heading: 'Information',
-                                    text: 'New restore job "'+response.restore.metadata.name+'" is created',
+                                    text: 'New restore job "'+restore+'" is created',
                                     icon: 'info',
                                     loader: true,        
                                     loaderBg: '#9EC600'         
@@ -184,6 +187,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.delete-backup-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -197,10 +201,11 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/backups",
+                            url: window.subpath+"/backups",
                             type: "DELETE",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
+                            headers: { 'CSRF-Token': token },
                             data: JSON.stringify({backup: name, name: name+'-delete-'+Math.floor(Date.now() / 1000)}),
                             beforeSend: function() {  
                                 $('.backup-bloc').block();  
@@ -254,7 +259,7 @@ $(document).ready(function() {
         var backupTableApi = $('#list-backups').dataTable().api();
 
         $.ajax({
-            url: "/backups",
+            url: window.subpath+"/backups",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
@@ -367,7 +372,7 @@ $(document).ready(function() {
     $(document).on('click', 'button.restore-result-action', function(){
         let name = $(this).attr('data-name');
         $.ajax({
-            url: "/restores/result/"+name,
+            url: window.subpath+"/restores/result/"+name,
             beforeSend: function() {
                 $.blockUI({baseZ: 9999});
                 $('#result-modal-label').html('Restore "'+name+'" result');
@@ -407,7 +412,7 @@ $(document).ready(function() {
         var restoreTableApi = $('#list-restores').dataTable().api();
 
         $.ajax({
-            url: "/restores",
+            url: window.subpath+"/restores",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
@@ -514,11 +519,13 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.toggle-schedule-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.ajax({
-            url: "/schedules/toggle",
+            url: window.subpath+"/schedules/toggle",
             type: "POST",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
+            headers: { 'CSRF-Token': token },
             data: JSON.stringify({schedule: name}),
             beforeSend: function() {  
                 $('.schedule-bloc').block();  
@@ -551,6 +558,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.backup-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -563,19 +571,21 @@ $(document).ready(function() {
                 confirm: {
                     btnClass: 'btn-blue',
                     action: function () {
+                        var backupName = name+'-backup-'+Math.floor(Date.now() / 1000);
                         $.ajax({
-                            url: "/schedules/execute",
+                            url: window.subpath+"/schedules/execute",
                             type: "POST",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({schedule: name, name: name+'-backup-'+Math.floor(Date.now() / 1000)}),
+                            headers: { 'CSRF-Token': token },
+                            data: JSON.stringify({schedule: name, name: backupName}),
                             beforeSend: function() {  
                                 $('.schedule-bloc').block();  
                             },
                             success: function(response) {
                                 $.toast({
                                     heading: 'Information',
-                                    text: 'New backup job "'+response.backup.metadata.name+'" is created',
+                                    text: 'New backup job "'+backupName+'" is created',
                                     icon: 'info',
                                     loader: true,        
                                     loaderBg: '#9EC600'         
@@ -607,6 +617,7 @@ $(document).ready(function() {
 
     $(document).on('click', 'button.delete-schedule-action', function(){
         let name = $(this).attr('data-name');
+        let token = $('meta[name="csrf-token"]').attr('content');
         $.confirm({
             title: 'Confirm!',
             icon: 'bi bi-exclamation-circle',
@@ -620,11 +631,12 @@ $(document).ready(function() {
                     btnClass: 'btn-blue',
                     action: function () {
                         $.ajax({
-                            url: "/schedules",
+                            url: window.subpath+"/schedules",
                             type: "DELETE",
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify({schedule: name}),
+                            headers: { 'CSRF-Token': token },
                             beforeSend: function() {  
                                 $('.schedule-bloc').block();  
                             },
@@ -665,7 +677,7 @@ $(document).ready(function() {
         var scheduleTableApi = $('#list-schedules').dataTable().api();
 
         $.ajax({
-            url: "/schedules",
+            url: window.subpath+"/schedules",
             type: "GET",
             dataType: 'json',
             contentType: "application/json; charset=utf-8",

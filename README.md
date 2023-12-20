@@ -64,7 +64,7 @@ METRICS_PORT=9000 #default 3001 (prometheus.io/port)
 METRICS_PATH=internal-metrics #default metrics (prometheus.io/path)
 ```
 
-_Important : If user filtering is enabled and Restore/Backup include one namespace, metrcis label 'namespace' will be overrided by the target namespace of the Restore/Backup._
+_Important : If user filtering is enabled and Restore/Backup include one namespace, metrics label 'namespace' will be overrided by the target namespace of the Restore/Backup._
 
 - Debug mode: if is enabled, debug information will be written to stdout.
 
@@ -78,13 +78,23 @@ DEBUG=true #default false
 AUDIT_LOG=true #default false
 ```
 
-- Web app options : to define Web app listening port , a secret key for session encryption and the admin credentials
+- Multi-Cluster mode: if is enabled, all files into the config dir path, will be loaded as Kube Config file. Users will be allowed to switch between all available contexts and manage velero for the selected context.
+
+```ini
+MULTI_CLUSTER_CONFIG_DIR=/absolut/path/config/dir #default false
+```
+
+_Important : If metrics is enabled, a cluster label will contain the context name of the metric._
+
+- Web app options : to define Web app listening port , a secret key for session encryption, a subpath (baypass absolute UI URL), a secured cookie restriction and the admin credentials
 
 ```ini
 SECRET_KEY=random-secret-key #default default-secret-mut-be-changed
 APP_PORT=8080 #default 3000
+SECURE_HOST=true # default false
 ADMIN_USERNAME=admin #no default
 ADMIN_PASSWORD=adminpassword #no default
+APP_SUB_PATH=/myapp # no default
 ```
 
 ## Building

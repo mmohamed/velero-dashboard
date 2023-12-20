@@ -2,13 +2,14 @@ const tools = require('./../tools');
 const { authenticate } = require('ldap-authentication');
 
 class AuthController {
-  constructor(twing) {
+  constructor(kubeService, twing) {
+    this.kubeService = kubeService;
     this.twing = twing;
   }
 
   globalSecureAction(request, response, next) {
     if (!request.session.user) {
-      if (request.url !== '/login' && request.url !== '/') {
+      if (request.path !== '/login' && request.path !== '/') {
         return response.status(403).end('Forbidden');
       }
     }
@@ -19,11 +20,37 @@ class AuthController {
         }
       }
     }
+    // switch context for each request
+    if (this.kubeService.isMultiCluster()) {
+      let newContext = request.query.context;
+      if (newContext) {
+        request.session.context = newContext;
+      }
+      let userContext = request.session.context;
+      if (!userContext) {
+        userContext = this.kubeService.getCurrentContext();
+        request.session.context = userContext;
+      }
+      this.kubeService.switchContext(userContext);
+    }
     return next();
   }
 
+  globalCSRFTokenAction(error, request, response, next) {
+    if (error.code !== 'EBADCSRFTOKEN') {
+      return next(error);
+    }
+    // handle CSRF token errors
+    if(/application\/json;/.test(request.get('accept'))){
+      response.status(403);
+      response.send('CSRF Token Invalid');
+    }else{
+      response.redirect(request.originalUrl+'?csrf-error');
+    }
+  }
+
   loginView(request, response) {
-    this.twing.render('login.html.twig').then((output) => {
+    this.twing.render('login.html.twig', { csrfToken: request.csrfToken() }).then((output) => {
       response.end(output);
     });
   }
@@ -34,7 +61,7 @@ class AuthController {
       tools.debug('user logged out.');
       tools.audit(actor, 'AuthController', 'LOGOUT');
     });
-    response.redirect('/login');
+    response.redirect(tools.subPath('/login'));
   }
 
   async loginAction(request, response) {
@@ -52,7 +79,7 @@ class AuthController {
           username: request.body.username,
           password: request.body.password
         };
-        return response.redirect('/');
+        return response.redirect(tools.subPath('/'));
       }
     }
 
@@ -83,7 +110,7 @@ class AuthController {
 
           tools.audit(request.session.user.username, 'AuthController', 'LOGIN');
 
-          return response.redirect('/');
+          return response.redirect(tools.subPath('/'));
         }
       } catch (err) {
         console.error(err);
