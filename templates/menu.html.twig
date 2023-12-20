@@ -17,6 +17,9 @@
                 </select>
                 <hr class="vr" style="color: white; margin: 0 5px;">
                 {% endif %}
+                {% if readonly %}
+                <span style="top: 33px;left: 240px;" class="position-absolute badge translate-middle badge rounded-pill bg-danger">Read Only</span>
+                {% endif %}
                 <a class="btn btn-outline-secondary" href="{{ path('/logout') }}">Hello {{ user }} - Logout</a>
             </div>
         </div>

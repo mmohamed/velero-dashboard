@@ -148,6 +148,10 @@ describe('Read only mode', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
+    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    expect(resHome.status).toEqual(200);
+    expect(resHome.text).toEqual(expect.stringContaining('Read Only'));
+
     const okPaths = {
       get: [
         '/backups',
