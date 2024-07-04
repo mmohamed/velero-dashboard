@@ -53,6 +53,10 @@ spec:
         prometheus.io/port: '3001'
     spec:
       serviceAccountName: myvelero-sa
+      # volumes:
+      # - name: myvelero-tls
+      #   secret:
+      #     secretName: myvelero-tls
       containers:
         - name: my-velero
           image: medinvention/my-velero-dashboard:dev
@@ -69,6 +73,10 @@ spec:
             requests:
               cpu: 500m
               memory: 512Mi
+          # volumeMounts:
+          # - name: myvelero-tls
+          #   readOnly: true
+          #   mountPath: "/usr/src/tls"
           env:
             - name: ADMIN_USERNAME
               valueFrom:
@@ -82,6 +90,12 @@ spec:
                   key: password
             - name: USE_FSBACKUP
               value: '1'
+            # - name: SECURE_HOST
+            #   value: "1"
+            # - name: SECURE_HOST_CERT_FILE_PATH
+            #   value: "/usr/src/tls/tls.crt"
+            # - name: SECURE_HOST_KEY_FILE_PATH
+            #   value: "/usr/src/tls/tls.key"   
             - name: DEBUG
               value: '1'
             - name: METRICS
@@ -124,6 +138,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
   name: my-velero-ing
   namespace: velero
   labels:

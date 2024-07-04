@@ -4,6 +4,8 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const xssShield = require('xss-shield');
+const https = require('https');
+const fs = require('fs');
 const { TwingEnvironment, TwingLoaderFilesystem, TwingFunction } = require('twing');
 require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
 
@@ -17,6 +19,15 @@ const KubeService = require('./services/kube');
 const tools = require('./tools');
 const app = express();
 const metrics = express();
+
+// server export
+var server = app;
+
+// https server
+if(tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()){
+  console.log(new Date(), ': Start HTTPS server...');
+  server = https.createServer({key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath())}, app);
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -78,4 +89,4 @@ const metricsService = new MetricsService(kubeService);
 
 metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-module.exports = { app: app, metrics: metrics };
+module.exports = { app: server, metrics: metrics };
