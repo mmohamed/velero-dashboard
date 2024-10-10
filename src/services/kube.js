@@ -515,8 +515,8 @@ class KubeService {
         useOwnerReferencesInBackup: scheduleDef.ownerreferences === '1' ? true : false
       }
     };
-    if (backupDef.cluster !== undefined && user.isAdmin){
-      body.spec.includeClusterResources = backupDef.cluster === '1' ? true : false
+    if (scheduleDef.cluster !== undefined && user.isAdmin){
+      body.spec.template.includeClusterResources = scheduleDef.cluster === '1' ? true : false
     }
     if (scheduleDef.useselector && scheduleDef.useselector.trim().length > 0) {
       let selectors = scheduleDef.useselector.split(',');
