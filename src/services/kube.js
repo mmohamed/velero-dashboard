@@ -240,13 +240,15 @@ class KubeService {
         excludedNamespaces: backupDef.excludenamespace ? backupDef.excludenamespace : [],
         includedResources: backupDef.includeresources ? backupDef.includeresources.trim().split(',') : [],
         excludedResources: backupDef.excluderesources ? backupDef.excluderesources.trim().split(',') : [],
-        includeClusterResources: backupDef.cluster === '1' && user.isAdmin ? true : false,
         snapshotVolumes: backupDef.snapshot === '1' ? true : null,
         storageLocation: backupDef.backuplocation,
         volumeSnapshotLocations: backupDef.snapshotlocation ? [backupDef.snapshotlocation] : [],
         ttl: parseInt(backupDef.retention) * 24 + 'h0m0s'
       }
     };
+    if (backupDef.cluster !== undefined && user.isAdmin){
+      body.spec.includeClusterResources = backupDef.cluster === '1' ? true : false
+    }
     if (backupDef.useselector && backupDef.useselector.trim().length > 0) {
       let selectors = backupDef.useselector.split(',');
       let labelSelector = { matchLabels: {} };
@@ -504,7 +506,6 @@ class KubeService {
           excludedNamespaces: scheduleDef.excludenamespace ? scheduleDef.excludenamespace : [],
           includedResources: scheduleDef.includeresources ? scheduleDef.includeresources.trim().split(',') : [],
           excludedResources: scheduleDef.excluderesources ? scheduleDef.excluderesources.trim().split(',') : [],
-          includeClusterResources: scheduleDef.cluster === '1' && user.isAdmin ? true : false,
           snapshotVolumes: scheduleDef.snapshot === '1' ? true : null,
           storageLocation: scheduleDef.backuplocation,
           volumeSnapshotLocations: scheduleDef.snapshotlocation ? [scheduleDef.snapshotlocation] : [],
@@ -514,6 +515,9 @@ class KubeService {
         useOwnerReferencesInBackup: scheduleDef.ownerreferences === '1' ? true : false
       }
     };
+    if (backupDef.cluster !== undefined && user.isAdmin){
+      body.spec.includeClusterResources = backupDef.cluster === '1' ? true : false
+    }
     if (scheduleDef.useselector && scheduleDef.useselector.trim().length > 0) {
       let selectors = scheduleDef.useselector.split(',');
       let labelSelector = { matchLabels: {} };
