@@ -74,13 +74,13 @@ class Schedule extends Backup{
             let schedule = new Schedule(crd.metadata.name);
 
             schedule.setBackupLocation(crd.spec.template.storageLocation);
-            schedule.setSnapshotLocation(crd.spec.template.snapshotLocation); // to check
+            schedule.setSnapshotLocation(crd.spec.template.snapshotLocation); 
             schedule.setDefaultVolumeToFS(crd.spec.template.defaultVolumesToFsBackup);
             schedule.setIncludeClusterResources(crd.spec.template.includeClusterResources);
             schedule.setIncludeNamespaces(crd.spec.template.includedNamespaces);
-            schedule.setExcludeNamespaces(crd.spec.template.excludedNamespaces); // to check
-            schedule.setIncludeResources(crd.spec.template.includeResources); // to check
-            schedule.setExcludeResources(crd.spec.template.excludeResources); // to check
+            schedule.setExcludeNamespaces(crd.spec.template.excludedNamespaces); 
+            schedule.setIncludeResources(crd.spec.template.includeResources); 
+            schedule.setExcludeResources(crd.spec.template.excludeResources); 
             schedule.setBackupRetention(Math.floor(crd.spec.template.ttl.replace('h0m0s', '')/24));
             schedule.setSnapshot(crd.spec.template.snapshotVolumes);
             schedule.setCRON(crd.spec.schedule);

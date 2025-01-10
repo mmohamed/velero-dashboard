@@ -12,8 +12,9 @@ api.use(express.json());
 const kubeService = new KubeService();
 const apiController = new APIController(kubeService);
 
+api.disable('x-powered-by');
 api.use((req, res, next) => apiController.auth(req, res, next));
-api.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+api.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 /**
  * @swagger
@@ -38,7 +39,7 @@ api.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 /**
  * @openapi
- * '/api/backups':
+ * '/v1/backups':
  *  get:
  *     tags:
  *       - Backup Controller
@@ -65,11 +66,11 @@ api.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
  *      500:
  *        description: Server Error
  */
-api.get('/api/backups', (req, res, next) => apiController.listBackup(req, res, next));
+api.get('/v1/backups', (req, res, next) => apiController.listBackup(req, res, next));
 
 /**
  * @openapi
- * '/api/backups/{name}':
+ * '/v1/backups/{name}':
  *  get:
  *     tags:
  *       - Backup Controller
@@ -100,11 +101,11 @@ api.get('/api/backups', (req, res, next) => apiController.listBackup(req, res, n
  *      500:
  *        description: Server Error
  */
-api.get('/api/backups/:name', (req, res, next) => apiController.getBackup(req, res, next));
+api.get('/v1/backups/:name', (req, res, next) => apiController.getBackup(req, res, next));
 
 /**
  * @openapi
- * '/api/backups':
+ * '/v1/backups':
  *  post:
  *     tags:
  *     - Backup Controller
@@ -126,6 +127,13 @@ api.get('/api/backups/:name', (req, res, next) => apiController.getBackup(req, r
  *                status: 
  *                  type: boolean
  *                  description: status of the operation
+ *                errors:
+ *                  type: array
+ *                  description: list of fields with errors
+ *                backup: 
+ *                  description: the new backup
+ *                  type: object
+ *                  $ref: '#/components/schemas/Backup'
  *      400:
  *        description: Bad Request
  *      404:
@@ -133,11 +141,11 @@ api.get('/api/backups/:name', (req, res, next) => apiController.getBackup(req, r
  *      500:
  *        description: Server Error
  */
-api.post('/api/backups', (req, res, next) => apiController.createBackup(req, res, next));
+api.post('/v1/backups', (req, res, next) => apiController.createBackup(req, res, next));
 
 /**
  * @openapi
- * '/api/backups/{name}':
+ * '/v1/backups/{name}':
  *  delete:
  *     tags:
  *     - Backup Controller
@@ -168,11 +176,11 @@ api.post('/api/backups', (req, res, next) => apiController.createBackup(req, res
  *      500:
  *        description: Server Error
  */
-api.delete('/api/backups/:name', (req, res, next) => apiController.deleteBackup(req, res, next));
+api.delete('/v1/backups/:name', (req, res, next) => apiController.deleteBackup(req, res, next));
 
 /**
  * @openapi
- * '/api/backups/{name}/log':
+ * '/v1/backups/{name}/log':
  *  get:
  *     tags:
  *       - Backup Controller
@@ -207,11 +215,11 @@ api.delete('/api/backups/:name', (req, res, next) => apiController.deleteBackup(
  *      500:
  *        description: Server Error
  */
-api.get('/api/backups/:name/log', (req, res, next) => apiController.getBackupLog(req, res, next));
+api.get('/v1/backups/:name/log', (req, res, next) => apiController.getBackupLog(req, res, next));
 
 /**
  * @openapi
- * '/api/backups/{name}/restore':
+ * '/v1/backups/{name}/restore':
  *  put:
  *     tags:
  *     - Backup Controller
@@ -243,11 +251,11 @@ api.get('/api/backups/:name/log', (req, res, next) => apiController.getBackupLog
  *      500:
  *        description: Server Error
  */
-api.put('/api/backups/:name/restore', (req, res, next) => apiController.createRestoreFromBackup(req, res, next));
+api.put('/v1/backups/:name/restore', (req, res, next) => apiController.createRestoreFromBackup(req, res, next));
 
 /**
  * @openapi
- * '/api/restores':
+ * '/v1/restores':
  *  get:
  *     tags:
  *       - Restore Controller
@@ -274,11 +282,11 @@ api.put('/api/backups/:name/restore', (req, res, next) => apiController.createRe
  *      500:
  *        description: Server Error
  */
-api.get('/api/restores', (req, res, next) => apiController.listRestore(req, res, next));
+api.get('/v1/restores', (req, res, next) => apiController.listRestore(req, res, next));
 
 /**
  * @openapi
- * '/api/restores/{name}':
+ * '/v1/restores/{name}':
  *  get:
  *     tags:
  *       - Restore Controller
@@ -309,11 +317,11 @@ api.get('/api/restores', (req, res, next) => apiController.listRestore(req, res,
  *      500:
  *        description: Server Error
  */
-api.get('/api/restores/:name', (req, res, next) => apiController.getRestore(req, res, next));
+api.get('/v1/restores/:name', (req, res, next) => apiController.getRestore(req, res, next));
 
 /**
  * @openapi
- * '/api/restores/{name}/log':
+ * '/v1/restores/{name}/log':
  *  get:
  *     tags:
  *       - Restore Controller
@@ -348,11 +356,11 @@ api.get('/api/restores/:name', (req, res, next) => apiController.getRestore(req,
  *      500:
  *        description: Server Error
  */
-api.get('/api/restores/:name/log', (req, res, next) => apiController.getRestoreLog(req, res, next));
+api.get('/v1/restores/:name/log', (req, res, next) => apiController.getRestoreLog(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules':
+ * '/v1/schedules':
  *  get:
  *     tags:
  *       - Schedule Controller
@@ -379,11 +387,11 @@ api.get('/api/restores/:name/log', (req, res, next) => apiController.getRestoreL
  *      500:
  *        description: Server Error
  */
-api.get('/api/schedules', (req, res, next) => apiController.listSchedule(req, res, next));
+api.get('/v1/schedules', (req, res, next) => apiController.listSchedule(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules/{name}':
+ * '/v1/schedules/{name}':
  *  get:
  *     tags:
  *       - Schedule Controller
@@ -414,11 +422,11 @@ api.get('/api/schedules', (req, res, next) => apiController.listSchedule(req, re
  *      500:
  *        description: Server Error
  */
-api.get('/api/schedules/:name', (req, res, next) => apiController.getSchedule(req, res, next));
+api.get('/v1/schedules/:name', (req, res, next) => apiController.getSchedule(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules':
+ * '/v1/schedules':
  *  post:
  *     tags:
  *     - Schedule Controller
@@ -440,6 +448,13 @@ api.get('/api/schedules/:name', (req, res, next) => apiController.getSchedule(re
  *                status: 
  *                  type: boolean
  *                  description: status of the operation
+ *                errors:
+ *                  type: array
+ *                  description: list of fields with errors
+ *                schedule: 
+ *                  description: the new schedule
+ *                  type: object
+ *                  $ref: '#/components/schemas/Schedule'
  *      400:
  *        description: Bad Request
  *      404:
@@ -447,11 +462,11 @@ api.get('/api/schedules/:name', (req, res, next) => apiController.getSchedule(re
  *      500:
  *        description: Server Error
  */
-api.post('/api/schedules', (req, res, next) => apiController.createSchedule(req, res, next));
+api.post('/v1/schedules', (req, res, next) => apiController.createSchedule(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules/{name}':
+ * '/v1/schedules/{name}':
  *  delete:
  *     tags:
  *     - Schedule Controller
@@ -479,11 +494,11 @@ api.post('/api/schedules', (req, res, next) => apiController.createSchedule(req,
  *      500:
  *        description: Server Error
  */
-api.delete('/api/schedules/:name', (req, res, next) => apiController.deleteSchedule(req, res, next));
+api.delete('/v1/schedules/:name', (req, res, next) => apiController.deleteSchedule(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules/{name}/execute':
+ * '/v1/schedules/{name}/execute':
  *  put:
  *     tags:
  *     - Schedule Controller
@@ -515,11 +530,11 @@ api.delete('/api/schedules/:name', (req, res, next) => apiController.deleteSched
  *      500:
  *        description: Server Error
  */
-api.put('/api/schedules/:name/execute', (req, res, next) => apiController.executeSchedule(req, res, next));
+api.put('/v1/schedules/:name/execute', (req, res, next) => apiController.executeSchedule(req, res, next));
 
 /**
  * @openapi
- * '/api/schedules/{name}/toggle':
+ * '/v1/schedules/{name}/toggle':
  *  put:
  *     tags:
  *     - Schedule Controller
@@ -550,7 +565,6 @@ api.put('/api/schedules/:name/execute', (req, res, next) => apiController.execut
  *      500:
  *        description: Server Error
  */
-api.put('/api/schedules/:name/toggle', (req, res, next) => apiController.toggleSchedule(req, res, next));
-
+api.put('/v1/schedules/:name/toggle', (req, res, next) => apiController.toggleSchedule(req, res, next));
 
 module.exports = api;

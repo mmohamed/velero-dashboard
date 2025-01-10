@@ -512,7 +512,8 @@ class KubeService {
           ttl: parseInt(scheduleDef.retention) * 24 + 'h0m0s'
         },
         schedule: scheduleDef.cron,
-        useOwnerReferencesInBackup: scheduleDef.ownerreferences === '1' ? true : false
+        useOwnerReferencesInBackup: scheduleDef.ownerreferences === '1' ? true : false,
+        paused: scheduleDef.paused === '1' ? true : false
       }
     };
     if (scheduleDef.cluster !== undefined && user.isAdmin){

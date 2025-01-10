@@ -240,13 +240,13 @@ class Backup{
             let backup = new Backup(crd.metadata.name);
 
             backup.setBackupLocation(crd.spec.storageLocation);
-            backup.setSnapshotLocation(crd.spec.snapshotLocation); // to check
+            backup.setSnapshotLocation(crd.spec.snapshotLocation); 
             backup.setDefaultVolumeToFS(crd.spec.defaultVolumesToFsBackup);
             backup.setIncludeClusterResources(crd.spec.includeClusterResources);
             backup.setIncludeNamespaces(crd.spec.includedNamespaces);
-            backup.setExcludeNamespaces(crd.spec.excludedNamespaces); // to check
-            backup.setIncludeResources(crd.spec.includeResources); // to check
-            backup.setExcludeResources(crd.spec.excludeResources); // to check
+            backup.setExcludeNamespaces(crd.spec.excludedNamespaces);
+            backup.setIncludeResources(crd.spec.includeResources); 
+            backup.setExcludeResources(crd.spec.excludeResources); 
             backup.setBackupRetention(Math.floor(crd.spec.ttl.replace('h0m0s', '')/24));
             backup.setSnapshot(crd.spec.snapshotVolumes);
 

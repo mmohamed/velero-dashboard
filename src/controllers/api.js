@@ -2,6 +2,7 @@ const tools = require('./../tools');
 const https = require('https');
 const axios = require('axios');
 const zlib = require('zlib');
+const cron = require('cron-validator');
 const sanitizer = require('sanitizer');
 const auth = require('basic-auth')
 const { authenticate } = require('ldap-authentication');
@@ -18,14 +19,14 @@ class APIController {
   }
 
   async auth(request, response, next) {
-    if (request.path === '/api-docs') {
-      return next(); // skip for docs
+    if (request.path.indexOf('/v1/docs') !== -1) {
+      return next(); // skip auth for docs
     }
 
     let user = auth(request);
     let adminAccount = tools.admin();
     let ldapConfig = tools.ldap();
-    let authenticatedUser = null;
+    let authenticateduser = null;
 
     if (!user) {
       response.set('WWW-Authenticate', 'Basic realm="MyVelero"');
@@ -33,10 +34,10 @@ class APIController {
     }
 
     if (adminAccount && adminAccount.username === user.name && adminAccount.password === user.pass) {
-      authenticatedUser = {isAdmin: true, username: user.name, password: user.pass, groups: [], namespaces: []};
+      authenticateduser = {isAdmin: true, username: user.name, password: user.pass, groups: [], namespaces: []};
     }
 
-    if (ldapConfig && !authenticatedUser) {
+    if (ldapConfig && !authenticateduser) {
       try {
         ldapConfig.userPassword = user.pass;
         ldapConfig.username = user.name;
@@ -50,29 +51,29 @@ class APIController {
         if (authenticated) {
           let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups ? authenticated.groups.split('|') : [];
           let availableNamespaces = tools.userNamespace(groups);
-          authenticatedUser = {isAdmin: false, username: authenticated.gecos ? authenticated.gecos : request.body.username, password: user.pass, groups: groups, namespaces: availableNamespaces};
+          authenticateduser = {isAdmin: false, username: authenticated.gecos ? authenticated.gecos : request.body.username, password: user.pass, groups: groups, namespaces: availableNamespaces};
         }
       } catch (err) {
         console.error(err);
       }
     }
 
-    if(!authenticatedUser){
+    if(!authenticateduser){
       return response.status(403).end('Forbidden');
     }
 
     if (tools.readOnlyMode()) {
-      if (request.method != 'GET' && !authenticatedUser.isAdmin) {
+      if (request.method != 'GET' && !authenticateduser.isAdmin) {
         return response.status(405).end('Method Not Allowed');
       }
     }
 
     tools.audit(user.name, 'APIController', 'LOGIN');
-
-    response.set('authenticatedUser', JSON.stringify(authenticatedUser));
+    delete authenticateduser.password;
+    response.set('authenticateduser', JSON.stringify(authenticateduser));
     
     // switch context for each request
-    /*if (this.kubeService.isMultiCluster()) {
+    if (this.kubeService.isMultiCluster()) {
       let newContext = request.query.context;
       if (newContext) {
         request.session.context = newContext;
@@ -83,8 +84,285 @@ class APIController {
         request.session.context = userContext;
       }
       this.kubeService.switchContext(userContext);
-    }*/
+    }
     return next();
+  }
+
+  async createBackup(request, response) {
+    // access
+    let user = JSON.parse(response.get('authenticateduser'));
+
+    if (tools.readOnlyMode() && !user.isAdmin) return response.status(403).json({});
+
+    const backupStorageLocations = await this.kubeService.listBackupStorageLocations();
+    const volumeSnapshotLocations = await this.kubeService.listVolumeSnapshotLocations();
+
+    // filter
+    let availableNamespaces = tools.availableNamespaces(user, await this.kubeService.listNamespaces());
+    let errors = [];
+    let found;
+    let bodyRequest = request.body;
+    // name
+    if (!bodyRequest.name || bodyRequest.name.trim().length == 0) {
+      errors.push('name');
+    }
+    // includeNamespaces
+    if (!bodyRequest.includeNamespaces || bodyRequest.includeNamespaces.length == 0) {
+      errors.push('includeNamespaces');
+    } else {
+      for (let i in bodyRequest.includeNamespaces) {
+        found = false;
+        for (let j in availableNamespaces) {
+          if (bodyRequest.includeNamespaces[i] === availableNamespaces[j].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('includeNamespaces');
+          break;
+        }
+      }
+    }
+    // excludenamespace
+    if (bodyRequest.excludeNamespaces) {
+      for (let i in bodyRequest.excludeNamespaces) {
+        found = false;
+        for (let j in availableNamespaces) {
+          if (bodyRequest.excludeNamespaces[i] === availableNamespaces[j].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('excludeNamespaces');
+          break;
+        }
+      }
+    }
+    // retention
+    if (!bodyRequest.backupRetention || [30, 60, 90].indexOf(Number(bodyRequest.backupRetention)) === -1) {
+      errors.push('backupRetention');
+    }
+    // backuplocation
+    if (!bodyRequest.backupLocation || bodyRequest.backupLocation.trim().length == 0) {
+      errors.push('backupLocation');
+    }
+    if (bodyRequest.backupLocation) {
+      found = false;
+      for (let i in backupStorageLocations) {
+        if (bodyRequest.backupLocation === backupStorageLocations[i].metadata.name) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        errors.push('backupLocation');
+      }
+    }
+    // snapshotlocation
+    if (bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+      if (!bodyRequest.snapshotLocation || bodyRequest.snapshotLocation.trim().length == 0) {
+        errors.push('snapshotLocation');
+      }
+      if (bodyRequest.snapshotLocation) {
+        found = false;
+        for (let i in volumeSnapshotLocations) {
+          if (bodyRequest.snapshotLocation === volumeSnapshotLocations[i].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('snapshotLocation');
+        }
+      }
+    }
+
+    let responseContent = null;
+
+    if (!errors.length) {
+      let selectors = [], labels = [];
+      if(bodyRequest.selectors){
+        for(let i in bodyRequest.selectors){
+          selectors.push(bodyRequest.selectors[i].name+':'+bodyRequest.selectors[i].value);
+        }
+      }
+      if(bodyRequest.backuplabels){
+        for(let i in bodyRequest.backuplabels){
+          labels.push(bodyRequest.backuplabels[i].name+':'+bodyRequest.backuplabels[i].value);
+        }
+      }
+      let backupRequest = {
+        name: bodyRequest.name,
+        fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
+        snapshot: bodyRequest.snapshot ? '1' : 0,
+        cluster: bodyRequest.includeClusterResources ? '1' : 0,
+        backuplocation: bodyRequest.backupLocation,
+        retention: bodyRequest.backupRetention,
+        includenamespace: bodyRequest.includeNamespaces,
+        excludenamespace: bodyRequest.excludeNamespaces,
+        includeresources: bodyRequest.includeResources ? bodyRequest.includeResources.join(',') : null,
+        excluderesources: bodyRequest.excludeResources ? bodyRequest.excludeResources.join(',') : null,
+        useselector: selectors.join(','),
+        labels: labels.join(',')
+      }
+      let createErrors = {};
+      const newBackup = await this.kubeService.createBackup(backupRequest, user, createErrors);
+      if (newBackup) {
+        tools.audit(user.username, 'APIController', 'CREATE', bodyRequest.name, 'Backup');
+        responseContent = Backup.buildFromCRD(newBackup);
+        if(responseContent){
+          responseContent = responseContent.serialize();
+        }
+      } else {
+        errors.push(createErrors.message ? createErrors.message : 'Unable to create new backup');
+      }
+    }
+    response.type('json').send({ status: errors.length == 0, data: responseContent, errors: errors });
+  }
+
+  async createSchedule(request, response) {
+    // access
+    let user = JSON.parse(response.get('authenticateduser'));
+
+    if (tools.readOnlyMode() && !user.isAdmin) return response.status(403).json({});
+
+    const backupStorageLocations = await this.kubeService.listBackupStorageLocations();
+    const volumeSnapshotLocations = await this.kubeService.listVolumeSnapshotLocations();
+
+    // filter
+    let availableNamespaces = tools.availableNamespaces(user, await this.kubeService.listNamespaces());
+    let errors = [];
+    let found;
+    let bodyRequest = request.body;
+    // name
+    if (!bodyRequest.name || bodyRequest.name.trim().length == 0) {
+      errors.push('name');
+    }
+    // cron
+    if (!bodyRequest.cron || bodyRequest.cron.trim().length == 0) {
+      errors.push('cron');
+    } else if (!cron.isValidCron(bodyRequest.cron)) {
+      errors.push('cron');
+    }
+    // includeNamespaces
+    if (!bodyRequest.includeNamespaces || bodyRequest.includeNamespaces.length == 0) {
+      errors.push('includeNamespaces');
+    } else {
+      for (let i in bodyRequest.includeNamespaces) {
+        found = false;
+        for (let j in availableNamespaces) {
+          if (bodyRequest.includeNamespaces[i] === availableNamespaces[j].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('includeNamespaces');
+          break;
+        }
+      }
+    }
+    // excludenamespace
+    if (bodyRequest.excludeNamespaces) {
+      for (let i in bodyRequest.excludeNamespaces) {
+        found = false;
+        for (let j in availableNamespaces) {
+          if (bodyRequest.excludeNamespaces[i] === availableNamespaces[j].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('excludeNamespaces');
+          break;
+        }
+      }
+    }
+    // retention
+    if (!bodyRequest.backupRetention || [30, 60, 90].indexOf(Number(bodyRequest.backupRetention)) === -1) {
+      errors.push('backupRetention');
+    }
+    // backuplocation
+    if (!bodyRequest.backupLocation || bodyRequest.backupLocation.trim().length == 0) {
+      errors.push('backupLocation');
+    }
+    if (bodyRequest.backupLocation) {
+      found = false;
+      for (let i in backupStorageLocations) {
+        if (bodyRequest.backupLocation === backupStorageLocations[i].metadata.name) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        errors.push('backupLocation');
+      }
+    }
+    // snapshotlocation
+    if (bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+      if (!bodyRequest.snapshotLocation || bodyRequest.snapshotLocation.trim().length == 0) {
+        errors.push('snapshotLocation');
+      }
+      if (bodyRequest.snapshotLocation) {
+        found = false;
+        for (let i in volumeSnapshotLocations) {
+          if (bodyRequest.snapshotLocation === volumeSnapshotLocations[i].metadata.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          errors.push('snapshotLocation');
+        }
+      }
+    }
+
+    let responseContent = null;
+
+    if (!errors.length) {
+      let selectors = [], labels = [];
+      if(bodyRequest.selectors){
+        for(let i in bodyRequest.selectors){
+          selectors.push(bodyRequest.selectors[i].name+':'+bodyRequest.selectors[i].value);
+        }
+      }
+      if(bodyRequest.backuplabels){
+        for(let i in bodyRequest.backuplabels){
+          labels.push(bodyRequest.backuplabels[i].name+':'+bodyRequest.backuplabels[i].value);
+        }
+      }
+      let scheduleRequest = {
+        name: bodyRequest.name,
+        fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
+        snapshot: bodyRequest.snapshot ? '1' : 0,
+        cluster: bodyRequest.includeClusterResources ? '1' : 0,
+        backuplocation: bodyRequest.backupLocation,
+        retention: bodyRequest.backupRetention,
+        includenamespace: bodyRequest.includeNamespaces,
+        excludenamespace: bodyRequest.excludeNamespaces,
+        includeresources: bodyRequest.includeResources ? bodyRequest.includeResources.join(',') : null,
+        excluderesources: bodyRequest.excludeResources ? bodyRequest.excludeResources.join(',') : null,
+        useselector: selectors.join(','),
+        labels: labels.join(','),
+        cron: bodyRequest.cron,
+        ownerreferences: bodyRequest.ownerReferenceInBackup ? '1' : '0',
+        paused: bodyRequest.paused ? '1' : '0'
+      }
+      let createErrors = {};
+      const newSchedule = await this.kubeService.createSchedule(scheduleRequest, user, createErrors);
+      if (newSchedule) {
+        tools.audit(user.username, 'APIController', 'CREATE', bodyRequest.name, 'Schedule');
+        responseContent = Schedule.buildFromCRD(newSchedule);
+        if(responseContent){
+          responseContent = responseContent.serialize();
+        }
+      } else {
+        errors.push(createErrors.message ? createErrors.message : 'Unable to create new schedule');
+      }
+    }
+    response.type('json').send({ status: errors.length == 0, data: responseContent, errors: errors });
   }
 
   async createRestoreFromBackup(request, response) {
@@ -97,7 +375,7 @@ class APIController {
       return response.status(404).json({});
     }
     // access
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     if (!tools.hasAccess(user, backup)) {
       return response.status(403).json({});
     }
@@ -124,7 +402,7 @@ class APIController {
   
   async listBackup(request, response) {
     let backups = await this.kubeService.listBackups();
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     let availableBackups = [];
     for (let i in backups) {
@@ -158,7 +436,7 @@ class APIController {
       return response.status(404).json({});
     }
     // access
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     if (!tools.hasAccess(user, backup)) {
       return response.status(403).json({});
     }
@@ -190,7 +468,7 @@ class APIController {
     
     let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
     // access
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     if (!tools.hasAccess(user, backup)) {
       return response.status(403).json({});
     }
@@ -272,7 +550,7 @@ class APIController {
       return response.status(404).json({});
     }
     // access
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     if (!tools.hasAccess(user, backup)) {
       return response.status(403).json({});
     }
@@ -287,7 +565,7 @@ class APIController {
 
   async listRestore(request, response) {
     let restores = await this.kubeService.listRestores();
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     let availableRestores = [];
     for (let i in restores) {
@@ -319,7 +597,7 @@ class APIController {
       return response.status(404).json({});
     }
 
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     if (!tools.hasAccess(user, restore)) {
       return response.status(403).json({});
@@ -350,7 +628,7 @@ class APIController {
     let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
 
     // access
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     if (!tools.hasAccess(user, restore)) {
       return response.status(403).json({});
     }
@@ -426,7 +704,7 @@ class APIController {
 
   async listSchedule(request, response) {
     let schedules = await this.kubeService.listSchedules();
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     let availableSchedules = [];
     for (let i in schedules) {
@@ -458,7 +736,7 @@ class APIController {
       return response.status(404).json({});
     }
 
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     if (!tools.hasAccess(user, schedule)) {
       return response.status(403).json({});
@@ -482,8 +760,8 @@ class APIController {
     }
 
     let schedule = await this.kubeService.getSchedule(request.params.name);
-    let user = JSON.parse(response.get('authenticatedUser'));
-
+    let user = JSON.parse(response.get('authenticateduser'));
+    
     if (!schedule) {
       return response.status(404).json({});
     }
@@ -506,7 +784,7 @@ class APIController {
     }
 
     let schedule = await this.kubeService.getSchedule(request.params.name);
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
     // filter
     if (!tools.hasAccess(user, schedule)) {
       return response.status(403).json({});
@@ -533,7 +811,7 @@ class APIController {
     }
 
     let schedule = await this.kubeService.getSchedule(request.params.name);
-    let user = JSON.parse(response.get('authenticatedUser'));
+    let user = JSON.parse(response.get('authenticateduser'));
 
     if (!schedule) {
       return response.status(404).json({});
@@ -554,9 +832,9 @@ class APIController {
       'Schedule',
       'Schedule ' + (schedule.spec.paused ? 'unpaused' : 'paused')
     );
+    console.debug(returned);
     // response
-    // @TODO fix false return
-    response.type('json').send({ status: returned ? true : false, paused: returned ? returned.spec.paused : '' });
+    response.type('json').send({ status: returned ? true : false, paused: returned ? (returned.spec.paused ? true : false) : false });
   }
 }
 
