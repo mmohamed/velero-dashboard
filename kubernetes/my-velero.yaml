@@ -66,6 +66,8 @@ spec:
               protocol: TCP
             - containerPort: 3001
               protocol: TCP
+            - containerPort: 3002
+              protocol: TCP
           resources:
             limits:
               cpu: 1000m
@@ -95,7 +97,7 @@ spec:
             # - name: SECURE_HOST_CERT_FILE_PATH
             #   value: "/usr/src/tls/tls.crt"
             # - name: SECURE_HOST_KEY_FILE_PATH
-            #   value: "/usr/src/tls/tls.key"   
+            #   value: "/usr/src/tls/tls.key"
             - name: DEBUG
               value: '1'
             - name: METRICS
@@ -128,6 +130,9 @@ spec:
     - name: http
       port: 80
       targetPort: 3000
+    - name: api
+      port: 81
+      targetPort: 3002
   selector:
     app: myvelero
 
@@ -152,6 +157,10 @@ spec:
               serviceName: my-velero-svc
               servicePort: http
             path: /
+          - backend:
+              serviceName: my-velero-svc
+              servicePort: api
+            path: /api/
   tls:
     - hosts:
         - myvelero.medinvention.dev

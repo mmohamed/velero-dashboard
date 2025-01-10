@@ -14,28 +14,94 @@ const apiController = new APIController(kubeService);
 
 api.disable('x-powered-by');
 api.use((req, res, next) => apiController.auth(req, res, next));
-api.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+api.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, { customSiteTitle: 'MyVelero API' }));
 
 /**
  * @swagger
  * components:
- *   schemas: 
+ *   schemas:
  *     BackupWithStatus:
  *       allOf:
- *         - $ref: '#/components/schemas/BackupStatus'  
- *         - $ref: '#/components/schemas/Backup'  
- * 
+ *         - $ref: '#/components/schemas/BackupStatus'
+ *         - $ref: '#/components/schemas/Backup'
+ *
  *     ScheduleWithStatus:
  *       allOf:
- *         - $ref: '#/components/schemas/ScheduleStatus' 
- *         - $ref: '#/components/schemas/Schedule' 
- * 
+ *         - $ref: '#/components/schemas/ScheduleStatus'
+ *         - $ref: '#/components/schemas/Schedule'
+ *
  *     RestoreWithStatus:
  *       allOf:
- *         - $ref: '#/components/schemas/RestoreStatus' 
- *         - $ref: '#/components/schemas/Restore' 
- *  
- */    
+ *         - $ref: '#/components/schemas/RestoreStatus'
+ *         - $ref: '#/components/schemas/Restore'
+ *
+ */
+
+/**
+ * @openapi
+ * '/v1/status':
+ *  get:
+ *     tags:
+ *       - Service Controller
+ *     summary: Get service status
+ *     responses:
+ *      200:
+ *        description: Successfully
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                status:
+ *                  type: boolean
+ *                  description: status of the operation
+ *                data:
+ *                  type: object
+ *                  properties:
+ *                    isReady:
+ *                      type: boolean
+ *                      description: The status of the service
+ *                    isReadOnly:
+ *                      type: boolean
+ *                      description: Is the service run on read only mode
+ *                    backupStorageLocations:
+ *                      type: array
+ *                      items:
+ *                        type: object
+ *                        properties:
+ *                          status:
+ *                            type: string
+ *                            describe: The location status.
+ *                            example: Available
+ *                          lastSync:
+ *                            type: string
+ *                            description: Time of last sync.
+ *                          name:
+ *                            type: string
+ *                            describe: The location name.
+ *                    volumeSnapshotLocations:
+ *                      type: array
+ *                      items:
+ *                        type: object
+ *                        properties:
+ *                          status:
+ *                            type: string
+ *                            describe: The location status.
+ *                            example: Available
+ *                          lastSync:
+ *                            type: string
+ *                            description: Time of last sync.
+ *                          name:
+ *                            type: string
+ *                            describe: The location name.
+ *      400:
+ *        description: Bad Request
+ *      404:
+ *        description: Not Found
+ *      500:
+ *        description: Server Error
+ */
+api.get('/v1/status', (req, res, next) => apiController.getStatus(req, res, next));
 
 /**
  * @openapi
@@ -52,10 +118,10 @@ api.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: array
  *                  items:
  *                    $ref: '#/components/schemas/BackupWithStatus'
@@ -88,10 +154,10 @@ api.get('/v1/backups', (req, res, next) => apiController.listBackup(req, res, ne
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: object
  *                  $ref: '#/components/schemas/BackupWithStatus'
  *      400:
@@ -117,20 +183,20 @@ api.get('/v1/backups/:name', (req, res, next) => apiController.getBackup(req, re
  *           schema:
  *             $ref: '#/components/schemas/Backup'
  *     responses:
- *      200:
+ *      201:
  *        description: Successfully
  *        content:
  *          application/json:
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
  *                errors:
  *                  type: array
  *                  description: list of fields with errors
- *                backup: 
+ *                backup:
  *                  description: the new backup
  *                  type: object
  *                  $ref: '#/components/schemas/Backup'
@@ -163,7 +229,7 @@ api.post('/v1/backups', (req, res, next) => apiController.createBackup(req, res,
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
  *                backup:
@@ -198,10 +264,10 @@ api.delete('/v1/backups/:name', (req, res, next) => apiController.deleteBackup(r
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: object
  *                  propereties:
  *                      result:
@@ -230,17 +296,17 @@ api.get('/v1/backups/:name/log', (req, res, next) => apiController.getBackupLog(
  *        description: The name of the backup
  *        required: true
  *     responses:
- *      200:
+ *      201:
  *        description: Successfully
  *        content:
  *          application/json:
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                restore: 
+ *                restore:
  *                  description: the new restore
  *                  type: object
  *                  $ref: '#/components/schemas/Restore'
@@ -268,10 +334,10 @@ api.put('/v1/backups/:name/restore', (req, res, next) => apiController.createRes
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: array
  *                  items:
  *                    $ref: '#/components/schemas/RestoreWithStatus'
@@ -304,10 +370,10 @@ api.get('/v1/restores', (req, res, next) => apiController.listRestore(req, res, 
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: object
  *                  $ref: '#/components/schemas/RestoreWithStatus'
  *      400:
@@ -339,10 +405,10 @@ api.get('/v1/restores/:name', (req, res, next) => apiController.getRestore(req, 
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: object
  *                  propereties:
  *                      result:
@@ -373,10 +439,10 @@ api.get('/v1/restores/:name/log', (req, res, next) => apiController.getRestoreLo
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: array
  *                  items:
  *                    $ref: '#/components/schemas/ScheduleWithStatus'
@@ -409,10 +475,10 @@ api.get('/v1/schedules', (req, res, next) => apiController.listSchedule(req, res
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                data: 
+ *                data:
  *                  type: object
  *                  $ref: '#/components/schemas/ScheduleWithStatus'
  *      400:
@@ -438,20 +504,20 @@ api.get('/v1/schedules/:name', (req, res, next) => apiController.getSchedule(req
  *           schema:
  *             $ref: '#/components/schemas/Schedule'
  *     responses:
- *      200:
+ *      201:
  *        description: Successfully
  *        content:
  *          application/json:
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
  *                errors:
  *                  type: array
  *                  description: list of fields with errors
- *                schedule: 
+ *                schedule:
  *                  description: the new schedule
  *                  type: object
  *                  $ref: '#/components/schemas/Schedule'
@@ -484,7 +550,7 @@ api.post('/v1/schedules', (req, res, next) => apiController.createSchedule(req, 
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
  *      400:
@@ -516,10 +582,10 @@ api.delete('/v1/schedules/:name', (req, res, next) => apiController.deleteSchedu
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                backup: 
+ *                backup:
  *                  description: the new backup
  *                  type: object
  *                  $ref: '#/components/schemas/Backup'
@@ -552,10 +618,10 @@ api.put('/v1/schedules/:name/execute', (req, res, next) => apiController.execute
  *            schema:
  *              type: object
  *              properties:
- *                status: 
+ *                status:
  *                  type: boolean
  *                  description: status of the operation
- *                paused: 
+ *                paused:
  *                  type: boolean
  *                  description: the new state of the schedule (pause, unpause)
  *      400:

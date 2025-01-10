@@ -12,15 +12,16 @@ express.mockReturnValue({
   },
   get: function () {},
   post: function () {},
-  delete: function () {}
+  delete: function () {},
+  put: function () {}
 });
 
 process.env.METRICS = true;
 const server = require('./app.js');
 
 describe('Check lanching servers', () => {
-  it('should app/metrics server in running mode', async () => {
-    expect(ports.length).toEqual(2);
-    expect(ports).toEqual([3000, 3001]);
+  it('should app/metrics/api servers in running mode', async () => {
+    expect(ports.length).toEqual(3);
+    expect(ports).toEqual([3000, 3002, 3001]);
   });
 });

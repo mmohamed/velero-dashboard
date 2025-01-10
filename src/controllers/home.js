@@ -33,7 +33,7 @@ class HomeController {
     const backupStorageLocations = await this.kubeService.listBackupStorageLocations();
     const volumeSnapshotLocations = await this.kubeService.listVolumeSnapshotLocations();
 
-    var backupStorageLocationStatus = 'uncknown';
+    var backupStorageLocationStatus = 'unknown';
     var backupStorageLocationLastSync = null;
 
     for (var i in backupStorageLocations) {

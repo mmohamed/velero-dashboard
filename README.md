@@ -22,6 +22,7 @@ This is a very simplified Velero dashboard for backup, restore and schedule mana
 - Delete a schedule
 - Pause / Unpause a schedule
 - Get backup and restore result information (logs included)
+- Full Rest API support (docs /v1/docs)
 
 ### 2. App features
 
@@ -43,7 +44,7 @@ LDAP_SEARCH_BASE="OU=users,DC=mtr,DC=com"
 LDAP_SEARCH_FILTER=sAMAccountName
 ```
 
-- Multi-tenant & User access namspaced scope : With LDAP configuration, you can define a scope control based on an assotioation of a LDAP groups and a list of namespace, for example, if a user X is member of LDAP group group-it, he can manage backup, restore and schedule with include-namespace associated to the group-it (all namespace mut be accessible by the user to see these resources)
+- Multi-tenant & User access namespaced scope : With LDAP configuration, you can define a scope control based on an assotioation of a LDAP groups and a list of namespace, for example, if a user X is member of LDAP group group-it, he can manage backup, restore and schedule with include-namespace associated to the group-it (all namespace mut be accessible by the user to see these resources)
 
 ```ini
 NAMESPACE_FILTERING='[{"group": "group-it", "namespaces": ["ns1","ns2","ns3"]}]' # json list

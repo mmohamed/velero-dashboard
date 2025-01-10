@@ -4,7 +4,7 @@ const axios = require('axios');
 const zlib = require('zlib');
 const cron = require('cron-validator');
 const sanitizer = require('sanitizer');
-const auth = require('basic-auth')
+const auth = require('basic-auth');
 const { authenticate } = require('ldap-authentication');
 const Backup = require('./../models/backup');
 const BackupStatus = require('./../models/backupstatus');
@@ -34,7 +34,7 @@ class APIController {
     }
 
     if (adminAccount && adminAccount.username === user.name && adminAccount.password === user.pass) {
-      authenticateduser = {isAdmin: true, username: user.name, password: user.pass, groups: [], namespaces: []};
+      authenticateduser = { isAdmin: true, username: user.name, password: user.pass, groups: [], namespaces: [] };
     }
 
     if (ldapConfig && !authenticateduser) {
@@ -51,14 +51,20 @@ class APIController {
         if (authenticated) {
           let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups ? authenticated.groups.split('|') : [];
           let availableNamespaces = tools.userNamespace(groups);
-          authenticateduser = {isAdmin: false, username: authenticated.gecos ? authenticated.gecos : request.body.username, password: user.pass, groups: groups, namespaces: availableNamespaces};
+          authenticateduser = {
+            isAdmin: false,
+            username: authenticated.gecos ? authenticated.gecos : request.body.username,
+            password: user.pass,
+            groups: groups,
+            namespaces: availableNamespaces
+          };
         }
       } catch (err) {
         console.error(err);
       }
     }
 
-    if(!authenticateduser){
+    if (!authenticateduser) {
       return response.status(403).end('Forbidden');
     }
 
@@ -71,21 +77,71 @@ class APIController {
     tools.audit(user.name, 'APIController', 'LOGIN');
     delete authenticateduser.password;
     response.set('authenticateduser', JSON.stringify(authenticateduser));
-    
+
     // switch context for each request
     if (this.kubeService.isMultiCluster()) {
       let newContext = request.query.context;
       if (newContext) {
-        request.session.context = newContext;
+        this.kubeService.switchContext(newContext);
       }
-      let userContext = request.session.context;
-      if (!userContext) {
-        userContext = this.kubeService.getCurrentContext();
-        request.session.context = userContext;
-      }
-      this.kubeService.switchContext(userContext);
     }
     return next();
+  }
+
+  async getStatus(request, response) {
+    const deployStatus = await this.kubeService.getVeleroDeploymentStatus();
+    const backupStorageLocations = await this.kubeService.listBackupStorageLocations();
+    const volumeSnapshotLocations = await this.kubeService.listVolumeSnapshotLocations();
+
+    var backupStorageLocationsSerialized = [];
+    var volumeSnapshotLocationsSerialized = [];
+
+    for (var i in backupStorageLocations) {
+      if (backupStorageLocations[i].spec.default) {
+        backupStorageLocationsSerialized.push({
+          status: backupStorageLocations[i].status ? backupStorageLocations[i].status.phase : 'unknown',
+          lastSync: backupStorageLocations[i].status ? backupStorageLocations[i].status.lastSyncedTime : 'unknown',
+          name: backupStorageLocations[i].metadata.name
+        });
+      }
+    }
+
+    for (var i in volumeSnapshotLocations) {
+      if (volumeSnapshotLocations[i].spec.default) {
+        volumeSnapshotLocationsSerialized.push({
+          status: volumeSnapshotLocations[i].statu ? volumeSnapshotLocations[i].status.phase : 'unknown',
+          lastSync: volumeSnapshotLocations[i].statu ? volumeSnapshotLocations[i].status.lastSyncedTime : 'unknown',
+          name: volumeSnapshotLocations[i].metadata.name
+        });
+      }
+    }
+
+    // audit
+    let user = JSON.parse(response.get('authenticateduser'));
+    tools.audit(user.username, 'APIController', 'STATUS');
+    // check ready
+    let isReady = false;
+    if (deployStatus && deployStatus.status && deployStatus.status.replicas - deployStatus.status.readyReplicas == 0) {
+      isReady = true;
+    }
+
+    let status = {
+      isReady: isReady,
+      isReadOnly: !user.isAdmin && tools.readOnlyMode(),
+      backupStorageLocations: backupStorageLocationsSerialized,
+      volumeSnapshotLocations: volumeSnapshotLocationsSerialized
+    };
+
+    if (this.kubeService.isMultiCluster()) {
+      status.contexts = [];
+      status.currentContext = this.kubeService.getCurrentContext();
+      let contexts = this.kubeService.getContexts();
+      for (let i in contexts) {
+        status.contexts.push(contexts[i].name);
+      }
+    }
+
+    response.type('json').send(status);
   }
 
   async createBackup(request, response) {
@@ -161,7 +217,7 @@ class APIController {
       }
     }
     // snapshotlocation
-    if (bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+    if (bodyRequest.snapshot && bodyRequest.snapshot === '1') {
       if (!bodyRequest.snapshotLocation || bodyRequest.snapshotLocation.trim().length == 0) {
         errors.push('snapshotLocation');
       }
@@ -182,15 +238,16 @@ class APIController {
     let responseContent = null;
 
     if (!errors.length) {
-      let selectors = [], labels = [];
-      if(bodyRequest.selectors){
-        for(let i in bodyRequest.selectors){
-          selectors.push(bodyRequest.selectors[i].name+':'+bodyRequest.selectors[i].value);
+      let selectors = [],
+        labels = [];
+      if (bodyRequest.selectors) {
+        for (let i in bodyRequest.selectors) {
+          selectors.push(bodyRequest.selectors[i].name + ':' + bodyRequest.selectors[i].value);
         }
       }
-      if(bodyRequest.backuplabels){
-        for(let i in bodyRequest.backuplabels){
-          labels.push(bodyRequest.backuplabels[i].name+':'+bodyRequest.backuplabels[i].value);
+      if (bodyRequest.backuplabels) {
+        for (let i in bodyRequest.backuplabels) {
+          labels.push(bodyRequest.backuplabels[i].name + ':' + bodyRequest.backuplabels[i].value);
         }
       }
       let backupRequest = {
@@ -206,20 +263,23 @@ class APIController {
         excluderesources: bodyRequest.excludeResources ? bodyRequest.excludeResources.join(',') : null,
         useselector: selectors.join(','),
         labels: labels.join(',')
-      }
+      };
       let createErrors = {};
       const newBackup = await this.kubeService.createBackup(backupRequest, user, createErrors);
       if (newBackup) {
         tools.audit(user.username, 'APIController', 'CREATE', bodyRequest.name, 'Backup');
         responseContent = Backup.buildFromCRD(newBackup);
-        if(responseContent){
+        if (responseContent) {
           responseContent = responseContent.serialize();
         }
       } else {
         errors.push(createErrors.message ? createErrors.message : 'Unable to create new backup');
       }
     }
-    response.type('json').send({ status: errors.length == 0, data: responseContent, errors: errors });
+    response
+      .type('json')
+      .status(errors.length == 0 ? 201 : 200)
+      .send({ status: errors.length == 0, data: responseContent, errors: errors });
   }
 
   async createSchedule(request, response) {
@@ -301,7 +361,7 @@ class APIController {
       }
     }
     // snapshotlocation
-    if (bodyRequest.snapshot && bodyRequest.snapshot === '1'){
+    if (bodyRequest.snapshot && bodyRequest.snapshot === '1') {
       if (!bodyRequest.snapshotLocation || bodyRequest.snapshotLocation.trim().length == 0) {
         errors.push('snapshotLocation');
       }
@@ -322,15 +382,16 @@ class APIController {
     let responseContent = null;
 
     if (!errors.length) {
-      let selectors = [], labels = [];
-      if(bodyRequest.selectors){
-        for(let i in bodyRequest.selectors){
-          selectors.push(bodyRequest.selectors[i].name+':'+bodyRequest.selectors[i].value);
+      let selectors = [],
+        labels = [];
+      if (bodyRequest.selectors) {
+        for (let i in bodyRequest.selectors) {
+          selectors.push(bodyRequest.selectors[i].name + ':' + bodyRequest.selectors[i].value);
         }
       }
-      if(bodyRequest.backuplabels){
-        for(let i in bodyRequest.backuplabels){
-          labels.push(bodyRequest.backuplabels[i].name+':'+bodyRequest.backuplabels[i].value);
+      if (bodyRequest.backuplabels) {
+        for (let i in bodyRequest.backuplabels) {
+          labels.push(bodyRequest.backuplabels[i].name + ':' + bodyRequest.backuplabels[i].value);
         }
       }
       let scheduleRequest = {
@@ -349,20 +410,23 @@ class APIController {
         cron: bodyRequest.cron,
         ownerreferences: bodyRequest.ownerReferenceInBackup ? '1' : '0',
         paused: bodyRequest.paused ? '1' : '0'
-      }
+      };
       let createErrors = {};
       const newSchedule = await this.kubeService.createSchedule(scheduleRequest, user, createErrors);
       if (newSchedule) {
         tools.audit(user.username, 'APIController', 'CREATE', bodyRequest.name, 'Schedule');
         responseContent = Schedule.buildFromCRD(newSchedule);
-        if(responseContent){
+        if (responseContent) {
           responseContent = responseContent.serialize();
         }
       } else {
         errors.push(createErrors.message ? createErrors.message : 'Unable to create new schedule');
       }
     }
-    response.type('json').send({ status: errors.length == 0, data: responseContent, errors: errors });
+    response
+      .type('json')
+      .status(errors.length == 0 ? 201 : 200)
+      .send({ status: errors.length == 0, data: responseContent, errors: errors });
   }
 
   async createRestoreFromBackup(request, response) {
@@ -380,26 +444,22 @@ class APIController {
       return response.status(403).json({});
     }
 
-    let restoreName = request.params.name+'-restore-'+Math.floor(Date.now() / 1000);
-    const newRestore = await this.kubeService.createRestore({name: restoreName, backup: request.params.name}, backup);
+    let restoreName = request.params.name + '-restore-' + Math.floor(Date.now() / 1000);
+    const newRestore = await this.kubeService.createRestore({ name: restoreName, backup: request.params.name }, backup);
     // audit
-    tools.audit(
-      user.username,
-      'APIController',
-      'CREATE',
-      restoreName,
-      'Restore',
-      'Origin backup : ' + request.params.name
-    );
+    tools.audit(user.username, 'APIController', 'CREATE', restoreName, 'Restore', 'Origin backup : ' + request.params.name);
 
     let responseContent = Restore.buildFromCRD(newRestore);
-    if(responseContent){
+    if (responseContent) {
       responseContent = responseContent.serialize();
     }
 
-    response.type('json').send({ status: newRestore ? true : false, restore: responseContent });
+    response
+      .type('json')
+      .status(newRestore ? 201 : 200)
+      .send({ status: newRestore ? true : false, restore: responseContent });
   }
-  
+
   async listBackup(request, response) {
     let backups = await this.kubeService.listBackups();
     let user = JSON.parse(response.get('authenticateduser'));
@@ -408,14 +468,14 @@ class APIController {
     for (let i in backups) {
       if (tools.hasAccess(user, backups[i])) {
         let responseContent = Backup.buildFromCRD(backups[i]);
-        if(responseContent){
+        if (responseContent) {
           responseContent = responseContent.serialize();
           let subResponseContent = BackupStatus.buildFromCRD(backups[i]);
-          if(subResponseContent){
+          if (subResponseContent) {
             responseContent.status = subResponseContent.serialize();
           }
         }
-        if(responseContent){
+        if (responseContent) {
           availableBackups.push(responseContent);
         }
       }
@@ -444,10 +504,10 @@ class APIController {
     tools.audit(user.username, 'APIController', 'GET', request.params.name, 'Backup');
 
     let responseContent = Backup.buildFromCRD(backup);
-    if(responseContent){
+    if (responseContent) {
       responseContent = responseContent.serialize();
       let subResponseContent = BackupStatus.buildFromCRD(backup);
-      if(subResponseContent){
+      if (subResponseContent) {
         responseContent.status = subResponseContent.serialize();
       }
     }
@@ -459,13 +519,13 @@ class APIController {
     if (!request.params.name) {
       return response.status(404).json({});
     }
-    
+
     let backup = await this.kubeService.getBackup(request.params.name);
-    
+
     if (!backup) {
       return response.status(404).json({});
     }
-    
+
     let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
     // access
     let user = JSON.parse(response.get('authenticateduser'));
@@ -531,8 +591,8 @@ class APIController {
       }
       // audit
       tools.audit(user.username, 'APIController', 'DOWNLOAD', request.params.name, 'Backup');
-      
-      return response.type('json').send(sanitizer.sanitize(JSON.stringify({result: jsonResult, logs: logResult})));
+
+      return response.type('json').send(sanitizer.sanitize(JSON.stringify({ result: jsonResult, logs: logResult })));
     } catch (err) {
       console.error(err);
     }
@@ -555,12 +615,15 @@ class APIController {
       return response.status(403).json({});
     }
 
-    var deleteRequest = await this.kubeService.createDeleteBackupRequest('delete-'+request.params.name+'-'+Math.floor(Date.now() / 1000), request.params.name);
+    var deleteRequest = await this.kubeService.createDeleteBackupRequest(
+      'delete-' + request.params.name + '-' + Math.floor(Date.now() / 1000),
+      request.params.name
+    );
     if (deleteRequest) {
       // audit
       tools.audit(user.username, 'APIController', 'DELETE', request.params.name, 'Backup');
     }
-    response.send({ status: deleteRequest ? true : false , backup: request.params.name});
+    response.send({ status: deleteRequest ? true : false, backup: request.params.name });
   }
 
   async listRestore(request, response) {
@@ -571,10 +634,10 @@ class APIController {
     for (let i in restores) {
       if (tools.hasAccess(user, restores[i])) {
         let responseContent = Restore.buildFromCRD(restores[i]);
-        if(responseContent){
+        if (responseContent) {
           responseContent = responseContent.serialize();
           let subResponseContent = RestoreStatus.buildFromCRD(restores[i]);
-          if(subResponseContent){
+          if (subResponseContent) {
             responseContent.status = subResponseContent.serialize();
           }
         }
@@ -606,10 +669,10 @@ class APIController {
     tools.audit(user.username, 'APIController', 'GET', '', 'Restore');
 
     let responseContent = Restore.buildFromCRD(restore);
-    if(responseContent){
+    if (responseContent) {
       responseContent = responseContent.serialize();
       let subResponseContent = RestoreStatus.buildFromCRD(restore);
-      if(subResponseContent){
+      if (subResponseContent) {
         responseContent.status = subResponseContent.serialize();
       }
     }
@@ -694,7 +757,7 @@ class APIController {
       // audit
       tools.audit(user.username, 'APIController', 'DOWNLOAD', request.params.name, 'Restore');
 
-      return response.type('json').send(sanitizer.sanitize(JSON.stringify({result: jsonResult, logs: logResult})));
+      return response.type('json').send(sanitizer.sanitize(JSON.stringify({ result: jsonResult, logs: logResult })));
     } catch (err) {
       console.error(err);
     }
@@ -710,10 +773,10 @@ class APIController {
     for (let i in schedules) {
       if (tools.hasAccess(user, schedules[i])) {
         let responseContent = Schedule.buildFromCRD(schedules[i]);
-        if(responseContent){
+        if (responseContent) {
           responseContent = responseContent.serialize();
           let subResponseContent = ScheduleStatus.buildFromCRD(schedules[i]);
-          if(subResponseContent){
+          if (subResponseContent) {
             responseContent.status = subResponseContent.serialize();
           }
         }
@@ -744,14 +807,14 @@ class APIController {
     // audit
     tools.audit(user.username, 'APIController', 'GET', request.params.name, 'Schedule');
     let responseContent = Schedule.buildFromCRD(schedule);
-    if(responseContent){
+    if (responseContent) {
       responseContent = responseContent.serialize();
       let subResponseContent = ScheduleStatus.buildFromCRD(schedule);
-      if(subResponseContent){
+      if (subResponseContent) {
         responseContent.status = subResponseContent.serialize();
       }
     }
-    response.type('json').send(sanitizer.sanitize(JSON.stringify({status: responseContent != null, data: responseContent})));
+    response.type('json').send(sanitizer.sanitize(JSON.stringify({ status: responseContent != null, data: responseContent })));
   }
 
   async deleteSchedule(request, response) {
@@ -761,7 +824,7 @@ class APIController {
 
     let schedule = await this.kubeService.getSchedule(request.params.name);
     let user = JSON.parse(response.get('authenticateduser'));
-    
+
     if (!schedule) {
       return response.status(404).json({});
     }
@@ -774,7 +837,7 @@ class APIController {
     tools.audit(user.username, 'APIController', 'DELETE', request.params.name, 'Schedule');
 
     await this.kubeService.deleteSchedule(request.params.name);
-    
+
     response.send({ status: true });
   }
 
@@ -784,23 +847,20 @@ class APIController {
     }
 
     let schedule = await this.kubeService.getSchedule(request.params.name);
+    if (!schedule) {
+      return response.status(404).json({});
+    }
+
     let user = JSON.parse(response.get('authenticateduser'));
     // filter
     if (!tools.hasAccess(user, schedule)) {
       return response.status(403).json({});
     }
 
-    let backupName = request.params.name+'-backup-'+Math.floor(Date.now() / 1000);
+    let backupName = request.params.name + '-backup-' + Math.floor(Date.now() / 1000);
     const returned = await this.kubeService.executeSchedule(schedule, backupName);
     // audit
-    tools.audit(
-      user.username,
-      'APIController',
-      'EXECUTE',
-      request.params.name,
-      'Schedule',
-      'Created backup : ' + backupName
-    );
+    tools.audit(user.username, 'APIController', 'EXECUTE', request.params.name, 'Schedule', 'Created backup : ' + backupName);
     // response
     response.send({ status: returned ? true : false, backup: returned });
   }
@@ -832,7 +892,6 @@ class APIController {
       'Schedule',
       'Schedule ' + (schedule.spec.paused ? 'unpaused' : 'paused')
     );
-    console.debug(returned);
     // response
     response.type('json').send({ status: returned ? true : false, paused: returned ? (returned.spec.paused ? true : false) : false });
   }
