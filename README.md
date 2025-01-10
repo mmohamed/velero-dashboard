@@ -87,11 +87,12 @@ MULTI_CLUSTER_CONFIG_DIR=/absolut/path/config/dir #default false
 
 _Important : If metrics is enabled, a cluster label will contain the context name of the metric._
 
-- Web app options : to define Web app listening port , a secret key for session encryption, a subpath (baypass absolute UI URL), a secured cookie restriction (work only with SSL on backned enabled, key and cert files required) and the admin credentials
+- Web app options : to define Web app listening port , api server listening port, a secret key for session encryption, a subpath (baypass absolute UI URL), a secured cookie restriction (work only with SSL on backned enabled, key and cert files required) and the admin credentials
 
 ```ini
 SECRET_KEY=random-secret-key #default default-secret-mut-be-changed
 APP_PORT=8080 #default 3000
+API_PORT=8082 #default 3002
 SECURE_HOST=true # default false
 SECURE_HOST_CERT_FILE_PATH=/absolut/path/to/cert/file # default false
 SECURE_HOST_KEY_FILE_PATH=/absolut/path/to/key/file # default false
