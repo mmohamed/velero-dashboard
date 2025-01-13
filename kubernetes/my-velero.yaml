@@ -102,6 +102,8 @@ spec:
               value: '1'
             - name: METRICS
               value: '1'
+            - name: API_SUB_PATH
+              value: '/api'
             - name: LDAP_HOST
               value: ldaps://my-velero-ldap-svc.velero.svc.cluster.local:636
             - name: LDAP_SKIP_SSL
@@ -117,7 +119,7 @@ spec:
             - name: LDAP_SEARCH_FILTER
               value: sAMAccountName
             - name: NAMESPACE_FILTERING
-              value: '[{"group": "IT", "namespaces": ["ovpn","ovpn-dev","ovpn-prd"]}]'
+              value: '[{"group": "IT", "namespaces": ["qrcode","qrcode-dev","qrcode-prd"]}]'
 
 ---
 apiVersion: v1
@@ -160,7 +162,7 @@ spec:
           - backend:
               serviceName: my-velero-svc
               servicePort: api
-            path: /api/
+            path: /api
   tls:
     - hosts:
         - myvelero.medinvention.dev

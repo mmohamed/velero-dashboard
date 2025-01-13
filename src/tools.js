@@ -12,7 +12,7 @@ const tools = {
   },
   apiSubPath: function () {
     if (process.env.API_SUB_PATH && process.env.API_SUB_PATH.trim().length > 0) {
-      return ('/' + process.env.API_SUB_PATH.trim()).replace(/\/{2,}/g, '/');
+      return ('/' + process.env.API_SUB_PATH.trim() + '/').replace(/\/{2,}/g, '/');
     }
     return '/';
   },

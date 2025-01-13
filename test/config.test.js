@@ -12,7 +12,7 @@ describe('SubPath APP & API', () => {
     process.env.ADMIN_USERNAME = 'admin';
     process.env.ADMIN_PASSWORD = 'admin';
     process.env.APP_SUB_PATH = '/subpath-of-my-velero';
-    process.env.API_SUB_PATH = 'api/';
+    process.env.API_SUB_PATH = 'api';
   });
   it('should redirect to homepage/login with subpath', async () => {
     var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
