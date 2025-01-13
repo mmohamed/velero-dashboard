@@ -16,6 +16,14 @@ express.mockReturnValue({
   put: function () {}
 });
 
+express.Router.mockReturnValue({
+  get: function () {},
+  post: function () {},
+  delete: function () {},
+  put: function () {},
+  use: function () {}
+});
+
 process.env.METRICS = true;
 const server = require('./app.js');
 
