@@ -22,7 +22,7 @@ describe('Backups get', () => {
     process.env.AUDIT_LOG = 'true';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
-  it('should have access to 2 backups', async () => {
+  it('should have access to 3 backups', async () => {
     var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
@@ -144,7 +144,7 @@ describe('Backups result show', () => {
     var data = {
       errors: ['error 1', 'error 2'],
       warnings: {
-        namspace: ['waning 1', 'warning 2']
+        namespace: ['waning 1', 'warning 2']
       }
     };
     axios.get.mockImplementation(function (url) {

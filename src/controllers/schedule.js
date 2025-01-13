@@ -147,7 +147,7 @@ class ScheduleController {
   }
 
   async listAction(request, response) {
-    let schedules = await this.kubeService.listSchedules('velero.io', 'v1', tools.namespace(), 'schedules');
+    let schedules = await this.kubeService.listSchedules();
     // filter
     let availableSchedules = [];
     for (let i in schedules) {

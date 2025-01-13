@@ -24,9 +24,9 @@ const metrics = express();
 var server = app;
 
 // https server
-if(tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()){
+if (tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()) {
   console.log(new Date(), ': Start HTTPS server...');
-  server = https.createServer({key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath())}, app);
+  server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, app);
 }
 
 app.use(bodyParser.urlencoded({ extended: true }));
