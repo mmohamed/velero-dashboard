@@ -7,6 +7,15 @@ const tools = {
   port: function () {
     return process.env.APP_PORT | 3000;
   },
+  apiPort: function () {
+    return process.env.API_PORT | 3002;
+  },
+  apiSubPath: function () {
+    if (process.env.API_SUB_PATH && process.env.API_SUB_PATH.trim().length > 0) {
+      return ('/' + process.env.API_SUB_PATH.trim() + '/').replace(/\/{2,}/g, '/');
+    }
+    return '/';
+  },
   subPath: function (slug) {
     if (process.env.APP_SUB_PATH && process.env.APP_SUB_PATH.trim().length > 0) {
       var newSlug = '/' + process.env.APP_SUB_PATH.trim() + '/' + slug;

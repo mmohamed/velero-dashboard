@@ -2,25 +2,34 @@ const data = {
   oddCall: false,
   backups: function () {
     return [
-      { spec: { includedNamespaces: ['ns1', 'ns2'], storageLocation: 'default' }, metadata: { name: 'backup-first' } },
-      { spec: { includedNamespaces: ['ns1', 'ns3'], storageLocation: 'default' }, metadata: { name: 'backup-second' } },
-      { spec: { includedNamespaces: ['ns4'], storageLocation: 'default' }, metadata: { name: 'backup-third' } }
+      { spec: { includedNamespaces: ['ns1', 'ns2'], storageLocation: 'default' }, metadata: { name: 'backup-first' }, status: {} },
+      { spec: { includedNamespaces: ['ns1', 'ns3'], storageLocation: 'default' }, metadata: { name: 'backup-second' }, status: {} },
+      { spec: { includedNamespaces: ['ns4'], storageLocation: 'default' }, metadata: { name: 'backup-third' }, status: {} }
     ];
   },
   restores: function () {
     return [
-      { spec: { includedNamespaces: ['ns1', 'ns2'], backupName: 'backup-first' }, metadata: { name: 'first-restore-from-backup-first' } },
+      {
+        spec: { includedNamespaces: ['ns1', 'ns2'], backupName: 'backup-first' },
+        metadata: { name: 'first-restore-from-backup-first' },
+        status: {}
+      },
       {
         spec: { includedNamespaces: ['ns1', 'ns3'], backupName: 'backup-second' },
-        metadata: { name: 'second-restore-from-backup-second' }
+        metadata: { name: 'second-restore-from-backup-second' },
+        status: {}
       },
-      { spec: { includedNamespaces: ['ns4'], backupName: 'backup-third' }, metadata: { name: 'third-restore-from-backup-third' } }
+      {
+        spec: { includedNamespaces: ['ns4'], backupName: 'backup-third' },
+        metadata: { name: 'third-restore-from-backup-third' },
+        status: {}
+      }
     ];
   },
   schedules: function () {
     return [
-      { spec: { template: { includedNamespaces: ['ns1', 'ns2'] } }, metadata: { name: 'first-schedules' } },
-      { spec: { template: { includedNamespaces: ['ns1', 'ns3'] } }, metadata: { name: 'second-schedules' } }
+      { spec: { template: { includedNamespaces: ['ns1', 'ns2'] } }, metadata: { name: 'first-schedules' }, status: {} },
+      { spec: { template: { includedNamespaces: ['ns1', 'ns3'] } }, metadata: { name: 'second-schedules' }, status: {} }
     ];
   },
   namespaces: function () {
@@ -33,11 +42,14 @@ const data = {
         spec: { default: true, objectStorage: { caCert: 'ZmFrZWNhY2VydAo=' } },
         status: { phase: 'Available', lastSyncedTime: '2023-11-06T14:09:49Z' }
       },
-      { metadata: { name: 'backupstoragelocations', spec: {} } }
+      { metadata: { name: 'backupstoragelocations' }, spec: {} }
     ];
   },
   volumesnapshotlocations: function () {
-    return [{ metadata: { name: 'default' }, spec: { default: true } }, { metadata: { name: 'volumesnapshotlocations' } }];
+    return [
+      { metadata: { name: 'default' }, spec: { default: true } },
+      { metadata: { name: 'volumesnapshotlocations' }, spec: {} }
+    ];
   },
   downloadrequests: function () {
     this.oddCall = !this.oddCall;

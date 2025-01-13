@@ -41,11 +41,11 @@ class AuthController {
       return next(error);
     }
     // handle CSRF token errors
-    if(/application\/json;/.test(request.get('accept'))){
+    if (/application\/json;/.test(request.get('accept'))) {
       response.status(403);
       response.send('CSRF Token Invalid');
-    }else{
-      response.redirect(request.originalUrl+'?csrf-error');
+    } else {
+      response.redirect(request.originalUrl + '?csrf-error');
     }
   }
 
