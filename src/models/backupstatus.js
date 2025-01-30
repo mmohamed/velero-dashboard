@@ -11,32 +11,40 @@ class BackupStatus {
    *           properties:
    *             phase:
    *               type: string
-   *               description: the state of the backup.
-   *               example: Completed, PartiallyFailed
+   *               description: the state of the backup (Completed, PartiallyFailed, Failed).
+   *               example: Completed
    *             failureReason:
    *               type: string
    *               description: failure message if completed with error
+   *               example: Global error 
    *             errors:
    *               type: integer
    *               description: errors count
+   *               example: 0
    *             warnings:
    *               type: integer
    *               description: warning count
+   *               example: 0
    *             itemsBackedUp:
    *               type: integer
    *               description: items backedUp count
+   *               example: 0
    *             totalItems:
    *               type: integer
    *               description: total items count
+   *               example: 0
    *             expireAt:
    *               type: string
    *               description: the expiration date
+   *               example: 2023-12-06T14:09:49Z
    *             startedAt:
    *               type: string
    *               description: the starting date
+   *               example: 2023-11-06T14:09:49Z
    *             completedAt:
    *               type: string
    *               description: the completion date
+   *               example: 2023-11-06T14:11:09Z
    */
 
   #backup;

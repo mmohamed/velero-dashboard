@@ -40,3 +40,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Full Rest API support V1 (swagger doc)
+
+## [1.2.1] - 2024-01-30
+
+### Fixed
+
+- Fix the swagger doc API

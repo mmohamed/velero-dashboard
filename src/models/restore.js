@@ -23,7 +23,8 @@ class Restore {
    *           example: my-backup
    *         createdAt:
    *           required: true
-   *           type: datetime
+   *           type: string
+   *           example: 2023-11-06T14:11:09Z
    *           description: creation date.
    *         includeNamespaces:
    *           required: false

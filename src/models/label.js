@@ -9,9 +9,11 @@ class Label {
    *         name:
    *           required: true
    *           type: string
+   *           example: myvelero/v1
    *         value:
    *           required: false
    *           type: string
+   *           example: enable
    */
 
   #name;
