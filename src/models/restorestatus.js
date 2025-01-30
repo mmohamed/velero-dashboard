@@ -10,29 +10,37 @@ class RestoreStatus {
    *           type: object
    *           properties:
    *             completedAt:
-   *               type: datetime
+   *               type: string
    *               description: completing date
+   *               example: 2023-11-06T14:11:09Z
    *             startedAt:
-   *               type: datetime
+   *               type: string
    *               description: starting date
+   *               example: 2023-11-06T13:11:09Z
    *             failureReason:
    *               type: string
    *               description: failure message if completed with error
+   *               example: Global error 
    *             phase:
    *               type: string
    *               example: Completed
+   *               description: the state of the restore (Completed, PartiallyFailed, Failed).
    *             errors:
    *               type: integer
    *               description: errors count
+   *               example: 0
    *             warnings:
    *               type: integer
    *               description: warning count
+   *               example: 0
    *             itemsRestored:
    *               type: integer
    *               description: restored items count
+   *               example: 10 
    *             totalItems:
    *               type: integer
    *               description: total items count
+   *               example: 10 
    */
 
   #restore;

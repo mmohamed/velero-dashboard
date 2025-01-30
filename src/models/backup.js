@@ -32,14 +32,17 @@ class Backup {
    *           type: string
    *           required: false
    *           description: The snapshot location name.
+   *           example: default
    *         backupLocation:
    *           type: string
    *           required: false
    *           description: The backup location.
+   *           example: default
    *         backupRetention:
    *           type: integer
    *           required: true
    *           description: The backup retention days (must be 30, 60 or 90).
+   *           example: 60
    *         includeNamespaces:
    *           required: false
    *           type: array

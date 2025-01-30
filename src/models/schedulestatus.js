@@ -12,6 +12,7 @@ class ScheduleStatus {
    *             lastBackup:
    *               type: string
    *               description: the last backup date.
+   *               example: 2023-11-06T14:11:09Z
    */
 
   #schedule;

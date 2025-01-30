@@ -79,9 +79,11 @@ router.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, { customSit
  *                          lastSync:
  *                            type: string
  *                            description: Time of last sync.
+ *                            example: 2023-11-06T14:09:49Z
  *                          name:
  *                            type: string
  *                            describe: The location name.
+ *                            example: default
  *                    volumeSnapshotLocations:
  *                      type: array
  *                      items:
@@ -94,9 +96,11 @@ router.use('/v1/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, { customSit
  *                          lastSync:
  *                            type: string
  *                            description: Time of last sync.
+ *                            example: 2023-11-06T14:09:49Z
  *                          name:
  *                            type: string
  *                            describe: The location name.
+ *                            example: default
  *      400:
  *        description: Bad Request
  *      404:

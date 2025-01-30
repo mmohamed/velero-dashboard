@@ -19,14 +19,14 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Multi (Remote) Cluster mode.
+- Multi (Remote) Cluster mode
 - CirculeCI configuration
 - Debug logs
 - GIP support
 
 ### Fixed
 
-- Fix relative paths (#4).
+- Fix relative paths (#4)
 - Fix logs timestamp
 - Fix read only mode view
 - Fix CaCert for of Backup Storage location
@@ -40,3 +40,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Full Rest API support V1 (swagger doc)
+
+## [1.2.1] - 2024-01-30
+
+### Fixed
+
+- Fix security issues
+- Fix the swagger doc API
