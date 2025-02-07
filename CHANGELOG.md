@@ -35,15 +35,21 @@ All notable changes to this project will be documented in this file.
 
 - Upgrade dependencies: @kubernetes/client-node from 0.19.0 to 0.20.0
 
-## [1.2.0] - 2024-01-10
+## [1.2.0] - 2025-01-10
 
 ### Added
 
 - Full Rest API support V1 (swagger doc)
 
-## [1.2.1] - 2024-01-30
+## [1.2.1] - 2025-01-30
 
 ### Fixed
 
 - Fix security issues
 - Fix the swagger doc API
+
+## [1.2.2] - 2025-02-07
+
+### Added
+
+- Add SSL support for API backend
