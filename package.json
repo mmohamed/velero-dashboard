@@ -45,7 +45,7 @@
     "sanitizer": "^0.1.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "twing": "^5.2.2",
+    "twing": "^6.0.0",
     "xss-shield": "^1.0.1"
   },
   "devDependencies": {
