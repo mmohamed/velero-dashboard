@@ -53,3 +53,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Add SSL support for API backend
+
+## [1.2.3] - 2025-11-20
+
+### Fixed
+
+- Fix LDAP authentication with password or username contains special characters 
