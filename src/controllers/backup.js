@@ -156,11 +156,10 @@ class BackupController {
     }
     // create download request for result
     let downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'BackupResults');
-
     let isProcessed = false,
       retry = 0,
       downloadResultLink = null;
-    while (!isProcessed && retry < 15) {
+    while (downloadRequest && !isProcessed && retry < 15) {
       downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
       if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
         isProcessed = true;
@@ -174,10 +173,10 @@ class BackupController {
     downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
     // create download request for log
     downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'BackupLog');
-
+    
     (isProcessed = false), (retry = 0);
     let downloadLogLink = null;
-    while (!isProcessed && retry < 15) {
+    while (downloadRequest && !isProcessed && retry < 15) {
       downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
       if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
         isProcessed = true;

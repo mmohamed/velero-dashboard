@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "commonjs" /* Specify what module code is generated. */,
+
+    // THIS IS IMPORTANT!
+    "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+  },
+  "include": [
+    "src/**/*" // Include all files in the 'src' folder
+  ]
+}

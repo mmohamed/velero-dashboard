@@ -127,7 +127,7 @@ npm start # access to http://localhost:3000
 # Teting
 npm test
 # Building image
-docker buildx build --push --platform linux/arm64,linux/arm/v7,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
+docker buildx build --push --platform linux/arm64,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
 ```
 
 ## Deployment

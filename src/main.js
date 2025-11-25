@@ -6,7 +6,7 @@ const csrf = require('csurf');
 const xssShield = require('xss-shield');
 const https = require('https');
 const fs = require('fs');
-const { TwingEnvironment, TwingLoaderFilesystem, TwingFunction } = require('twing');
+const { createFilesystemLoader, createEnvironment, createFunction } = require('twing');
 require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
 
 const AuthController = require('./controllers/auth');
@@ -40,14 +40,15 @@ app.use(
 app.use(express.static(__dirname + '/../static'));
 
 const csrfProtect = csrf({ cookie: true });
-const loader = new TwingLoaderFilesystem('./templates');
-const twing = new TwingEnvironment(loader);
-const viewPath = new TwingFunction(
+const loader = createFilesystemLoader(fs);
+loader.addPath('./templates');
+const twing = createEnvironment(loader);
+const viewPath = createFunction(
   'path',
-  function (slug) {
+  function (_executionContext, slug) {
     return Promise.resolve(tools.subPath(slug));
   },
-  []
+  [{name: 'slug'}]
 );
 twing.addFunction(viewPath);
 
