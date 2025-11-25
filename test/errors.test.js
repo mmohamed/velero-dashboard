@@ -84,8 +84,8 @@ describe('Managing partial server errors 2', () => {
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
 
-    // res = await requestWithSupertest.get('/restores/result/first-restore-from-backup-first').set('cookie', auth.cookie);
-    // expect(res.status).toEqual(200);
+    res = await requestWithSupertest.get('/restores/result/first-restore-from-backup-first').set('cookie', auth.cookie);
+    expect(res.status).toEqual(200);
 
     res = await requestWithSupertest.get('/backups/result/backup-first').set('cookie', auth.cookie);
     expect(res.status).toEqual(200);
