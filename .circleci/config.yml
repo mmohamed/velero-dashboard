@@ -38,7 +38,7 @@ jobs:
             docker context create buildx-build
             docker buildx create --use buildx-build
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker buildx build --push --platform linux/arm64,linux/arm/v7,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
+            docker buildx build --push --platform linux/arm64,linux/amd64 --tag medinvention/my-velero-dashboard:dev .
 
 workflows:
   sample:
