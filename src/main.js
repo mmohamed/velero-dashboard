@@ -45,7 +45,7 @@ loader.addPath('./templates');
 const twing = createEnvironment(loader);
 const viewPath = createFunction(
   'path',
-  function (slug) {
+  function (_executionContext, slug) {
     return Promise.resolve(tools.subPath(slug));
   },
   [{name: 'slug'}]

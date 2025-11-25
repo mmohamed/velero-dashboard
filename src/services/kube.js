@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const k8s = require('@kubernetes/client-node');
 
+
 class KubeService {
   constructor() {
     this.kc = new k8s.KubeConfig();
@@ -119,7 +120,7 @@ class KubeService {
   async listNamespaces() {
     try {
       const namespaces = await this.getCoreApi().listNamespace();
-      return namespaces.body.items;
+      return namespaces.items;
     } catch (err) {
       console.error('List namespaces error : ' + err);
       return [];
@@ -128,13 +129,14 @@ class KubeService {
 
   async listBackupStorageLocations() {
     try {
-      const backupStorageLocations = await this.getCustomObjectsApi().listNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'backupstoragelocations'
-      );
-      return backupStorageLocations.body.items;
+      const backupStorageLocations = await this.getCustomObjectsApi().listNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backupstoragelocations'
+      });
+      
+      return backupStorageLocations.items;
     } catch (err) {
       console.error('List backup storage locations error : ' + err);
       return [];
@@ -143,13 +145,13 @@ class KubeService {
 
   async getBackupStorageLocation(name) {
     try {
-      const backupStorageLocation = await this.getCustomObjectsApi().getNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'backupstoragelocations',
-        name
-      );
+      const backupStorageLocation = await this.getCustomObjectsApi().getNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backupstoragelocations',
+        name: name
+      });
       return backupStorageLocation.body ? backupStorageLocation.body : null;
     } catch (err) {
       console.error('Get backup storage locations error : ' + err);
@@ -159,13 +161,13 @@ class KubeService {
 
   async listVolumeSnapshotLocations() {
     try {
-      const volumesnapshotlocations = await this.getCustomObjectsApi().listNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'volumesnapshotlocations'
-      );
-      return volumesnapshotlocations.body.items;
+      const volumesnapshotlocations = await this.getCustomObjectsApi().listNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'volumesnapshotlocations'
+      });
+      return volumesnapshotlocations.items;
     } catch (err) {
       console.error('List volumes napshot locations error : ' + err);
       return [];
@@ -174,8 +176,13 @@ class KubeService {
 
   async listBackups() {
     try {
-      const backups = await this.getCustomObjectsApi().listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups');
-      return backups.body.items;
+      const backups = await this.getCustomObjectsApi().listNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backups'
+      });
+      return backups.items;
     } catch (err) {
       console.error('List backups error : ' + err);
       return [];
@@ -184,8 +191,14 @@ class KubeService {
 
   async getBackup(name) {
     try {
-      let backup = await this.getCustomObjectsApi().getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', name);
-      return backup.body ? backup.body : null;
+      let backup = await this.getCustomObjectsApi().getNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backups',
+        name: name
+      });
+      return backup;
     } catch (err) {
       console.error('Get backup error : ' + err);
       return null;
@@ -194,8 +207,13 @@ class KubeService {
 
   async listRestores() {
     try {
-      const restores = await this.getCustomObjectsApi().listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores');
-      return restores.body.items;
+      const restores = await this.getCustomObjectsApi().listNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'restores'
+      });
+      return restores.items;
     } catch (err) {
       console.error('List restores error : ' + err);
       return [];
@@ -204,8 +222,14 @@ class KubeService {
 
   async getRestore(name) {
     try {
-      let restore = await this.getCustomObjectsApi().getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'restores', name);
-      return restore.body ? restore.body : null;
+      let restore = await this.getCustomObjectsApi().getNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'restores',
+        name: name
+      });
+      return restore;
     } catch (err) {
       console.error('Get restore error : ' + err);
       return null;
@@ -264,8 +288,14 @@ class KubeService {
     }
 
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
-      return response.response.body;
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backups',
+        body: body
+      });
+      return response;
     } catch (err) {
       console.error('Create backup error : ' + err);
       if (typeof errors == 'object' && err.body && err.body.message) {
@@ -293,14 +323,14 @@ class KubeService {
     };
 
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'downloadrequests',
-        body
-      );
-      return response.response.body;
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'downloadrequests',
+        body: body
+      });
+      return response;
     } catch (err) {
       console.error('Create download request error : ' + err);
       return null;
@@ -309,14 +339,14 @@ class KubeService {
 
   async geDownloadRequest(name) {
     try {
-      let downloadRequest = await this.getCustomObjectsApi().getNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'downloadrequests',
-        name
-      );
-      return downloadRequest.body ? downloadRequest.body : null;
+      let downloadRequest = await this.getCustomObjectsApi().getNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'downloadrequests',
+        name: name
+      });
+      return downloadRequest;
     } catch (err) {
       console.error('Get download request error : ' + err);
       return null;
@@ -338,14 +368,14 @@ class KubeService {
     };
 
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'deletebackuprequests',
-        body
-      );
-      return response.response.body;
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'deletebackuprequests',
+        body: body
+      });
+      return response;
     } catch (err) {
       console.error('Create delete backup request error : ' + err);
       return null;
@@ -380,14 +410,14 @@ class KubeService {
       }
     };
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'restores',
-        body
-      );
-      return response.response.body;
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'restores',
+        body: body
+      });
+      return response;
     } catch (err) {
       console.error('Create restore error : ' + err);
       if (typeof errors == 'object' && err.body && err.body.message) {
@@ -399,8 +429,13 @@ class KubeService {
 
   async listSchedules() {
     try {
-      const schedules = await this.getCustomObjectsApi().listNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules');
-      return schedules.body.items;
+      const schedules = await this.getCustomObjectsApi().listNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'schedules'
+      });
+      return schedules.items;
     } catch (err) {
       console.error('List schedules error : ' + err);
       return [];
@@ -409,8 +444,14 @@ class KubeService {
 
   async getSchedule(name) {
     try {
-      let schedule = await this.getCustomObjectsApi().getNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', name);
-      return schedule.body ? schedule.body : null;
+      let schedule = await this.getCustomObjectsApi().getNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'schedules',
+        name: name
+      });
+      return schedule;
     } catch (err) {
       console.error('Get schedule error : ' + err);
       return null;
@@ -419,7 +460,13 @@ class KubeService {
 
   async deleteSchedule(name) {
     try {
-      this.getCustomObjectsApi().deleteNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'schedules', name);
+      this.getCustomObjectsApi().deleteNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'schedules',
+        name: name
+      });
       return true;
     } catch (err) {
       console.error('Delete schedule error : ' + err);
@@ -437,20 +484,16 @@ class KubeService {
           value: true
         }
       ];
-      let options = { headers: { 'Content-type': k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH } };
-      let response = await this.getCustomObjectsApi().patchNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'schedules',
-        schedule.metadata.name,
-        patch,
-        undefined,
-        undefined,
-        undefined,
-        options
-      );
-      return response.response.body;
+      let options = { headers: { 'Content-type': k8s.PatchStrategy.JsonPatch } };
+      let response = await this.getCustomObjectsApi().patchNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'schedules',
+        name: schedule.metadata.name,
+        body: patch
+      }, options);
+      return response;
     } catch (err) {
       console.error('Toggle schedule error : ' + err);
       return null;
@@ -469,8 +512,14 @@ class KubeService {
         },
         spec: schedule.spec.template
       };
-      var returned = await this.getCustomObjectsApi().createNamespacedCustomObject('velero.io', 'v1', tools.namespace(), 'backups', body);
-      return returned.response.body;
+      var returned = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'backups',
+        body: body
+      });
+      return returned;
     } catch (err) {
       console.error('Execute schedule error : ' + err);
       return null;
@@ -534,14 +583,14 @@ class KubeService {
     }
 
     try {
-      const response = await this.getCustomObjectsApi().createNamespacedCustomObject(
-        'velero.io',
-        'v1',
-        tools.namespace(),
-        'schedules',
-        body
-      );
-      return response.response.body;
+      const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
+        group: 'velero.io',
+        version: 'v1',
+        namespace: tools.namespace(),
+        plural: 'schedules',
+        body: body
+      });
+      return response;
     } catch (err) {
       console.error('Create schedule error : ' + err);
       if (typeof errors == 'object' && err.body && err.body.message) {
@@ -553,8 +602,8 @@ class KubeService {
 
   async getVeleroDeploymentStatus(name) {
     try {
-      const deployStatus = await this.getAppsApi().readNamespacedDeploymentStatus('velero', tools.namespace());
-      return deployStatus.body ? deployStatus.body : null;
+      const deployStatus = await this.getAppsApi().readNamespacedDeploymentStatus({ name: 'velero', namespace: tools.namespace()});
+      return deployStatus;
     } catch (err) {
       console.error('Get velero deployment status error : ' + err);
       return null;
