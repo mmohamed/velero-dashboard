@@ -25,7 +25,7 @@ class RestoreController {
     let isProcessed = false,
       retry = 0,
       downloadResultLink = null;
-    while (!isProcessed && retry < 15) {
+    while (downloadRequest && !isProcessed && retry < 15) {
       downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
       if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
         isProcessed = true;
@@ -42,7 +42,7 @@ class RestoreController {
 
     (isProcessed = false), (retry = 0);
     let downloadLogLink = null;
-    while (!isProcessed && retry < 15) {
+    while (downloadRequest && !isProcessed && retry < 15) {
       downloadRequest = await this.kubeService.geDownloadRequest(downloadRequestName);
       if (downloadRequest && downloadRequest.status && downloadRequest.status.phase == 'Processed') {
         isProcessed = true;
