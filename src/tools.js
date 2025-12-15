@@ -108,6 +108,12 @@ const tools = {
     }
     return false;
   },
+  resourcePolicies: function () {
+    if (process.env.RESOURCE_POLICIES && process.env.RESOURCE_POLICIES.trim().length > 0) {
+      return process.env.RESOURCE_POLICIES.trim();
+    }
+    return null;
+  },
   readOnlyMode: function () {
     if (
       process.env.READ_ONLY_USER &&
