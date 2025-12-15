@@ -270,6 +270,9 @@ class KubeService {
         ttl: parseInt(backupDef.retention) * 24 + 'h0m0s'
       }
     };
+    if(tools.resourcePolicies() != null){
+      body.spec.resourcePolicy = {kind: 'configmap', name: tools.resourcePolicies()}
+    }
     if (backupDef.cluster !== undefined && user.isAdmin) {
       body.spec.includeClusterResources = backupDef.cluster === '1' ? true : false;
     }
@@ -286,7 +289,7 @@ class KubeService {
         body.spec.labelSelector = labelSelector;
       }
     }
-
+    
     try {
       const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
         group: 'velero.io',
@@ -565,6 +568,9 @@ class KubeService {
         paused: scheduleDef.paused === '1' ? true : false
       }
     };
+    if(tools.resourcePolicies() != null){
+      body.spec.template.resourcePolicy = {kind: 'configmap', name: tools.resourcePolicies()}
+    }
     if (scheduleDef.cluster !== undefined && user.isAdmin) {
       body.spec.template.includeClusterResources = scheduleDef.cluster === '1' ? true : false;
     }
@@ -581,7 +587,7 @@ class KubeService {
         body.spec.template.labelSelector = labelSelector;
       }
     }
-
+    
     try {
       const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
         group: 'velero.io',

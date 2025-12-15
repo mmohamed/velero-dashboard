@@ -59,3 +59,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix LDAP authentication with password or username contains special characters 
+
+## [1.2.4] - 2025-12-15
+
+### Added
+
+- Add global resource policy support for backup and schedule

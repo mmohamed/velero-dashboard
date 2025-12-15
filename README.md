@@ -50,11 +50,12 @@ LDAP_SEARCH_FILTER=sAMAccountName
 NAMESPACE_FILTERING='[{"group": "group-it", "namespaces": ["ns1","ns2","ns3"]}]' # json list
 ```
 
-- Velero default configuration : to define the Velero install namespace , and using FS Backup option by default
+- Velero default configuration : to define the Velero install namespace, force usage of resource policy configmap (configmap name) for backup / schedule and using FS Backup option by default
 
 ```ini
 VELERO_NAMESPACE=myvelero #default velero
 USE_FSBACKUP=true #default false
+RESOURCE_POLICIES=volume-policies # default empty
 ```
 
 - Metrics for Prometheus: if is enabled, Backup and Restore status metrics will be available for Prometheus scraper
