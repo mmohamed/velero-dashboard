@@ -39,7 +39,7 @@ spec:
                       - arm64
       containers:
         - name: my-velero-minio
-          image: bitnami/minio:2023.10.25
+          image: bitnamilegacy/minio:2023.4.20 # 2023.10.25(v2)
           env:
             - name: MINIO_ROOT_USER
               valueFrom:
@@ -111,6 +111,9 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
   name: my-velero-minio-ing
   namespace: velero
   labels:
