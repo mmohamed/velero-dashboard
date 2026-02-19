@@ -48,6 +48,7 @@ describe('Schedules create', () => {
       excludeResources: ['job'],
       backupRetention: 60,
       snapshot: true,
+      snapshotMoveData: false,
       includeClusterResources: true,
       defaultVolumeToFS: true,
       backuplabels: 'app:test',

@@ -48,7 +48,7 @@ const viewPath = createFunction(
   function (_executionContext, slug) {
     return Promise.resolve(tools.subPath(slug));
   },
-  [{name: 'slug'}]
+  [{ name: 'slug' }]
 );
 twing.addFunction(viewPath);
 

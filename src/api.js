@@ -16,8 +16,8 @@ var server = api;
 
 // https server
 if (tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()) {
-    console.log(new Date(), ': Start API HTTPS server...');
-    server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, api);
+  console.log(new Date(), ': Start API HTTPS server...');
+  server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, api);
 }
 
 api.use(express.json());

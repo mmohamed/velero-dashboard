@@ -108,6 +108,24 @@ const tools = {
     }
     return false;
   },
+  snapshotVolumes: function () {
+    if (
+      process.env.SNAPSHOT_VOLUMES &&
+      (process.env.SNAPSHOT_VOLUMES.trim() === '1' || process.env.SNAPSHOT_VOLUMES.trim().toLowerCase() === 'true')
+    ) {
+      return true;
+    }
+    return false;
+  },
+  snapshotMoveData: function () {
+    if (
+      process.env.SNAPSHOT_MOVE_DATA &&
+      (process.env.SNAPSHOT_MOVE_DATA.trim() === '1' || process.env.SNAPSHOT_MOVE_DATA.trim().toLowerCase() === 'true')
+    ) {
+      return true;
+    }
+    return false;
+  },
   resourcePolicies: function () {
     if (process.env.RESOURCE_POLICIES && process.env.RESOURCE_POLICIES.trim().length > 0) {
       return process.env.RESOURCE_POLICIES.trim();

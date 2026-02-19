@@ -57,6 +57,7 @@ describe('Backups create', () => {
       excludeResources: ['job'],
       backupRetention: 60,
       snapshot: true,
+      snapshotMoveData: true,
       includeClusterResources: true,
       defaultVolumeToFS: true,
       backuplabels: 'app:test',

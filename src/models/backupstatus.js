@@ -16,7 +16,7 @@ class BackupStatus {
    *             failureReason:
    *               type: string
    *               description: failure message if completed with error
-   *               example: Global error 
+   *               example: Global error
    *             errors:
    *               type: integer
    *               description: errors count
@@ -162,7 +162,7 @@ class BackupStatus {
 
       status.setPhase(crd.status.phase);
       status.setErrors(crd.status.errors ? crd.status.errors : 0);
-      status.setWarnings(crd.status.warnings ? rd.status.warnings : 0);
+      status.setWarnings(crd.status.warnings ? crd.status.warnings : 0);
       status.setExpireAt(crd.status.expirattion);
       status.setStartedAt(crd.status.startTimestamp);
       status.setCompletedAt(crd.status.completionTimestamp);

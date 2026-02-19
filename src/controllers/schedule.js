@@ -139,6 +139,8 @@ class ScheduleController {
         namespaces: availableNamespaces,
         user: user,
         defaultVolumesToFsBackup: tools.useFSBackup(),
+        defaultVolumeSnapshots: tools.snapshotVolumes(),
+        defaultSnapshotMoveData: tools.snapshotMoveData(),
         csrfToken: request.csrfToken()
       })
       .then((output) => {

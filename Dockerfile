@@ -2,10 +2,12 @@ FROM node:24
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json ./
+RUN npm i && npm ci --omit=dev
 
 COPY . .
+RUN rm -rf build coverage doc kubernetes test .git .circleci
+RUN find -type f -name ".*" -delete
 
 EXPOSE 3000
 

@@ -20,7 +20,7 @@ class RestoreStatus {
    *             failureReason:
    *               type: string
    *               description: failure message if completed with error
-   *               example: Global error 
+   *               example: Global error
    *             phase:
    *               type: string
    *               example: Completed
@@ -36,11 +36,11 @@ class RestoreStatus {
    *             itemsRestored:
    *               type: integer
    *               description: restored items count
-   *               example: 10 
+   *               example: 10
    *             totalItems:
    *               type: integer
    *               description: total items count
-   *               example: 10 
+   *               example: 10
    */
 
   #restore;

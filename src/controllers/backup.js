@@ -137,6 +137,8 @@ class BackupController {
         namespaces: availableNamespaces,
         user: user,
         defaultVolumesToFsBackup: tools.useFSBackup(),
+        defaultVolumeSnapshots: tools.snapshotVolumes(),
+        defaultSnapshotMoveData: tools.snapshotMoveData(),
         csrfToken: request.csrfToken()
       })
       .then((output) => {
@@ -173,7 +175,7 @@ class BackupController {
     downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
     // create download request for log
     downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'BackupLog');
-    
+
     (isProcessed = false), (retry = 0);
     let downloadLogLink = null;
     while (downloadRequest && !isProcessed && retry < 15) {
