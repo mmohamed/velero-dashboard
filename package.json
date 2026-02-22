@@ -30,7 +30,7 @@
       ]
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!(@kubernetes/client-node|jose)/)"
+      "/node_modules/(?!(@kubernetes/client-node|openid-client|oauth4webapi|jose)/)"
     ],
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
