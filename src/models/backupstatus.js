@@ -181,4 +181,4 @@ class BackupStatus {
   }
 }
 
-module.exports = BackupStatus;
+export default BackupStatus;

@@ -30,7 +30,7 @@
       ]
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!(@kubernetes/client-node|openid-client|oauth4webapi|jose)/)"
+      "/node_modules/(?!(@kubernetes/client-node|jose)/)"
     ],
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
@@ -48,7 +48,9 @@
   },
   "author": "Marouan MOHAMED",
   "license": "Apache-2.0",
+  "type": "module",
   "dependencies": {
+    "@babel/preset-env": "^7.29.0",
     "@kubernetes/client-node": "^1.4.0",
     "axios": "^1.13.2",
     "basic-auth": "^2.0.1",
@@ -78,7 +80,7 @@
     "nodemon": "^3.1.11",
     "prettier": "3.1.0",
     "supertest": "^6.3.4",
-    "ts-jest": "^29.4.5",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   }
 }

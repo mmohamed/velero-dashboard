@@ -4,7 +4,7 @@ const util = require('./test.util');
 const k8s = require('@kubernetes/client-node');
 const supertest = require('supertest');
 const api = require('./../src/api.js');
-const requestWithSupertest = supertest(api);
+const requestWithSupertest = supertest(api.default);
 
 describe('Managing partial server errors 1', () => {
   beforeAll(() => {

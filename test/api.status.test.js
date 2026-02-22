@@ -5,7 +5,7 @@ const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const api = require('./../src/api');
-const requestWithSupertest = supertest(api);
+const requestWithSupertest = supertest(api.default);
 
 jest.mock('axios');
 

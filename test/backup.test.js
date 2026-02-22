@@ -7,7 +7,7 @@ const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertest(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 

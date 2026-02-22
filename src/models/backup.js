@@ -1,4 +1,4 @@
-const Label = require('./label');
+import Label from './label.js'
 
 class Backup {
   /**
@@ -293,4 +293,4 @@ class Backup {
   }
 }
 
-module.exports = Backup;
+export default Backup;

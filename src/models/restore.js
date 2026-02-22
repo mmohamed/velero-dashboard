@@ -170,4 +170,4 @@ class Restore {
   }
 }
 
-module.exports = Restore;
+export default Restore;

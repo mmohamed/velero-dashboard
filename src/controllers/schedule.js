@@ -1,6 +1,6 @@
-const tools = require('./../tools');
-const cron = require('cron-validator');
-const sanitizer = require('sanitizer');
+import tools from './../tools.js'
+import {isValidCron} from 'cron-validator'
+import sanitizer from 'sanitizer'
 
 class ScheduleController {
   constructor(kubeService, twing, k8sApi, customObjectsApi) {
@@ -29,7 +29,7 @@ class ScheduleController {
       }
       if (!bodyRequest.cron || bodyRequest.cron.trim().length == 0) {
         errors.push('cron');
-      } else if (!cron.isValidCron(bodyRequest.cron)) {
+      } else if (!isValidCron(bodyRequest.cron)) {
         errors.push('cron');
       }
       // includenamespace
@@ -144,7 +144,7 @@ class ScheduleController {
         csrfToken: request.csrfToken()
       })
       .then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
   }
 
@@ -236,4 +236,4 @@ class ScheduleController {
   }
 }
 
-module.exports = ScheduleController;
+export default ScheduleController;

@@ -1,5 +1,5 @@
-const Backup = require('./backup');
-const Label = require('./label');
+import Backup from './backup.js'
+import Label from './label.js'
 
 class Schedule extends Backup {
   /**
@@ -112,4 +112,4 @@ class Schedule extends Backup {
   }
 }
 
-module.exports = Schedule;
+export default Schedule;

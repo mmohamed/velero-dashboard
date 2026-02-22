@@ -6,19 +6,19 @@
     <meta name="msapplication-TileColor" content="#603cba">
     <meta name="theme-color" content="#ffffff">
     <meta name="csrf-token" content="{{ csrfToken }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ path('/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ path('/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ path('/favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ path('/site.webmanifest') }}">
-    <link rel="mask-icon" href="{{ path('/safari-pinned-tab.svg') }}" color="#031014">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ path('/static/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ path('/static/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ path('/static/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ path('/static/site.webmanifest') }}">
+    <link rel="mask-icon" href="{{ path('/static/safari-pinned-tab.svg') }}" color="#031014">
     <title>My Velero - {% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ path('/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ path('/css/bootstrap-icons.css') }}">
-    <link rel="stylesheet" href="{{ path('/css/dataTables.bootstrap5.min.css') }}">
-    <link rel="stylesheet" href="{{ path('/css/jquery.toast.min.css') }}">
-    <link rel="stylesheet" href="{{ path('/css/jquery-confirm.min.css') }}">
-    <link rel="stylesheet" href="{{ path('/css/select2.min.css') }}" />
-    <link rel="stylesheet" href="{{ path('/css/select2-bootstrap-5-theme.min.css') }}" />
+    <link rel="stylesheet" href="{{ path('/static/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/static/css/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ path('/static/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/static/css/jquery.toast.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/static/css/jquery-confirm.min.css') }}">
+    <link rel="stylesheet" href="{{ path('/static/css/select2.min.css') }}" />
+    <link rel="stylesheet" href="{{ path('/static/css/select2-bootstrap-5-theme.min.css') }}" />
     <style>
     main > .container {
       padding-top: 60px;
@@ -58,21 +58,21 @@
 
     <footer class="footer mt-auto py-3 bg-body-tertiary">
         <div class="container">
-            <span class="text-body-secondary">&copy; My Velero {{ version }} - <a href="https://medinvention.io" target="_blank">medinvention.io</a> [Experimentation - Beta]</span>
+            <span class="text-body-secondary">&copy; My Velero {{ version }} - <a href="https://medinvention.io" target="_blank">medinvention.io</a> [Stable]</span>
         </div>
     </footer>
     {% endblock -%}
-    <script src="{{ path('/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ path('/js/popper.min.js') }}"></script>
-    <script src="{{ path('/js/bootstrap.min.js') }}"></script>
-    <script src="{{ path('/js/jquery.min.js') }}"></script>
-    <script src="{{ path('/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ path('/js/dataTables.bootstrap5.min.js') }}"></script>
-    <script src="{{ path('/js/moment.js') }}"></script>
-    <script src="{{ path('/js/jquery.blockUI.js') }}"></script>
-    <script src="{{ path('/js/jquery.toast.min.js') }}"></script>
-    <script src="{{ path('/js/jquery-confirm.min.js') }}"></script>
-    <script src="{{ path('/js/select2.min.js') }}"></script>
+    <script src="{{ path('/static/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ path('/static/js/popper.min.js') }}"></script>
+    <script src="{{ path('/static/js/bootstrap.min.js') }}"></script>
+    <script src="{{ path('/static/js/jquery.min.js') }}"></script>
+    <script src="{{ path('/static/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ path('/static/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ path('/static/js/moment.js') }}"></script>
+    <script src="{{ path('/static/js/jquery.blockUI.js') }}"></script>
+    <script src="{{ path('/static/js/jquery.toast.min.js') }}"></script>
+    <script src="{{ path('/static/js/jquery-confirm.min.js') }}"></script>
+    <script src="{{ path('/static/js/select2.min.js') }}"></script>
     {%- block javascript %}{% endblock -%}
   </body>
 </html>

@@ -166,4 +166,4 @@ class RestoreStatus {
   }
 }
 
-module.exports = RestoreStatus;
+export default RestoreStatus;

@@ -4,7 +4,7 @@ process.env.METRICS_PATH = 'internal-metrics';
 const k8s = require('@kubernetes/client-node');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.metrics);
+const requestWithSupertest = supertest(server.default.metrics);
 
 describe('Disabled metrics', () => {
   beforeAll(() => {

@@ -1,8 +1,8 @@
-const tools = require('./../tools');
-const https = require('https');
-const axios = require('axios');
-const zlib = require('zlib');
-const sanitizer = require('sanitizer');
+import tools from './../tools.js'
+import https from 'https'
+import axios from 'axios'
+import zlib from 'zlib'
+import sanitizer from 'sanitizer'
 
 class BackupController {
   constructor(kubeService, twing) {
@@ -142,7 +142,7 @@ class BackupController {
         csrfToken: request.csrfToken()
       })
       .then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
   }
 
@@ -222,14 +222,14 @@ class BackupController {
           log: logResult
         })
         .then((output) => {
-          response.end(output);
+          response.set('Content-Type', 'text/html').end(output);
         });
     } catch (err) {
       console.error(err);
     }
 
     return this.twing.render('result.html.twig').then((output) => {
-      response.end(output);
+      response.set('Content-Type', 'text/html').end(output);
     });
   }
 
@@ -272,4 +272,4 @@ class BackupController {
   }
 }
 
-module.exports = BackupController;
+export default BackupController;

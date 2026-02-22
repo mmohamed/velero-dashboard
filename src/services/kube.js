@@ -1,7 +1,7 @@
-const tools = require('./../tools');
-const fs = require('fs');
-const path = require('path');
-const k8s = require('@kubernetes/client-node');
+import tools from './../tools.js'
+import fs from 'fs'
+import path from 'path'
+import * as k8s from '@kubernetes/client-node'
 
 class KubeService {
   constructor() {
@@ -621,4 +621,4 @@ class KubeService {
   }
 }
 
-module.exports = KubeService;
+export default KubeService;

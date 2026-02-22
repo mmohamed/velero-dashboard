@@ -1,8 +1,8 @@
-const { version } = require('../package.json');
+import * as config from './../package.json' with { type: 'json' };
 
 const tools = {
   version: function () {
-    return version;
+    return config.default.version;
   },
   port: function () {
     return process.env.APP_PORT | 3000;
@@ -244,4 +244,4 @@ const tools = {
   }
 };
 
-module.exports = tools;
+export default tools;

@@ -53,6 +53,8 @@ velero install \
     --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.20.96.1:31733
 # Deploy local ldap account for testing
 kubectl apply -f ldap-dev.yaml --namespace velero
+# Deploy OIDC server @Ref: https://github.com/Soluto/oidc-server-mock
+kubectl apply -f oidc-dev.yaml --namespace velero
 # Deploy My-Velero
 kubectl apply -f my-velero.yaml --namespace velero
 ```
