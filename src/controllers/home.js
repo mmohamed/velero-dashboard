@@ -1,4 +1,4 @@
-const tools = require('./../tools');
+import tools from './../tools.js'
 
 class HomeController {
   constructor(kubeService, twing) {
@@ -7,9 +7,9 @@ class HomeController {
   }
 
   async homeView(request, response) {
-    if (!request.session.user) return response.redirect(tools.subPath('/login'));
+    if (!request.user) return response.redirect(tools.subPath('/login'));
 
-    let user = request.session.user;
+    let user = request.user;
     let readOnly = tools.readOnlyMode() && !user.isAdmin;
     let contexts = this.kubeService.getContexts();
     let currentContext = this.kubeService.getCurrentContext();
@@ -24,7 +24,7 @@ class HomeController {
         csrfToken: request.csrfToken()
       })
       .then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
   }
 
@@ -44,7 +44,7 @@ class HomeController {
       }
     }
     // audit
-    tools.audit(request.session.user.username, 'HomeController', 'STATUS');
+    tools.audit(request.user.username, 'HomeController', 'STATUS');
     // check ready
     let isReady = false;
     if (deployStatus && deployStatus.status && deployStatus.status.replicas - deployStatus.status.readyReplicas == 0) {
@@ -59,4 +59,4 @@ class HomeController {
   }
 }
 
-module.exports = HomeController;
+export default HomeController;

@@ -1,0 +1,10 @@
+{
+    "clientId": "authorization-code-client-id",
+    "clientSecret": "authorization-code-client-secret",
+    "discoveryUrl": "https://localhost:4001",
+    "redirectUrl": "http://localhost:3000/auth/oidc/callback",
+    "baseUrl": "http://localhost:3000",
+    "extraScopes": ["groups"],
+    "userClaim": "name",
+    "groupClaim": "groups"
+}

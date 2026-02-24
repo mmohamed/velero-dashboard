@@ -1,8 +1,8 @@
-const tools = require('./../tools');
-const https = require('https');
-const axios = require('axios');
-const zlib = require('zlib');
-const sanitizer = require('sanitizer');
+import tools from './../tools.js'
+import https from 'https'
+import axios from 'axios'
+import zlib from 'zlib'
+import sanitizer from 'sanitizer'
 
 class RestoreController {
   constructor(kubeService, twing) {
@@ -16,7 +16,7 @@ class RestoreController {
     let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
 
     // access
-    if (!tools.hasAccess(request.session.user, restore)) {
+    if (!tools.hasAccess(request.user, restore)) {
       return response.status(403).json({});
     }
 
@@ -79,7 +79,7 @@ class RestoreController {
       }
 
       // audit
-      tools.audit(request.session.user.username, 'RestoreController', 'DOWNLOAD', request.params.name, 'Restore');
+      tools.audit(request.user.username, 'RestoreController', 'DOWNLOAD', request.params.name, 'Restore');
 
       return this.twing
         .render('result.html.twig', {
@@ -88,14 +88,14 @@ class RestoreController {
           log: logResult
         })
         .then((output) => {
-          response.end(output);
+          response.set('Content-Type', 'text/html').end(output);
         });
     } catch (err) {
       console.error(err);
     }
 
     return this.twing.render('result.html.twig').then((output) => {
-      response.end(output);
+      response.set('Content-Type', 'text/html').end(output);
     });
   }
 
@@ -104,12 +104,12 @@ class RestoreController {
     // filter
     let availableRestores = [];
     for (let i in restores) {
-      if (tools.hasAccess(request.session.user, restores[i])) {
+      if (tools.hasAccess(request.user, restores[i])) {
         availableRestores.push(restores[i]);
       }
     }
     // audit
-    tools.audit(request.session.user.username, 'RestoreController', 'LIST', '', 'Restore');
+    tools.audit(request.user.username, 'RestoreController', 'LIST', '', 'Restore');
 
     response.type('json').send(sanitizer.sanitize(JSON.stringify(availableRestores)));
   }
@@ -124,14 +124,14 @@ class RestoreController {
       return response.status(404).json({});
     }
     // access
-    if (!tools.hasAccess(request.session.user, backup)) {
+    if (!tools.hasAccess(request.user, backup)) {
       return response.status(403).json({});
     }
 
     const newRestore = await this.kubeService.createRestore(request.body, backup);
     // audit
     tools.audit(
-      request.session.user.username,
+      request.user.username,
       'RestoreController',
       'CREATE',
       request.body.name,
@@ -143,4 +143,4 @@ class RestoreController {
   }
 }
 
-module.exports = RestoreController;
+export default RestoreController;

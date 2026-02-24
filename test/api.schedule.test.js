@@ -3,9 +3,9 @@ const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const api = require('./../src/api');
-const requestWithSupertest = supertest(api);
+const requestWithSupertest = supertestsession(api.default);
 
 jest.mock('axios');
 
@@ -48,6 +48,7 @@ describe('Schedules create', () => {
       excludeResources: ['job'],
       backupRetention: 60,
       snapshot: true,
+      snapshotMoveData: false,
       includeClusterResources: true,
       defaultVolumeToFS: true,
       backuplabels: 'app:test',

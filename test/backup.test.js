@@ -5,9 +5,9 @@ const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -27,7 +27,7 @@ describe('Backups get', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
@@ -42,7 +42,7 @@ describe('Backups create', () => {
     process.env.ADMIN_PASSWORD = '';
     process.env.AUDIT_LOG = 'true';
     process.env.READ_ONLY_USER = 'false';
-    process.env.RESOURCE_POLICIES = 'resource-policy-configmap'
+    process.env.RESOURCE_POLICIES = 'resource-policy-configmap';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {
@@ -55,13 +55,13 @@ describe('Backups create', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backup/new').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backup/new');
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('new-backup-form');
 
-    res = await await requestWithSupertest.post('/backup/new').send({ _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await await requestWithSupertest.post('/backup/new').send({ _csrf: auth.token });
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const inputs = dom.window.document.getElementsByClassName('is-invalid');
@@ -75,6 +75,7 @@ describe('Backups create', () => {
       excluderesources: 'job',
       retention: '60',
       snapshot: '1',
+      snapshotmovedata: '0',
       cluster: '1',
       fsbackup: '1',
       backuplabels: 'app:test',
@@ -83,7 +84,7 @@ describe('Backups create', () => {
       snapshotlocation: 'default',
       _csrf: auth.token
     };
-    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', auth.cookie);
+    res = await requestWithSupertest.post('/backup/new').send(backupData);
     expect(res.status).toEqual(200);
     dom = new JSDOM(res.text);
     const filteringErrors = dom.window.document.getElementsByClassName('is-invalid');
@@ -91,7 +92,7 @@ describe('Backups create', () => {
     expect(filteringErrors[0].getAttribute('id')).toEqual('includenamespace');
 
     backupData.includenamespace = ['ns1', 'ns3'];
-    res = await requestWithSupertest.post('/backup/new').send(backupData).set('cookie', auth.cookie);
+    res = await requestWithSupertest.post('/backup/new').send(backupData);
     expect(res.status).toEqual(201);
     dom = new JSDOM(res.text);
     const errors = dom.window.document.getElementsByClassName('is-invalid');
@@ -113,11 +114,11 @@ describe('Backups delete', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.delete('/backups').send({ backupignored: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backupignored: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/backups').send({ backup: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backup: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.delete('/backups').send({ backup: 'backup-first', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.delete('/backups').send({ backup: 'backup-first', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -138,9 +139,9 @@ describe('Backups result show', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups/result/').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups/result/');
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.get('/backups/result/notfound').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups/result/notfound');
     expect(res.status).toEqual(404);
     var data = {
       errors: ['error 1', 'error 2'],
@@ -154,7 +155,7 @@ describe('Backups result show', () => {
       }
       return Promise.resolve({ data: zlib.gzipSync('one-line-logs') });
     });
-    res = await requestWithSupertest.get('/backups/result/backup-first').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups/result/backup-first');
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const warnings = dom.window.document.getElementsByClassName('list-group-item-warning');

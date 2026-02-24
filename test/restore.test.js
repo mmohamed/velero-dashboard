@@ -3,9 +3,9 @@ const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -25,7 +25,7 @@ describe('Restores get', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/restores').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/restores');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
@@ -46,11 +46,11 @@ describe('Restores create from backup', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.post('/restores').send({ backupignored: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.post('/restores').send({ backupignored: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/restores').send({ backup: 'notfound', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.post('/restores').send({ backup: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.post('/restores').send({ backup: 'backup-first', _csrf: auth.token }).set('cookie', auth.cookie);
+    res = await requestWithSupertest.post('/restores').send({ backup: 'backup-first', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -71,9 +71,9 @@ describe('Restores result show', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/restores/result/').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/restores/result/');
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest.get('/restores/result/notfound').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/restores/result/notfound');
     expect(res.status).toEqual(404);
     var data = {
       errors: ['error 1', 'error 2'],
@@ -87,7 +87,7 @@ describe('Restores result show', () => {
       }
       return Promise.resolve({ data: zlib.gzipSync('one-line-logs') });
     });
-    res = await requestWithSupertest.get('/restores/result/first-restore-from-backup-first').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/restores/result/first-restore-from-backup-first');
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     const warnings = dom.window.document.getElementsByClassName('list-group-item-warning');

@@ -3,9 +3,9 @@ require('./k8s.mock').mock();
 const util = require('./test.util');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -26,10 +26,9 @@ describe('Login page', () => {
   });
   it('should display error message to missing credentials', async () => {
     const res = await requestWithSupertest.get('/login');
-    const cookie = res.get('set-cookie');
     var dom = new JSDOM(res.text);
     const token = dom.window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const resLogin = await requestWithSupertest.post('/login').send({ _csrf: token }).set('cookie', cookie);
+    const resLogin = await requestWithSupertest.post('/login').send({ _csrf: token });
     expect(resLogin.status).toEqual(200);
     expect(resLogin.text).toEqual(expect.stringContaining('Please enter both username and password'));
   });
@@ -53,13 +52,13 @@ describe('Admin Login / Logout actions', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    const resHome = await requestWithSupertest.get('/');
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Hello admin'));
 
-    const resLogout = await requestWithSupertest.get('/logout').set('cookie', auth.cookie);
+    const resLogout = await requestWithSupertest.get('/logout');
     expect(resLogout.status).toEqual(302);
-    expect(resLogout.get('Location')).toEqual('/login');
+    expect(resLogout.get('Location')).toEqual('/');
   });
 });
 
@@ -87,13 +86,13 @@ describe('LDAP User Login / Logout actions', () => {
     expect(auth.response.get('Location')).toEqual('/');
     expect(authenticate).toHaveBeenCalledTimes(1);
 
-    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    const resHome = await requestWithSupertest.get('/');
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Hello username'));
 
-    const resLogout = await requestWithSupertest.get('/logout').set('cookie', auth.cookie);
+    const resLogout = await requestWithSupertest.get('/logout');
     expect(resLogout.status).toEqual(302);
-    expect(resLogout.get('Location')).toEqual('/login');
+    expect(resLogout.get('Location')).toEqual('/');
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -124,7 +123,8 @@ describe('Authenticated access', () => {
     for (let method in paths) {
       for (let path in paths[method]) {
         const res = await calls[method](paths[method][path]);
-        expect(res.status).toEqual(403);
+        expect(res.status).toEqual(302);
+        expect(res.get('Location')).toEqual('/login');
       }
     }
   });
@@ -148,7 +148,7 @@ describe('Read only mode', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    const resHome = await requestWithSupertest.get('/');
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Read Only'));
 
@@ -171,9 +171,9 @@ describe('Read only mode', () => {
     };
 
     const calls = {
-      get: (path) => requestWithSupertest.get(path).set('cookie', auth.cookie),
-      post: (path) => requestWithSupertest.post(path).set('cookie', auth.cookie),
-      delete: (path) => requestWithSupertest.delete(path).set('cookie', auth.cookie)
+      get: (path) => requestWithSupertest.get(path),
+      post: (path) => requestWithSupertest.post(path),
+      delete: (path) => requestWithSupertest.delete(path)
     };
     for (let method in koPaths) {
       for (let path in koPaths[method]) {

@@ -1,4 +1,4 @@
-const Label = require('./label');
+import Label from './label.js'
 
 class Backup {
   /**
@@ -23,6 +23,11 @@ class Backup {
    *           required: false
    *           default: false
    *           description: Use snapshot for volumes.
+   *         snapshotMoveData:
+   *           type: boolean
+   *           required: false
+   *           default: false
+   *           description: Move snapshot data to remote storage backend.
    *         includeClusterResources:
    *           type: boolean
    *           required: false
@@ -89,6 +94,7 @@ class Backup {
   #name;
   #defaultVolumeToFS = true;
   #snapshot = false;
+  #snapshotMoveData = false;
   #includeClusterResources = false;
   #snapshotLocation;
   #backupLocation;
@@ -126,6 +132,14 @@ class Backup {
 
   getSnapshot() {
     return this.#snapshot;
+  }
+
+  setSnapshotMoveData(snapshotMoveData) {
+    this.#snapshotMoveData = Boolean(snapshotMoveData);
+  }
+
+  getSnapshotMoveData() {
+    return this.#snapshotMoveData;
   }
 
   setIncludeClusterResources(includeClusterResources) {
@@ -225,6 +239,7 @@ class Backup {
       name: this.getName(),
       defaultVolumeToFS: this.getDefaultVolumeToFS(),
       snapshot: this.getSnapshot(),
+      snapshotMoveData: this.getSnapshotMoveData(),
       includeClusterResources: this.getIncludeClusterResources(),
       snapshotLocation: this.getSnapshotLocation(),
       backupLocation: this.getBackupLocation(),
@@ -252,6 +267,7 @@ class Backup {
       backup.setExcludeResources(crd.spec.excludeResources);
       backup.setBackupRetention(crd.spec.ttl ? Math.floor(crd.spec.ttl.replace('h0m0s', '') / 24) : null);
       backup.setSnapshot(crd.spec.snapshotVolumes);
+      backup.setSnapshotMoveData(crd.spec.snapshotMoveData);
 
       let labels = [];
       if (crd.metadata.labels) {
@@ -277,4 +293,4 @@ class Backup {
   }
 }
 
-module.exports = Backup;
+export default Backup;

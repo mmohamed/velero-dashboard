@@ -38,6 +38,7 @@ metadata:
   name: my-velero-ldap-svc
   namespace: velero
 spec:
+  type: NodePort
   ports:
     - name: ldap
       port: 636

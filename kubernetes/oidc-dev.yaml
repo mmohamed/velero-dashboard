@@ -1,0 +1,196 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-velero-oidc-client
+  namespace: velero
+data:
+  identify-config.json: |
+    [{ "Name": "groups", "ClaimTypes": ["groups"] }]
+  apiresources-config.yaml: |
+    - Name:  myvelero
+      Scopes:
+        - groups
+      UserClaims:
+        - groups
+  apiscopes-config.yaml: |
+    - Name: api-groups
+      UserClaims: ["groups"]
+  users-config.json: |
+    [
+      {
+        "SubjectId":"1",
+        "Username":"user",
+        "Password":"pwd",
+        "Claims": [
+          {
+            "Type": "name",
+            "Value": "Sam Tailor",
+            "ValueType": "string"
+          },
+          {
+            "Type": "username",
+            "Value": "user",
+            "ValueType": "string"
+          },
+          {
+            "Type": "email",
+            "Value": "sam.tailor@gmail.com",
+            "ValueType": "string"
+          },
+          {
+            "Type": "some-api-resource-claim",
+            "Value": "Sam's Api Resource Custom Claim",
+            "ValueType": "string"
+          },
+          {
+            "Type": "some-api-scope-claim",
+            "Value": "Sam's Api Scope Custom Claim",
+            "ValueType": "string"
+          },
+          {
+            "Type": "some-identity-resource-claim",
+            "Value": "Sam's Identity Resource Custom Claim",
+            "ValueType": "string"
+          },
+          {
+            "Type": "groups",
+            "Value": "[\"IT\", \"HR\"]",
+            "ValueType": "json"
+          }
+        ]
+      }
+    ]
+  clients-config.json: |
+    [
+      {
+        "ClientId": "implicit-mock-client",
+        "Description": "Client for implicit flow",
+        "AllowedGrantTypes": ["implicit"],
+        "AllowAccessTokensViaBrowser": true,
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
+        "AllowedScopes": ["openid", "profile", "email"],
+        "IdentityTokenLifetime": 3600,
+        "AccessTokenLifetime": 3600
+      },
+      {
+        "ClientId": "client-credentials-mock-client",
+        "ClientSecrets": ["client-credentials-mock-client-secret"],
+        "Description": "Client for client credentials flow",
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
+        "AllowedGrantTypes": ["client_credentials", "implicit", "password"],
+        "AllowedScopes": ["myvelero-scope"],
+        "ClientClaimsPrefix": "",
+        "Claims": [
+          {
+            "Type": "string_claim",
+            "Value": "string_claim_value",
+            "ValueType": "string"
+          },
+          {
+            "Type": "json_claim",
+            "Value": "[\"value1\", \"value2\"]",
+            "ValueType": "json"
+          }
+        ]
+      },
+      {
+        "ClientId": "authorization-code-client-id",
+        "ClientSecrets": ["authorization-code-client-secret"],
+        "Description": "Client for authorization code flow",
+        "AllowedGrantTypes": ["authorization_code"],
+        "AllowAccessTokensViaBrowser": true,
+        "AlwaysIncludeUserClaimsInIdToken": true,
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
+        "AllowedScopes": ["openid", "profile", "email", "groups"],
+        "IdentityTokenLifetime": 3600,
+        "AccessTokenLifetime": 3600,
+        "RequireClientSecret": false
+      }
+    ]
+
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-velero-oidc
+  namespace: velero
+  labels:
+    app: myvelerooidc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myvelerooidc
+  template:
+    metadata:
+      labels:
+        app: myvelerooidc
+    spec:
+      volumes:
+        - name: client-config
+          configMap: 
+            name: my-velero-oidc-client
+        - name: oidc-ssl
+          secret: 
+            secretName: oidc-ssl 
+      containers:
+        - name: my-velero-oidc
+          image: ghcr.io/soluto/oidc-server-mock:latest
+          volumeMounts:
+            - name: client-config
+              mountPath: /etc/config
+            - name: oidc-ssl
+              mountPath: /https
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: CLIENTS_CONFIGURATION_PATH
+              value: /etc/config/clients-config.json
+            - name: API_RESOURCES_PATH
+              value: /etc/config/apiresources-config.yaml
+            - name: API_SCOPES_PATH
+              value: /etc/config/apiscopes-config.yaml
+            - name: USERS_CONFIGURATION_PATH
+              value: /etc/config/users-config.json
+            - name: IDENTITY_RESOURCES_PATH
+              value: /etc/config/identify-config.json 
+            - name: ASPNETCORE_URLS
+              value: https://+:8443;http://+:8080
+            # - name: ASPNETCORE_Kestrel__Certificates__Default__Password
+            #   value: ""
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+              value: /https/medinvention.dev.pfx
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 8443
+              name: https
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-velero-oidc-svc
+  namespace: velero
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 8080
+    - name: https
+      port: 4001
+      targetPort: 8443  
+  selector:
+    app: myvelerooidc

@@ -39,7 +39,7 @@ spec:
                       - arm64
       containers:
         - name: my-velero-minio
-          image: bitnami/minio:2023.10.25
+          image: bitnamilegacy/minio:2023.10.25 # 2023.4.20(v1)
           env:
             - name: MINIO_ROOT_USER
               valueFrom:
@@ -56,7 +56,7 @@ spec:
             - name: MINIO_DEFAULT_BUCKETS
               value: velero
             - name: MINIO_SERVER_URL
-              value: https://myvelero-minio.medinvention.dev
+              value: http://172.20.96.1:31733
           ports:
             - containerPort: 9000
               name: endpoint
@@ -97,6 +97,7 @@ metadata:
   name: my-velero-minio-svc
   namespace: velero
 spec:
+  type: NodePort
   ports:
     - name: endpoint
       port: 9000
@@ -111,6 +112,9 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: '0'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '600'
   name: my-velero-minio-ing
   namespace: velero
   labels:

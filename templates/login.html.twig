@@ -49,6 +49,9 @@ body {
     </div>
     <input type="hidden" name="_csrf" id="_csrf" value="{{ csrfToken }}">
     <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+    {% if oidcEnabled is defined and oidcEnabled %}
+    <a href="{{ path('/auth/oidc') }}" class="btn btn-success w-100 py-2 mt-2" type="button">SSO (OIDC)</a>
+    {% endif %}
     <p class="mt-5 mb-3 text-body-secondary">&copy; My Velero - <a href="https://medinvention.io" target="_blank">medinvention.io</a></p>
   </form>
 </main>

@@ -177,3 +177,18 @@ spec:
     - hosts:
         - myvelero.medinvention.dev
       secretName: myvelero-tls
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: volume-policies
+  namespace: velero
+data:
+  volumePolicies: |
+    version: v1
+    volumePolicies:
+    - conditions:
+        capacity: "100Gi,"
+      action:
+        type: skip

@@ -58,10 +58,28 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Fix LDAP authentication with password or username contains special characters 
+- Fix LDAP authentication with password or username contains special characters
 
 ## [1.2.4] - 2025-12-15
 
 ### Added
 
 - Add global resource policy support for backup and schedule
+
+## [1.3.0] - 2026-02-19
+
+### Added
+
+- Add snapshot volume support and snapshot move data
+- Support Velero 1.13
+
+## [1.3.1] - 2026-02-24
+
+### Added
+
+- Add OIDC Auth support
+
+### Fixed
+
+- Fix Fail login CSRF error
+- Fix restore log error parsing

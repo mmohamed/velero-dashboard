@@ -1,8 +1,8 @@
-const tools = require('./../tools');
-const https = require('https');
-const axios = require('axios');
-const zlib = require('zlib');
-const sanitizer = require('sanitizer');
+import tools from './../tools.js'
+import https from 'https'
+import axios from 'axios'
+import zlib from 'zlib'
+import sanitizer from 'sanitizer'
 
 class BackupController {
   constructor(kubeService, twing) {
@@ -11,7 +11,7 @@ class BackupController {
   }
 
   async createViewAction(request, response) {
-    let user = request.session.user;
+    let user = request.user;
     let readOnly = tools.readOnlyMode() && !user.isAdmin;
     if (readOnly) return response.status(403).json({});
 
@@ -137,10 +137,12 @@ class BackupController {
         namespaces: availableNamespaces,
         user: user,
         defaultVolumesToFsBackup: tools.useFSBackup(),
+        defaultVolumeSnapshots: tools.snapshotVolumes(),
+        defaultSnapshotMoveData: tools.snapshotMoveData(),
         csrfToken: request.csrfToken()
       })
       .then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
   }
 
@@ -151,7 +153,7 @@ class BackupController {
     }
     let downloadRequestName = request.params.name + '-result-download-request-' + Math.floor(Date.now() / 1000);
     // access
-    if (!tools.hasAccess(request.session.user, backup)) {
+    if (!tools.hasAccess(request.user, backup)) {
       return response.status(403).json({});
     }
     // create download request for result
@@ -173,7 +175,7 @@ class BackupController {
     downloadRequestName = request.params.name + '-log-download-request-' + Math.floor(Date.now() / 1000);
     // create download request for log
     downloadRequest = await this.kubeService.createDownloadRequest(downloadRequestName, request.params.name, 'BackupLog');
-    
+
     (isProcessed = false), (retry = 0);
     let downloadLogLink = null;
     while (downloadRequest && !isProcessed && retry < 15) {
@@ -211,7 +213,7 @@ class BackupController {
         tools.debug('backup log download : ' + (logResult ? logResult.substring(0, 120) : '') + '...');
       }
       // audit
-      tools.audit(request.session.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
+      tools.audit(request.user.username, 'BackupController', 'DOWNLOAD', request.params.name, 'Backup');
 
       return this.twing
         .render('result.html.twig', {
@@ -220,14 +222,14 @@ class BackupController {
           log: logResult
         })
         .then((output) => {
-          response.end(output);
+          response.set('Content-Type', 'text/html').end(output);
         });
     } catch (err) {
       console.error(err);
     }
 
     return this.twing.render('result.html.twig').then((output) => {
-      response.end(output);
+      response.set('Content-Type', 'text/html').end(output);
     });
   }
 
@@ -236,12 +238,12 @@ class BackupController {
     // filter
     let availableBackups = [];
     for (let i in backups) {
-      if (tools.hasAccess(request.session.user, backups[i])) {
+      if (tools.hasAccess(request.user, backups[i])) {
         availableBackups.push(backups[i]);
       }
     }
     // audit
-    tools.audit(request.session.user.username, 'BackupController', 'LIST', '', 'Backup');
+    tools.audit(request.user.username, 'BackupController', 'LIST', '', 'Backup');
 
     response.type('json').send(sanitizer.sanitize(JSON.stringify(availableBackups)));
   }
@@ -257,17 +259,17 @@ class BackupController {
       return response.status(404).json({});
     }
     // access
-    if (!tools.hasAccess(request.session.user, backup)) {
+    if (!tools.hasAccess(request.user, backup)) {
       return response.status(403).json({});
     }
 
     var deleteRequest = await this.kubeService.createDeleteBackupRequest(request.body.name, request.body.backup);
     if (deleteRequest) {
       // audit
-      tools.audit(request.session.user.username, 'BackupController', 'DELETE', request.params.name, 'Backup');
+      tools.audit(request.user.username, 'BackupController', 'DELETE', request.params.name, 'Backup');
     }
     response.send({ status: deleteRequest ? true : false });
   }
 }
 
-module.exports = BackupController;
+export default BackupController;

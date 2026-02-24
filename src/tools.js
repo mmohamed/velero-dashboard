@@ -1,8 +1,9 @@
-const { version } = require('../package.json');
+import * as config from './../package.json' with { type: 'json' };
+import fs from 'fs'
 
 const tools = {
   version: function () {
-    return version;
+    return config.default.version;
   },
   port: function () {
     return process.env.APP_PORT | 3000;
@@ -108,6 +109,24 @@ const tools = {
     }
     return false;
   },
+  snapshotVolumes: function () {
+    if (
+      process.env.SNAPSHOT_VOLUMES &&
+      (process.env.SNAPSHOT_VOLUMES.trim() === '1' || process.env.SNAPSHOT_VOLUMES.trim().toLowerCase() === 'true')
+    ) {
+      return true;
+    }
+    return false;
+  },
+  snapshotMoveData: function () {
+    if (
+      process.env.SNAPSHOT_MOVE_DATA &&
+      (process.env.SNAPSHOT_MOVE_DATA.trim() === '1' || process.env.SNAPSHOT_MOVE_DATA.trim().toLowerCase() === 'true')
+    ) {
+      return true;
+    }
+    return false;
+  },
   resourcePolicies: function () {
     if (process.env.RESOURCE_POLICIES && process.env.RESOURCE_POLICIES.trim().length > 0) {
       return process.env.RESOURCE_POLICIES.trim();
@@ -147,6 +166,12 @@ const tools = {
         userSearchBase: process.env.LDAP_SEARCH_BASE || '',
         usernameAttribute: process.env.LDAP_SEARCH_FILTER || ''
       };
+    }
+    return false;
+  },
+  oidcConfig: function () {
+    if (process.env.OIDC_CONFIG_PATH && process.env.OIDC_CONFIG_PATH.trim() !== '') {
+      return JSON.parse(fs.readFileSync(process.env.OIDC_CONFIG_PATH.trim(), 'utf8'));
     }
     return false;
   },
@@ -226,4 +251,4 @@ const tools = {
   }
 };
 
-module.exports = tools;
+export default tools;

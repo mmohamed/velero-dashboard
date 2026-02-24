@@ -2,9 +2,41 @@ const data = {
   oddCall: false,
   backups: function () {
     return [
-      { spec: { includedNamespaces: ['ns1', 'ns2'], storageLocation: 'default' }, metadata: { name: 'backup-first' }, status: {} },
-      { spec: { includedNamespaces: ['ns1', 'ns3'], storageLocation: 'default' }, metadata: { name: 'backup-second' }, status: {} },
-      { spec: { includedNamespaces: ['ns4'], storageLocation: 'default' }, metadata: { name: 'backup-third' }, status: {} }
+      {
+        spec: {
+          includedNamespaces: ['ns1', 'ns2'],
+          storageLocation: 'default',
+          volumeSnapshotLocations: ['default'],
+          defaultVolumesToFsBackup: false,
+          snapshot: true,
+          snapshotMoveData: false
+        },
+        metadata: { name: 'backup-first' },
+        status: {}
+      },
+      {
+        spec: {
+          includedNamespaces: ['ns1', 'ns3'],
+          storageLocation: 'default',
+          defaultVolumesToFsBackup: true,
+          snapshot: false,
+          snapshotMoveData: false
+        },
+        metadata: { name: 'backup-second' },
+        status: {}
+      },
+      {
+        spec: {
+          includedNamespaces: ['ns4'],
+          storageLocation: 'default',
+          volumeSnapshotLocations: ['default'],
+          defaultVolumesToFsBackup: false,
+          snapshot: true,
+          snapshotMoveData: true
+        },
+        metadata: { name: 'backup-third' },
+        status: {}
+      }
     ];
   },
   restores: function () {
@@ -28,8 +60,32 @@ const data = {
   },
   schedules: function () {
     return [
-      { spec: { template: { includedNamespaces: ['ns1', 'ns2'] } }, metadata: { name: 'first-schedules' }, status: {} },
-      { spec: { template: { includedNamespaces: ['ns1', 'ns3'] } }, metadata: { name: 'second-schedules' }, status: {} }
+      {
+        spec: {
+          template: {
+            includedNamespaces: ['ns1', 'ns2'],
+            volumeSnapshotLocations: ['default'],
+            defaultVolumesToFsBackup: false,
+            snapshot: true,
+            snapshotMoveData: false
+          }
+        },
+        metadata: { name: 'first-schedules' },
+        status: {}
+      },
+      {
+        spec: {
+          template: {
+            includedNamespaces: ['ns1', 'ns3'],
+            volumeSnapshotLocations: ['default'],
+            defaultVolumesToFsBackup: false,
+            snapshot: true,
+            snapshotMoveData: true
+          }
+        },
+        metadata: { name: 'second-schedules' },
+        status: {}
+      }
     ];
   },
   namespaces: function () {
