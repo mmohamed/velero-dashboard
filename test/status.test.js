@@ -3,9 +3,9 @@ const util = require('./test.util');
 const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.default.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -25,7 +25,7 @@ describe('Status get', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/status').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/status');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.isReady).toEqual(true);

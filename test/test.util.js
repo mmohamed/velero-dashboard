@@ -9,7 +9,6 @@ const util = {
     const token = dom.window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const resLogin = await requestWithSupertest
       .post('/login')
-      .set('cookie', cookie)
       .send({ _csrf: token, username: username, password: password });
     return { cookie: cookie, token, token, response: resLogin };
   }

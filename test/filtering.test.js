@@ -3,9 +3,9 @@ jest.mock('ldap-authentication');
 const util = require('./test.util');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.default.app);
+const requestWithSupertest = supertestsession(server.default.app);
 
 describe('Admin full access', () => {
   beforeAll(() => {
@@ -20,7 +20,7 @@ describe('Admin full access', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
@@ -44,19 +44,19 @@ describe('User filtred access', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
     expect(res.body[0].metadata.name).toEqual('backup-second');
 
-    res = await requestWithSupertest.get('/restores').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/restores');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
     expect(res.body[0].metadata.name).toEqual('second-restore-from-backup-second');
 
-    res = await requestWithSupertest.get('/schedules').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/schedules');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(1);
@@ -81,7 +81,7 @@ describe('User with filtering feature disabled', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);

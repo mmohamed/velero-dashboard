@@ -3,9 +3,9 @@ require('./k8s.mock').multi();
 const util = require('./test.util');
 const fs = require('fs');
 const k8s = require('@kubernetes/client-node');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.default.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -21,26 +21,26 @@ describe('Multi cluster view and switch', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(3);
 
-    res = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/');
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     var selector = dom.window.document.getElementById('contextselect');
     expect(selector.getElementsByTagName('option').length).toEqual(2);
     expect(selector.value).toEqual('first');
 
-    res = await requestWithSupertest.get('/?context=second').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/?context=second');
     expect(res.status).toEqual(200);
     var dom = new JSDOM(res.text);
     selector = dom.window.document.getElementById('contextselect');
     expect(selector.getElementsByTagName('option').length).toEqual(2);
     expect(selector.value).toEqual('second');
 
-    res = await requestWithSupertest.get('/backups').set('cookie', auth.cookie);
+    res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(0);

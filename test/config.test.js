@@ -1,9 +1,9 @@
 require('./k8s.mock').mock();
 const util = require('./test.util');
 const tools = require('./../src/tools.js');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.default.app);
+const requestWithSupertest = supertestsession(server.default.app);
 
 describe('SubPath APP & API', () => {
   beforeAll(() => {
@@ -19,13 +19,17 @@ describe('SubPath APP & API', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/subpath-of-my-velero/');
 
-    const resHome = await requestWithSupertest.get('/').set('cookie', auth.cookie);
+    const resHome = await requestWithSupertest.get('/');
     expect(resHome.status).toEqual(200);
     expect(resHome.text).toEqual(expect.stringContaining('Hello admin'));
 
-    const resLogout = await requestWithSupertest.get('/logout').set('cookie', auth.cookie);
+    const resLogout = await requestWithSupertest.get('/logout');
     expect(resLogout.status).toEqual(302);
-    expect(resLogout.get('Location')).toEqual('/subpath-of-my-velero/login');
+    expect(resLogout.get('Location')).toEqual('/subpath-of-my-velero/');
+
+    const resLogin = await requestWithSupertest.get('/subpath-of-my-velero/');
+    expect(resLogin.status).toEqual(302);
+    expect(resLogin.get('Location')).toEqual('/subpath-of-my-velero/login');
   });
   it('should cleanup the api subpath', async () => {
     expect(tools.default.apiSubPath()).toEqual('/api/');

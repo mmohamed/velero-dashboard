@@ -9,7 +9,7 @@ class ScheduleController {
   }
 
   async createViewAction(request, response) {
-    let user = request.session.user;
+    let user = request.user;
     let readOnly = tools.readOnlyMode() && !user.isAdmin;
     if (readOnly) return response.status(403).json({});
 
@@ -153,12 +153,12 @@ class ScheduleController {
     // filter
     let availableSchedules = [];
     for (let i in schedules) {
-      if (tools.hasAccess(request.session.user, schedules[i])) {
+      if (tools.hasAccess(request.user, schedules[i])) {
         availableSchedules.push(schedules[i]);
       }
     }
     // audit
-    tools.audit(request.session.user.username, 'ScheduleController', 'LIST', '', 'Schedule');
+    tools.audit(request.user.username, 'ScheduleController', 'LIST', '', 'Schedule');
     response.type('json').send(sanitizer.sanitize(JSON.stringify(availableSchedules)));
   }
 
@@ -172,12 +172,12 @@ class ScheduleController {
       return response.status(404).json({});
     }
     // access
-    if (!tools.hasAccess(request.session.user, schedule)) {
+    if (!tools.hasAccess(request.user, schedule)) {
       return response.status(403).json({});
     }
     await this.kubeService.deleteSchedule(request.body.schedule);
     // audit
-    tools.audit(request.session.user.username, 'ScheduleController', 'DELETE', request.body.schedule, 'Schedule');
+    tools.audit(request.user.username, 'ScheduleController', 'DELETE', request.body.schedule, 'Schedule');
     // response
     response.send({ status: true });
   }
@@ -192,13 +192,13 @@ class ScheduleController {
       return response.status(404).json({});
     }
     // access
-    if (!tools.hasAccess(request.session.user, schedule)) {
+    if (!tools.hasAccess(request.user, schedule)) {
       return response.status(403).json({});
     }
     var returned = await this.kubeService.toggleSchedule(schedule);
     // audit
     tools.audit(
-      request.session.user.username,
+      request.user.username,
       'ScheduleController',
       'TOGGLE',
       request.body.schedule,
@@ -218,13 +218,13 @@ class ScheduleController {
       return response.status(404).json({});
     }
     // access
-    if (!tools.hasAccess(request.session.user, schedule)) {
+    if (!tools.hasAccess(request.user, schedule)) {
       return response.status(403).json({});
     }
     var returned = await this.kubeService.executeSchedule(schedule, request.body.name);
     // audit
     tools.audit(
-      request.session.user.username,
+      request.user.username,
       'ScheduleController',
       'EXECUTE',
       request.body.schedule,

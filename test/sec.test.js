@@ -1,8 +1,8 @@
 require('./k8s.mock').mock();
 const k8s = require('@kubernetes/client-node');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.default.app);
+const requestWithSupertest = supertestsession(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -20,10 +20,9 @@ describe('CSRF Token', () => {
   });
   it('should raccpet the request with valid csrf token', async () => {
     const res = await requestWithSupertest.get('/login');
-    const cookie = res.get('set-cookie');
     var dom = new JSDOM(res.text);
     const token = dom.window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const resLogin = await requestWithSupertest.post('/login').set('cookie', cookie).send({ _csrf: token });
+    const resLogin = await requestWithSupertest.post('/login').send({ _csrf: token });
     expect(resLogin.status).toEqual(200);
   });
 });

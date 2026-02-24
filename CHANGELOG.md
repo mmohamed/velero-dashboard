@@ -72,3 +72,14 @@ All notable changes to this project will be documented in this file.
 
 - Add snapshot volume support and snapshot move data
 - Support Velero 1.13
+
+## [1.3.1] - 2026-02-24
+
+### Added
+
+- Add OIDC Auth support
+
+### Fixed
+
+- Fix Fail login CSRF error
+- Fix restore log error parsing

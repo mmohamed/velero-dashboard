@@ -6,9 +6,13 @@ import csrf from 'csurf'
 import xssShield from 'xss-shield'
 import https from 'https'
 import fs from 'fs'
+import helmet from 'helmet'
+import { Strategy as LocalStrategy } from 'passport-local'
+import passport from 'passport'
 import { createFilesystemLoader, createEnvironment, createFunction } from 'twing'
 import dotenv from 'dotenv'
 import path from 'path';
+import { discovery } from 'openid-client'
 
 dotenv.config({
   path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'
@@ -20,6 +24,7 @@ import ScheduleController from './controllers/schedule.js'
 import RestoreController from './controllers/restore.js'
 import HomeController from './controllers/home.js'
 import MetricsService from './services/metrics.js'
+import AuthService from './services/auth.js'
 import KubeService from './services/kube.js'
 import tools from './tools.js'
 
@@ -58,19 +63,49 @@ const viewPath = createFunction(
 );
 twing.addFunction(viewPath);
 
+
+app.use(helmet({contentSecurityPolicy: {directives: {scriptSrc: ["'self'", "'unsafe-inline'"]}}}));
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+app.use(passport.initialize());
+app.use(passport.session());
+
+const authService = new AuthService();
+
+passport.use(new LocalStrategy(
+  async (username, password, done) => {
+    return await authService.auth(username, password, done)
+  }
+))
+
 const kubeService = new KubeService();
 
-const authController = new AuthController(kubeService, twing);
+const authController = new AuthController(kubeService, twing, authService);
 const backupController = new BackupController(kubeService, twing);
 const scheduleController = new ScheduleController(kubeService, twing);
 const restoreController = new RestoreController(kubeService, twing);
 const homeController = new HomeController(kubeService, twing);
+
+// oidc
+const oidcConfig = tools.oidcConfig();
+let oidcDiscovery, initFN;
+if(oidcConfig){
+  oidcDiscovery =  discovery(new URL(oidcConfig.discoveryUrl), oidcConfig.clientId, oidcConfig.clientSecret);
+  (async function() {
+      await authController.initOIDCConfiguration(oidcDiscovery, oidcConfig);
+  })();
+}
 
 app.use((req, res, next) => authController.globalSecureAction(req, res, next));
 
 app.get('/login', csrfProtect, (req, res, next) => authController.loginView(req, res, next));
 app.get('/logout', (req, res, next) => authController.logoutAction(req, res, next));
 app.post('/login', csrfProtect, (req, res, next) => authController.loginAction(req, res, next));
+
+if(oidcConfig){
+  app.get('/auth/oidc', (req, res, next) => authController.oidcAction(req, res, next));
+  app.get('/auth/oidc/callback', (req, res, next) => authController.oidcCallbackAction(req, res, next));
+}
 
 app.get('/', csrfProtect, (req, res, next) => homeController.homeView(req, res, next));
 app.get('/status', (req, res, next) => homeController.statusView(req, res, next));
@@ -96,4 +131,4 @@ const metricsService = new MetricsService(kubeService);
 
 metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-export default { app: server, metrics: metrics };
+export default { app: server, metrics: metrics, init: initFN };

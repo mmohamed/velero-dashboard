@@ -5,9 +5,9 @@ const axios = require('axios');
 const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const api = require('./../src/api');
-const requestWithSupertest = supertest(api.default);
+const requestWithSupertest = supertestsession(api.default);
 
 jest.mock('axios');
 
