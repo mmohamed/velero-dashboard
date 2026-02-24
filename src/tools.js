@@ -1,4 +1,5 @@
 import * as config from './../package.json' with { type: 'json' };
+import fs from 'fs'
 
 const tools = {
   version: function () {
@@ -165,6 +166,12 @@ const tools = {
         userSearchBase: process.env.LDAP_SEARCH_BASE || '',
         usernameAttribute: process.env.LDAP_SEARCH_FILTER || ''
       };
+    }
+    return false;
+  },
+  oidcConfig: function () {
+    if (process.env.OIDC_CONFIG_PATH && process.env.OIDC_CONFIG_PATH.trim() !== '') {
+      return JSON.parse(fs.readFileSync(process.env.OIDC_CONFIG_PATH.trim(), 'utf8'));
     }
     return false;
   },

@@ -120,3 +120,5 @@ build
 .DS_Store
 
 *.pem
+certs/*
+oidc.json

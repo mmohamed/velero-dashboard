@@ -5,12 +5,17 @@ metadata:
   name: my-velero-oidc-client
   namespace: velero
 data:
+  identify-config.json: |
+    [{ "Name": "groups", "ClaimTypes": ["groups"] }]
   apiresources-config.yaml: |
     - Name:  myvelero
       Scopes:
-        - myvelero.scope
+        - groups
+      UserClaims:
+        - groups
   apiscopes-config.yaml: |
-    - Name: myvelero.scope
+    - Name: api-groups
+      UserClaims: ["groups"]
   users-config.json: |
     [
       {
@@ -21,6 +26,11 @@ data:
           {
             "Type": "name",
             "Value": "Sam Tailor",
+            "ValueType": "string"
+          },
+          {
+            "Type": "username",
+            "Value": "user",
             "ValueType": "string"
           },
           {
@@ -42,6 +52,11 @@ data:
             "Type": "some-identity-resource-claim",
             "Value": "Sam's Identity Resource Custom Claim",
             "ValueType": "string"
+          },
+          {
+            "Type": "groups",
+            "Value": "[\"IT\", \"HR\"]",
+            "ValueType": "json"
           }
         ]
       }
@@ -53,7 +68,7 @@ data:
         "Description": "Client for implicit flow",
         "AllowedGrantTypes": ["implicit"],
         "AllowAccessTokensViaBrowser": true,
-        "RedirectUris": ["http://localhost:3000/auth/oidc", "http://localhost:31943/auth/oidc"],
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
         "AllowedScopes": ["openid", "profile", "email"],
         "IdentityTokenLifetime": 3600,
         "AccessTokenLifetime": 3600
@@ -62,7 +77,8 @@ data:
         "ClientId": "client-credentials-mock-client",
         "ClientSecrets": ["client-credentials-mock-client-secret"],
         "Description": "Client for client credentials flow",
-        "AllowedGrantTypes": ["client_credentials"],
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
+        "AllowedGrantTypes": ["client_credentials", "implicit", "password"],
         "AllowedScopes": ["myvelero-scope"],
         "ClientClaimsPrefix": "",
         "Claims": [
@@ -77,6 +93,19 @@ data:
             "ValueType": "json"
           }
         ]
+      },
+      {
+        "ClientId": "authorization-code-client-id",
+        "ClientSecrets": ["authorization-code-client-secret"],
+        "Description": "Client for authorization code flow",
+        "AllowedGrantTypes": ["authorization_code"],
+        "AllowAccessTokensViaBrowser": true,
+        "AlwaysIncludeUserClaimsInIdToken": true,
+        "RedirectUris": ["http://localhost:3000/auth/oidc/callback", "http://172.20.96.1:31943/auth/oidc/callback"],
+        "AllowedScopes": ["openid", "profile", "email", "groups"],
+        "IdentityTokenLifetime": 3600,
+        "AccessTokenLifetime": 3600,
+        "RequireClientSecret": false
       }
     ]
 
@@ -105,12 +134,17 @@ spec:
         - name: client-config
           configMap: 
             name: my-velero-oidc-client
+        - name: oidc-ssl
+          secret: 
+            secretName: oidc-ssl 
       containers:
         - name: my-velero-oidc
           image: ghcr.io/soluto/oidc-server-mock:latest
           volumeMounts:
             - name: client-config
               mountPath: /etc/config
+            - name: oidc-ssl
+              mountPath: /https
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: Development
@@ -122,9 +156,19 @@ spec:
               value: /etc/config/apiscopes-config.yaml
             - name: USERS_CONFIGURATION_PATH
               value: /etc/config/users-config.json
+            - name: IDENTITY_RESOURCES_PATH
+              value: /etc/config/identify-config.json 
+            - name: ASPNETCORE_URLS
+              value: https://+:8443;http://+:8080
+            # - name: ASPNETCORE_Kestrel__Certificates__Default__Password
+            #   value: ""
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+              value: /https/medinvention.dev.pfx
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               name: http
+            - containerPort: 8443
+              name: https
           resources:
             limits:
               cpu: 1000m
@@ -145,5 +189,8 @@ spec:
     - name: http
       port: 4000
       targetPort: 8080
+    - name: https
+      port: 4001
+      targetPort: 8443  
   selector:
     app: myvelerooidc
