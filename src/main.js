@@ -70,13 +70,6 @@ passport.deserializeUser((user, done) => done(null, user));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// oidc
-const oidcConfig = tools.oidcConfig();
-let oidcDiscovery;
-if(oidcConfig){
-  oidcDiscovery = await discovery(new URL(oidcConfig.discoveryUrl), oidcConfig.clientId, oidcConfig.clientSecret);
-}
-
 const authService = new AuthService();
 
 passport.use(new LocalStrategy(
@@ -87,11 +80,21 @@ passport.use(new LocalStrategy(
 
 const kubeService = new KubeService();
 
-const authController = new AuthController(kubeService, twing, authService, oidcDiscovery, oidcConfig);
+const authController = new AuthController(kubeService, twing, authService);
 const backupController = new BackupController(kubeService, twing);
 const scheduleController = new ScheduleController(kubeService, twing);
 const restoreController = new RestoreController(kubeService, twing);
 const homeController = new HomeController(kubeService, twing);
+
+// oidc
+const oidcConfig = tools.oidcConfig();
+let oidcDiscovery, initFN;
+if(oidcConfig){
+  oidcDiscovery =  discovery(new URL(oidcConfig.discoveryUrl), oidcConfig.clientId, oidcConfig.clientSecret);
+  (async function() {
+      await authController.initOIDCConfiguration(oidcDiscovery, oidcConfig);
+  })();
+}
 
 app.use((req, res, next) => authController.globalSecureAction(req, res, next));
 
@@ -128,4 +131,4 @@ const metricsService = new MetricsService(kubeService);
 
 metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-export default { app: server, metrics: metrics };
+export default { app: server, metrics: metrics, init: initFN };

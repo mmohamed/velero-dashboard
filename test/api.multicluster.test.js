@@ -3,9 +3,9 @@ require('./k8s.mock').multi();
 const util = require('./test.util');
 const fs = require('fs');
 const k8s = require('@kubernetes/client-node');
-const supertest = require('supertest');
+const supertestsession = require('supertest-session');
 const api = require('./../src/api.js');
-const requestWithSupertest = supertest(api.default);
+const requestWithSupertest = supertestsession(api.default);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 

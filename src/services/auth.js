@@ -50,6 +50,7 @@ class AuthService {
         return done(err)
       }
     }
+    return done(new Error('Invalid credentials'));
   }
 }
 

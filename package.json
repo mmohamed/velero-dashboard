@@ -85,6 +85,7 @@
     "nodemon": "^3.1.11",
     "prettier": "3.1.0",
     "supertest": "^6.3.4",
+    "supertest-session": "^5.0.1",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   }

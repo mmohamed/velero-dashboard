@@ -3,11 +3,16 @@ import crypto from 'crypto'
 import {buildAuthorizationUrl, authorizationCodeGrant} from 'openid-client'
 
 class AuthController {
-  constructor(kubeService, twing, authService, oidcDiscovery, oidcConfig) {
+  constructor(kubeService, twing, authService) {
     this.kubeService = kubeService;
     this.twing = twing;
     this.authService = authService;
-    this.oidcDiscovery = oidcDiscovery;
+    this.oidcDiscovery = null;
+    this.oidcConfig = null;
+  }
+
+  async initOIDCConfiguration(oidcDiscovery, oidcConfig){
+    this.oidcDiscovery = await Promise.resolve(oidcDiscovery);
     this.oidcConfig = oidcConfig;
   }
 
@@ -15,7 +20,7 @@ class AuthController {
     if(request.path.indexOf('/static/') === 0 || request.path.indexOf('/auth/oidc') === 0){
       return next();
     }
-
+    
     if (!request.isAuthenticated()) {
       if (request.path !== '/login' && request.path !== '/') {
         return response.redirect(tools.subPath('/login'));
@@ -78,7 +83,7 @@ class AuthController {
 
   async loginAction(request, response) {
     if (!request.body.username || !request.body.password) {
-      return this.twing.render('login.html.twig', { message: 'Please enter both username and password' }).then((output) => {
+      return this.twing.render('login.html.twig', { csrfToken: request.csrfToken(), message: 'Please enter both username and password', oidcEnabled: this.oidcConfig ? true : false }).then((output) => {
         response.set('Content-Type', 'text/html').end(output);
       });
     }
@@ -90,7 +95,7 @@ class AuthController {
       }
       tools.audit(request.body.username, 'AuthController', 'LOGINFAILED');
 
-      return this.twing.render('login.html.twig', { message: 'Invalid credentials!' }).then((output) => {
+      return this.twing.render('login.html.twig', { csrfToken: request.csrfToken(), message: 'Invalid credentials!', oidcEnabled: this.oidcConfig ? true : false }).then((output) => {
         response.set('Content-Type', 'text/html').end(output);
       });
 
