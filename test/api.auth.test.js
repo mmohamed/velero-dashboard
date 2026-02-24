@@ -5,7 +5,7 @@ const k8s = require('@kubernetes/client-node');
 const { authenticate } = require('ldap-authentication');
 const supertest = require('supertest');
 const api = require('./../src/api.js');
-const requestWithSupertest = supertest(api);
+const requestWithSupertest = supertest(api.default);
 
 describe('Admin Login', () => {
   beforeAll(() => {

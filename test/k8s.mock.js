@@ -83,7 +83,7 @@ const k8s = {
                       break;
                     }
                   }
-                  if(!target) throw Error(params.plural+' with name '+params.name+' not found !');
+                  if (!target) throw Error(params.plural + ' with name ' + params.name + ' not found !');
                   return target;
                 },
                 listNamespace: function () {
@@ -94,7 +94,7 @@ const k8s = {
                 },
                 createNamespacedCustomObject: function (params) {
                   if (process.env.TEST_THROW_CHANGE_ERROR === 'true') throw Error('Fake error');
-                  return params.body
+                  return params.body;
                 },
                 readNamespacedDeploymentStatus: function () {
                   if (process.env.TEST_THROW_READ_ERROR === 'true') throw Error('Fake error');

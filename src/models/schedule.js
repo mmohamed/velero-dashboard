@@ -1,5 +1,5 @@
-const Backup = require('./backup');
-const Label = require('./label');
+import Backup from './backup.js'
+import Label from './label.js'
 
 class Schedule extends Backup {
   /**
@@ -83,6 +83,7 @@ class Schedule extends Backup {
       schedule.setExcludeResources(crd.spec.template.excludeResources);
       schedule.setBackupRetention(crd.spec.template.ttl ? Math.floor(crd.spec.template.ttl.replace('h0m0s', '') / 24) : null);
       schedule.setSnapshot(crd.spec.template.snapshotVolumes);
+      schedule.setSnapshotMoveData(crd.spec.template.snapshotMoveData);
       schedule.setCRON(crd.spec.schedule);
       schedule.setOwnerReferenceInBackup(crd.spec.useOwnerReferencesInBackup);
       schedule.setPaused(crd.spec.paused);
@@ -111,4 +112,4 @@ class Schedule extends Backup {
   }
 }
 
-module.exports = Schedule;
+export default Schedule;

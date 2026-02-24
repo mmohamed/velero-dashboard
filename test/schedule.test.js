@@ -5,7 +5,7 @@ const k8s = require('@kubernetes/client-node');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertest(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -38,7 +38,7 @@ describe('Schedules create', () => {
     process.env.ADMIN_USERNAME = 'admin';
     process.env.ADMIN_PASSWORD = 'admin';
     process.env.AUDIT_LOG = 'true';
-    process.env.RESOURCE_POLICIES = 'resource-policy-configmap'
+    process.env.RESOURCE_POLICIES = 'resource-policy-configmap';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {
@@ -68,6 +68,7 @@ describe('Schedules create', () => {
       ownerreferences: '1',
       retention: '90',
       snapshot: '1',
+      snapshotmovedata: '1',
       cluster: '1',
       fsbackup: '1',
       backuplabels: 'app:test',

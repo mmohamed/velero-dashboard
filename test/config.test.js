@@ -3,7 +3,7 @@ const util = require('./test.util');
 const tools = require('./../src/tools.js');
 const supertest = require('supertest');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertest(server.default.app);
 
 describe('SubPath APP & API', () => {
   beforeAll(() => {
@@ -28,6 +28,6 @@ describe('SubPath APP & API', () => {
     expect(resLogout.get('Location')).toEqual('/subpath-of-my-velero/login');
   });
   it('should cleanup the api subpath', async () => {
-    expect(tools.apiSubPath()).toEqual('/api/');
+    expect(tools.default.apiSubPath()).toEqual('/api/');
   });
 });

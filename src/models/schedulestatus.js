@@ -58,4 +58,4 @@ class ScheduleStatus {
   }
 }
 
-module.exports = ScheduleStatus;
+export default ScheduleStatus;

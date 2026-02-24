@@ -1,25 +1,30 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
-const xssShield = require('xss-shield');
-const https = require('https');
-const fs = require('fs');
-const { createFilesystemLoader, createEnvironment, createFunction } = require('twing');
-require('dotenv').config({ path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test' });
+import express from 'express'
+import bodyParser from 'body-parser'
+import session from 'express-session'
+import cookieParser from 'cookie-parser'
+import csrf from 'csurf'
+import xssShield from 'xss-shield'
+import https from 'https'
+import fs from 'fs'
+import { createFilesystemLoader, createEnvironment, createFunction } from 'twing'
+import dotenv from 'dotenv'
+import path from 'path';
 
-const AuthController = require('./controllers/auth');
-const BackupController = require('./controllers/backup');
-const ScheduleController = require('./controllers/schedule');
-const RestoreController = require('./controllers/restore');
-const HomeController = require('./controllers/home');
-const MetricsService = require('./services/metrics');
-const KubeService = require('./services/kube');
-const tools = require('./tools');
+dotenv.config({
+  path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'
+})
+
+import AuthController from './controllers/auth.js'
+import BackupController from './controllers/backup.js'
+import ScheduleController from './controllers/schedule.js'
+import RestoreController from './controllers/restore.js'
+import HomeController from './controllers/home.js'
+import MetricsService from './services/metrics.js'
+import KubeService from './services/kube.js'
+import tools from './tools.js'
+
 const app = express();
 const metrics = express();
-
 // server export
 var server = app;
 
@@ -33,11 +38,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.disable('x-powered-by');
-app.use(xssShield.default.xssShield());
+
+app.use(process.env.NODE_ENV !== 'test' ? xssShield.default.xssShield() : xssShield.xssShield()); // jest no-esm supporting
 app.use(
-  session({ secret: require('./tools').secretKey(), resave: true, saveUninitialized: true, cookie: { secure: tools.isSecureHost() } })
+  session({ secret: tools.secretKey(), resave: true, saveUninitialized: true, cookie: { secure: tools.isSecureHost() } })
 );
-app.use(express.static(__dirname + '/../static'));
+app.use('/static', express.static(path.resolve('./') + '/static'));
 
 const csrfProtect = csrf({ cookie: true });
 const loader = createFilesystemLoader(fs);
@@ -48,7 +54,7 @@ const viewPath = createFunction(
   function (_executionContext, slug) {
     return Promise.resolve(tools.subPath(slug));
   },
-  [{name: 'slug'}]
+  [{ name: 'slug' }]
 );
 twing.addFunction(viewPath);
 
@@ -90,4 +96,4 @@ const metricsService = new MetricsService(kubeService);
 
 metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-module.exports = { app: server, metrics: metrics };
+export default { app: server, metrics: metrics };

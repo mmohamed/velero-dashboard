@@ -51,10 +51,14 @@
         <div class="invalid-feedback">Please provide a valid retention.</div>
     </div>
     <div class="col-md-6">
-        <label for="setting" class="form-label">Settings</label>
+        <label class="form-label">Settings</label>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if volumeSnapshotLocations|length == 0 %}disabled{% elseif backup and backup.snapshot == '1' %}checked{% endif %}>
+            <input class="form-check-input" type="checkbox" name="snapshot" id="snapshot" value="1" {% if volumeSnapshotLocations|length == 0 %}disabled{% elseif (backup and backup.snapshot == '1') or (not backup is defined and defaultVolumeSnapshots) %}checked{% endif %}>
             <label class="form-check-label" for="snapshot">Snapshot</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="snapshotmovedata" id="snapshotmovedata" value="1" {% if volumeSnapshotLocations|length == 0 or backupStorageLocations|length == 0 %}disabled{% elseif (backup and backup.snapshotmovedata == '1') or (not backup is defined and defaultSnapshotMoveData) %}checked{% endif %}>
+            <label class="form-check-label" for="snapshot">Snapshot Move Data</label>
         </div>
         <div class="form-check">
             <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if backup and backup.cluster == '1' %}checked{% endif %}{% if not user.admin %} disabled{% endif %}>

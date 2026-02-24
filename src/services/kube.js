@@ -1,8 +1,7 @@
-const tools = require('./../tools');
-const fs = require('fs');
-const path = require('path');
-const k8s = require('@kubernetes/client-node');
-
+import tools from './../tools.js'
+import fs from 'fs'
+import path from 'path'
+import * as k8s from '@kubernetes/client-node'
 
 class KubeService {
   constructor() {
@@ -135,7 +134,7 @@ class KubeService {
         namespace: tools.namespace(),
         plural: 'backupstoragelocations'
       });
-      
+
       return backupStorageLocations.items;
     } catch (err) {
       console.error('List backup storage locations error : ' + err);
@@ -264,14 +263,15 @@ class KubeService {
         excludedNamespaces: backupDef.excludenamespace ? backupDef.excludenamespace : [],
         includedResources: backupDef.includeresources ? backupDef.includeresources.trim().split(',') : [],
         excludedResources: backupDef.excluderesources ? backupDef.excluderesources.trim().split(',') : [],
-        snapshotVolumes: backupDef.snapshot === '1' ? true : null,
+        snapshotVolumes: backupDef.snapshot === '1' ? true : false,
+        snapshotMoveData: backupDef.snapshot === '1' && backupDef.snapshotmovedata === '1' ? true : false,
         storageLocation: backupDef.backuplocation,
         volumeSnapshotLocations: backupDef.snapshotlocation ? [backupDef.snapshotlocation] : [],
         ttl: parseInt(backupDef.retention) * 24 + 'h0m0s'
       }
     };
-    if(tools.resourcePolicies() != null){
-      body.spec.resourcePolicy = {kind: 'configmap', name: tools.resourcePolicies()}
+    if (tools.resourcePolicies() != null) {
+      body.spec.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
     if (backupDef.cluster !== undefined && user.isAdmin) {
       body.spec.includeClusterResources = backupDef.cluster === '1' ? true : false;
@@ -289,7 +289,7 @@ class KubeService {
         body.spec.labelSelector = labelSelector;
       }
     }
-    
+
     try {
       const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
         group: 'velero.io',
@@ -488,14 +488,17 @@ class KubeService {
         }
       ];
       let options = { headers: { 'Content-type': k8s.PatchStrategy.JsonPatch } };
-      let response = await this.getCustomObjectsApi().patchNamespacedCustomObject({
-        group: 'velero.io',
-        version: 'v1',
-        namespace: tools.namespace(),
-        plural: 'schedules',
-        name: schedule.metadata.name,
-        body: patch
-      }, options);
+      let response = await this.getCustomObjectsApi().patchNamespacedCustomObject(
+        {
+          group: 'velero.io',
+          version: 'v1',
+          namespace: tools.namespace(),
+          plural: 'schedules',
+          name: schedule.metadata.name,
+          body: patch
+        },
+        options
+      );
       return response;
     } catch (err) {
       console.error('Toggle schedule error : ' + err);
@@ -558,7 +561,8 @@ class KubeService {
           excludedNamespaces: scheduleDef.excludenamespace ? scheduleDef.excludenamespace : [],
           includedResources: scheduleDef.includeresources ? scheduleDef.includeresources.trim().split(',') : [],
           excludedResources: scheduleDef.excluderesources ? scheduleDef.excluderesources.trim().split(',') : [],
-          snapshotVolumes: scheduleDef.snapshot === '1' ? true : null,
+          snapshotVolumes: scheduleDef.snapshot === '1' ? true : false,
+          snapshotMoveData: scheduleDef.snapshot === '1' && scheduleDef.snapshotmovedata === '1' ? true : false,
           storageLocation: scheduleDef.backuplocation,
           volumeSnapshotLocations: scheduleDef.snapshotlocation ? [scheduleDef.snapshotlocation] : [],
           ttl: parseInt(scheduleDef.retention) * 24 + 'h0m0s'
@@ -568,8 +572,8 @@ class KubeService {
         paused: scheduleDef.paused === '1' ? true : false
       }
     };
-    if(tools.resourcePolicies() != null){
-      body.spec.template.resourcePolicy = {kind: 'configmap', name: tools.resourcePolicies()}
+    if (tools.resourcePolicies() != null) {
+      body.spec.template.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
     if (scheduleDef.cluster !== undefined && user.isAdmin) {
       body.spec.template.includeClusterResources = scheduleDef.cluster === '1' ? true : false;
@@ -587,7 +591,7 @@ class KubeService {
         body.spec.template.labelSelector = labelSelector;
       }
     }
-    
+
     try {
       const response = await this.getCustomObjectsApi().createNamespacedCustomObject({
         group: 'velero.io',
@@ -608,7 +612,7 @@ class KubeService {
 
   async getVeleroDeploymentStatus(name) {
     try {
-      const deployStatus = await this.getAppsApi().readNamespacedDeploymentStatus({ name: 'velero', namespace: tools.namespace()});
+      const deployStatus = await this.getAppsApi().readNamespacedDeploymentStatus({ name: 'velero', namespace: tools.namespace() });
       return deployStatus;
     } catch (err) {
       console.error('Get velero deployment status error : ' + err);
@@ -617,4 +621,4 @@ class KubeService {
   }
 }
 
-module.exports = KubeService;
+export default KubeService;

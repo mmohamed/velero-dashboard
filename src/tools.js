@@ -1,8 +1,8 @@
-const { version } = require('../package.json');
+import * as config from './../package.json' with { type: 'json' };
 
 const tools = {
   version: function () {
-    return version;
+    return config.default.version;
   },
   port: function () {
     return process.env.APP_PORT | 3000;
@@ -104,6 +104,24 @@ const tools = {
   },
   useFSBackup: function () {
     if (process.env.USE_FSBACKUP && (process.env.USE_FSBACKUP.trim() === '1' || process.env.USE_FSBACKUP.trim().toLowerCase() === 'true')) {
+      return true;
+    }
+    return false;
+  },
+  snapshotVolumes: function () {
+    if (
+      process.env.SNAPSHOT_VOLUMES &&
+      (process.env.SNAPSHOT_VOLUMES.trim() === '1' || process.env.SNAPSHOT_VOLUMES.trim().toLowerCase() === 'true')
+    ) {
+      return true;
+    }
+    return false;
+  },
+  snapshotMoveData: function () {
+    if (
+      process.env.SNAPSHOT_MOVE_DATA &&
+      (process.env.SNAPSHOT_MOVE_DATA.trim() === '1' || process.env.SNAPSHOT_MOVE_DATA.trim().toLowerCase() === 'true')
+    ) {
       return true;
     }
     return false;
@@ -226,4 +244,4 @@ const tools = {
   }
 };
 
-module.exports = tools;
+export default tools;

@@ -1,4 +1,4 @@
-const tools = require('./../tools');
+import tools from './../tools.js'
 
 class HomeController {
   constructor(kubeService, twing) {
@@ -24,7 +24,7 @@ class HomeController {
         csrfToken: request.csrfToken()
       })
       .then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
   }
 
@@ -59,4 +59,4 @@ class HomeController {
   }
 }
 
-module.exports = HomeController;
+export default HomeController;

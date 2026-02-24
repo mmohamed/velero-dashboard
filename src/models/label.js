@@ -48,4 +48,4 @@ class Label {
   }
 }
 
-module.exports = Label;
+export default Label;

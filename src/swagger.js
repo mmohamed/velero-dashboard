@@ -1,5 +1,5 @@
-const swaggerJSDoc = require('swagger-jsdoc');
-const tools = require('./tools.js');
+import swaggerJSDoc from 'swagger-jsdoc'
+import tools from './tools.js'
 
 const swaggerDefinition = {
   openapi: '3.0.0',
@@ -21,7 +21,6 @@ const swaggerDefinition = {
 };
 
 const options = { swaggerDefinition, apis: ['src/api.js', 'src/models/*.js'] };
-
 const swaggerSpec = swaggerJSDoc(options);
 
-module.exports = swaggerSpec;
+export default swaggerSpec;

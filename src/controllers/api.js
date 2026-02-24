@@ -1,17 +1,17 @@
-const tools = require('./../tools');
-const https = require('https');
-const axios = require('axios');
-const zlib = require('zlib');
-const cron = require('cron-validator');
-const sanitizer = require('sanitizer');
-const auth = require('basic-auth');
-const { authenticate } = require('ldap-authentication');
-const Backup = require('./../models/backup');
-const BackupStatus = require('./../models/backupstatus');
-const Restore = require('./../models/restore');
-const RestoreStatus = require('./../models/restorestatus');
-const Schedule = require('./../models/schedule');
-const ScheduleStatus = require('./../models/schedulestatus');
+import tools from './../tools.js'
+import https from 'https'
+import axios from 'axios'
+import zlib from 'zlib'
+import {isValidCron} from 'cron-validator'
+import sanitizer from 'sanitizer'
+import auth from 'basic-auth'
+import {authenticate} from 'ldap-authentication'
+import Backup from './../models/backup.js'
+import BackupStatus from './../models/backupstatus.js';
+import Restore from './../models/restore.js'
+import RestoreStatus from './../models/restorestatus.js'
+import Schedule from './../models/schedule.js'
+import ScheduleStatus from './../models/schedulestatus.js'
 
 class APIController {
   constructor(kubeService) {
@@ -254,6 +254,7 @@ class APIController {
         name: bodyRequest.name,
         fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
         snapshot: bodyRequest.snapshot ? '1' : 0,
+        snapshotMoveData: bodyRequest.snapshot && bodyRequest.snapshotmovedata,
         cluster: bodyRequest.includeClusterResources ? '1' : 0,
         backuplocation: bodyRequest.backupLocation,
         retention: bodyRequest.backupRetention,
@@ -303,7 +304,7 @@ class APIController {
     // cron
     if (!bodyRequest.cron || bodyRequest.cron.trim().length == 0) {
       errors.push('cron');
-    } else if (!cron.isValidCron(bodyRequest.cron)) {
+    } else if (!isValidCron(bodyRequest.cron)) {
       errors.push('cron');
     }
     // includeNamespaces
@@ -398,6 +399,7 @@ class APIController {
         name: bodyRequest.name,
         fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
         snapshot: bodyRequest.snapshot ? '1' : 0,
+        snapshotMoveData: bodyRequest.snapshot && bodyRequest.snapshotmovedata,
         cluster: bodyRequest.includeClusterResources ? '1' : 0,
         backuplocation: bodyRequest.backupLocation,
         retention: bodyRequest.backupRetention,
@@ -897,4 +899,4 @@ class APIController {
   }
 }
 
-module.exports = APIController;
+export default APIController;

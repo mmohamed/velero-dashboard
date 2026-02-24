@@ -7,7 +7,7 @@ const { authenticate } = require('ldap-authentication');
 const zlib = require('zlib');
 const supertest = require('supertest');
 const server = require('./../src/main');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertest(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 
@@ -42,7 +42,7 @@ describe('Backups create', () => {
     process.env.ADMIN_PASSWORD = '';
     process.env.AUDIT_LOG = 'true';
     process.env.READ_ONLY_USER = 'false';
-    process.env.RESOURCE_POLICIES = 'resource-policy-configmap'
+    process.env.RESOURCE_POLICIES = 'resource-policy-configmap';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {
@@ -75,6 +75,7 @@ describe('Backups create', () => {
       excluderesources: 'job',
       retention: '60',
       snapshot: '1',
+      snapshotmovedata: '0',
       cluster: '1',
       fsbackup: '1',
       backuplabels: 'app:test',

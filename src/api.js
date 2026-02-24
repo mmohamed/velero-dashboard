@@ -1,12 +1,12 @@
-const express = require('express');
-const swaggerUI = require('swagger-ui-express');
-const swaggerSpec = require('./swagger');
-const https = require('https');
-const fs = require('fs');
+import express from 'express'
+import swaggerUI from 'swagger-ui-express'
+import swaggerSpec from './swagger.js'
+import https from 'https'
+import fs from 'fs'
 
-const KubeService = require('./services/kube');
-const APIController = require('./controllers/api');
-const tools = require('./tools');
+import KubeService from './services/kube.js'
+import APIController from './controllers/api.js';
+import tools from './tools.js';
 
 const api = express();
 const router = express.Router();
@@ -16,8 +16,8 @@ var server = api;
 
 // https server
 if (tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()) {
-    console.log(new Date(), ': Start API HTTPS server...');
-    server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, api);
+  console.log(new Date(), ': Start API HTTPS server...');
+  server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, api);
 }
 
 api.use(express.json());
@@ -651,4 +651,4 @@ router.put('/v1/schedules/:name/execute', (req, res, next) => apiController.exec
  */
 router.put('/v1/schedules/:name/toggle', (req, res, next) => apiController.toggleSchedule(req, res, next));
 
-module.exports = server;
+export default server;

@@ -1,6 +1,6 @@
-const tools = require('./../tools');
-const { authenticate } = require('ldap-authentication');
-const { decode } = require('html-entities');
+import tools from './../tools.js'
+import {authenticate} from 'ldap-authentication'
+import {decode} from 'html-entities'
 
 class AuthController {
   constructor(kubeService, twing) {
@@ -9,6 +9,9 @@ class AuthController {
   }
 
   globalSecureAction(request, response, next) {
+    if(request.path.indexOf('/static/') === 0){
+      return next();
+    }
     if (!request.session.user) {
       if (request.path !== '/login' && request.path !== '/') {
         return response.status(403).end('Forbidden');
@@ -52,7 +55,7 @@ class AuthController {
 
   loginView(request, response) {
     this.twing.render('login.html.twig', { csrfToken: request.csrfToken() }).then((output) => {
-      response.end(output);
+      response.set('Content-Type', 'text/html').end(output);
     });
   }
 
@@ -68,7 +71,7 @@ class AuthController {
   async loginAction(request, response) {
     if (!request.body.username || !request.body.password) {
       return this.twing.render('login.html.twig', { message: 'Please enter both username and password' }).then((output) => {
-        response.end(output);
+        response.set('Content-Type', 'text/html').end(output);
       });
     }
 
@@ -121,9 +124,9 @@ class AuthController {
     tools.audit(request.body.username, 'AuthController', 'LOGINFAILED');
 
     this.twing.render('login.html.twig', { message: 'Invalid credentials!' }).then((output) => {
-      response.end(output);
+      response.set('Content-Type', 'text/html').end(output);
     });
   }
 }
 
-module.exports = AuthController;
+export default AuthController;

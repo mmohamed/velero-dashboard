@@ -2,7 +2,7 @@ require('./k8s.mock').mock();
 const k8s = require('@kubernetes/client-node');
 const supertest = require('supertest');
 const server = require('./../src/main.js');
-const requestWithSupertest = supertest(server.app);
+const requestWithSupertest = supertest(server.default.app);
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 

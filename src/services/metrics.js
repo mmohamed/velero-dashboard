@@ -1,5 +1,5 @@
-const tools = require('./../tools');
-const client = require('prom-client');
+import tools from './../tools.js'
+import client from 'prom-client';
 
 class MetricsService {
   constructor(kubeService, k8sApi, customObjectsApi) {
@@ -78,4 +78,4 @@ class MetricsService {
   }
 }
 
-module.exports = MetricsService;
+export default MetricsService;
