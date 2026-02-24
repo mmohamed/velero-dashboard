@@ -32,7 +32,7 @@ This is a very simplified Velero dashboard for backup, restore and schedule mana
 READ_ONLY_USER=true #default false
 ```
 
-- LDAP authentication for users : if a LDAP is configured, users (in addition to the admin) can be authenticated and have access to the dashboard
+- LDAP authentication for users : if a LDAP is configured, users (in addition to the admin and OIDC users) can be authenticated and have access to the dashboard
 
 ```ini
 LDAP_HOST=ldaps://0.0.0.0:636
@@ -44,7 +44,28 @@ LDAP_SEARCH_BASE="OU=users,DC=mtr,DC=com"
 LDAP_SEARCH_FILTER=sAMAccountName
 ```
 
-- Multi-tenant & User access namespaced scope : With LDAP configuration, you can define a scope control based on an assotioation of a LDAP groups and a list of namespace, for example, if a user X is member of LDAP group group-it, he can manage backup, restore and schedule with include-namespace associated to the group-it (all namespace mut be accessible by the user to see these resources)
+- OIDC authentication : if an OIDC is configured, users (in addition to the admin and LDAP users) can be authenticated and have access to the dashboard.
+
+```ini
+# See example config file ; beside extraScopes, userClaim and groupClaim, other parameters are required.
+OIDC_CONFIG_PATH=/absolut/path/config/dir #default null
+# Set up OIDC SSL server
+NODE_EXTRA_CA_CERTS=/absolut/path/cert/file
+```
+```json
+{
+    "clientId": "authorization-code-client-id",
+    "clientSecret": "authorization-code-client-secret",
+    "discoveryUrl": "https://172.20.96.1:31246",
+    "redirectUrl": "http://localhost:3000/auth/oidc/callback",
+    "baseUrl": "http://localhost:3000",
+    "extraScopes": ["groups"],
+    "userClaim": "name",
+    "groupClaim": "groups"
+}
+```
+
+- Multi-tenant & User access namespaced scope : With LDAP configuration, you can define a scope control based on an assotioation of a LDAP groups or OIDC groups and a list of namespace, for example, if a user X is member of group group-it, he can manage backup, restore and schedule with include-namespace associated to the group-it (all namespace mut be accessible by the user to see these resources)
 
 ```ini
 NAMESPACE_FILTERING='[{"group": "group-it", "namespaces": ["ns1","ns2","ns3"]}]' # json list
