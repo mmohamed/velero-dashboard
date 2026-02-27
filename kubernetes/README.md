@@ -49,14 +49,14 @@ kubectl create secret generic oidc-ssl -n velero --from-file=medinvention.dev.pf
 
 # Deploy local MinIO for Velero backup location
 kubectl apply -f minio-dev.yaml --namespace velero
-# Install Velero (v1.16.2)
-wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.2/velero-v1.16.2-linux-amd64.tar.gz
-tar -zxvf velero-v1.16.2-linux-amd64.tar.gz
-sudo cp velero-v1.16.2-linux-amd64/velero /usr/local/bin/velero-1.16.2
-sudo ln -sf /usr/local/bin/velero-1.16.2 /usr/local/bin/velero
+# Install Velero (v1.17.2)
+wget https://github.com/vmware-tanzu/velero/releases/download/v1.17.2/velero-v1.17.2-linux-amd64.tar.gz
+tar -zxvf velero-v1.17.2-linux-amd64.tar.gz
+sudo cp velero-v1.17.2-linux-amd64/velero /usr/local/bin/velero-1.17.2
+sudo ln -sf /usr/local/bin/velero-1.17.2 /usr/local/bin/velero
 velero install \
     --provider aws \
-    --plugins velero/velero-plugin-for-aws:v1.12.2 \
+    --plugins velero/velero-plugin-for-aws:v1.13.2 \
     --bucket velero \
     --use-node-agent \
     --secret-file ./credentials-velero \
@@ -70,7 +70,7 @@ kubectl apply -f oidc-dev.yaml --namespace velero
 # Deploy My-Velero
 kubectl apply -f my-velero.yaml --namespace velero
 # Test is
-velero backup create backup --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false
+velero backup create backup-7 --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false --wait
 ```
 
 ## Tips
