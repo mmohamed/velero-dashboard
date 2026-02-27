@@ -70,13 +70,5 @@ kubectl apply -f oidc-dev.yaml --namespace velero
 # Deploy My-Velero
 kubectl apply -f my-velero.yaml --namespace velero
 # Test is
-velero backup create backup-7 --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false --wait
-```
-
-## Tips
-
-- Restore CRD validation error for v1.12 [@see](https://github.com/vmware-tanzu/velero/issues/6382)
-
-```bash
-kubectl patch crd restores.velero.io --type json -p='[{"op": "remove", "path": "/spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/hooks/properties/resources/items/properties/postHooks/items/properties/init/properties/initContainers/x-kubernetes-preserve-unknown-fields"}]'
+velero backup create backup --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false --wait
 ```
