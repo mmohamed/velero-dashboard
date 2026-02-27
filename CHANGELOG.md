@@ -83,3 +83,9 @@ All notable changes to this project will be documented in this file.
 
 - Fix Fail login CSRF error
 - Fix restore log error parsing
+
+## [1.3.2] - 2026-02-27
+
+### Added
+
+- Add Velero 1.14.1n support
