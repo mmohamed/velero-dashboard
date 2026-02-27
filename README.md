@@ -166,6 +166,8 @@ kubectl apply -f ./kubernetes/minio-dev.yaml
 velero install .....
 # Deploy Dev LDAP sever
 kubectl apply -f ./kubernetes/ldap-dev.yaml
+# Deploy Dev OIDC server 
+kubectl apply -f ./kubernetes/oidc-dev.yaml
 # Deploy My-Velero (dev)
 kubectl apply -f ./kubernetes/my-velero.yaml
 ```

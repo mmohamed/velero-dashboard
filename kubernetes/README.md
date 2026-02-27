@@ -49,20 +49,20 @@ kubectl create secret generic oidc-ssl -n velero --from-file=medinvention.dev.pf
 
 # Deploy local MinIO for Velero backup location
 kubectl apply -f minio-dev.yaml --namespace velero
-# Install Velero (v1.14.1)
-wget https://github.com/vmware-tanzu/velero/releases/download/v1.14.1/velero-v1.14.1-linux-amd64.tar.gz
-tar -zxvf velero-v1.14.1-linux-amd64.tar.gz
-sudo cp velero-v1.14.1-linux-amd64/velero /usr/local/bin/velero-1.14.1
-sudo ln -sf /usr/local/bin/velero-1.14.1 /usr/local/bin/velero
+# Install Velero (v1.17.2)
+wget https://github.com/vmware-tanzu/velero/releases/download/v1.17.2/velero-v1.17.2-linux-amd64.tar.gz
+tar -zxvf velero-v1.17.2-linux-amd64.tar.gz
+sudo cp velero-v1.17.2-linux-amd64/velero /usr/local/bin/velero-1.17.2
+sudo ln -sf /usr/local/bin/velero-1.17.2 /usr/local/bin/velero
 velero install \
     --provider aws \
-    --plugins velero/velero-plugin-for-aws:v1.10.1 \
+    --plugins velero/velero-plugin-for-aws:v1.13.2 \
     --bucket velero \
     --use-node-agent \
     --secret-file ./credentials-velero \
     --use-volume-snapshots=true \
     --features=EnableCSI \
-    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.20.96.1:31733
+    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.20.96.1:32541 --dry-run -o yaml | kubectl apply -f -
 # Deploy local ldap account for testing
 kubectl apply -f ldap-dev.yaml --namespace velero
 # Deploy OIDC server @Ref: https://github.com/Soluto/oidc-server-mock
@@ -70,13 +70,5 @@ kubectl apply -f oidc-dev.yaml --namespace velero
 # Deploy My-Velero
 kubectl apply -f my-velero.yaml --namespace velero
 # Test is
-velero backup create backup --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false
-```
-
-## Tips
-
-- Restore CRD validation error for v1.12 [@see](https://github.com/vmware-tanzu/velero/issues/6382)
-
-```bash
-kubectl patch crd restores.velero.io --type json -p='[{"op": "remove", "path": "/spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/hooks/properties/resources/items/properties/postHooks/items/properties/init/properties/initContainers/x-kubernetes-preserve-unknown-fields"}]'
+velero backup create backup --include-namespaces="devops" --snapshot-volumes=true --snapshot-move-data=true --resource-policies-configmap=volume-policies --include-cluster-resources=false --wait
 ```

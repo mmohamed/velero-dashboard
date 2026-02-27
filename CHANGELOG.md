@@ -88,4 +88,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add Velero 1.14.1n support
+- Add Velero 1.14.1 support
+
+## [1.3.3] - 2026-02-27
+
+### Added
+
+- Add Velero 1.15.2 support
+
+## [1.3.4] - 2026-02-27
+
+### Added
+
+- Add Velero 1.16.2 support
+
+## [1.3.5] - 2026-02-27
+
+### Added
+
+- Add Velero 1.17.2 support (without add volumeGroupSnapshotLabelKey support)
