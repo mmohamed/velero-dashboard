@@ -49,14 +49,14 @@ kubectl create secret generic oidc-ssl -n velero --from-file=medinvention.dev.pf
 
 # Deploy local MinIO for Velero backup location
 kubectl apply -f minio-dev.yaml --namespace velero
-# Install Velero (v1.15.2)
-wget https://github.com/vmware-tanzu/velero/releases/download/v1.15.2/velero-v1.15.2-linux-amd64.tar.gz
-tar -zxvf velero-v1.15.2-linux-amd64.tar.gz
-sudo cp velero-v1.15.2-linux-amd64/velero /usr/local/bin/velero-1.15.2
-sudo ln -sf /usr/local/bin/velero-1.15.2 /usr/local/bin/velero
+# Install Velero (v1.16.2)
+wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.2/velero-v1.16.2-linux-amd64.tar.gz
+tar -zxvf velero-v1.16.2-linux-amd64.tar.gz
+sudo cp velero-v1.16.2-linux-amd64/velero /usr/local/bin/velero-1.16.2
+sudo ln -sf /usr/local/bin/velero-1.16.2 /usr/local/bin/velero
 velero install \
     --provider aws \
-    --plugins velero/velero-plugin-for-aws:v1.11.1 \
+    --plugins velero/velero-plugin-for-aws:v1.12.2 \
     --bucket velero \
     --use-node-agent \
     --secret-file ./credentials-velero \
