@@ -123,4 +123,3 @@ build
 certs/*
 tmp/*
 oidc.json
-package-lock.json
