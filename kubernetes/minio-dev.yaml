@@ -56,7 +56,7 @@ spec:
             - name: MINIO_DEFAULT_BUCKETS
               value: velero
             - name: MINIO_SERVER_URL
-              value: http://172.20.96.1:31733
+              value: http://172.20.96.1:32541
           ports:
             - containerPort: 9000
               name: endpoint
@@ -72,6 +72,8 @@ spec:
           volumeMounts:
             - mountPath: /bitnami/minio/data
               name: minio-data
+          securityContext:
+            runAsUser: 0
       volumes:
         - name: minio-data
           persistentVolumeClaim:
@@ -85,10 +87,11 @@ metadata:
   namespace: velero
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+  storageClassName: csi-hostpath-sc
 
 ---
 apiVersion: v1
