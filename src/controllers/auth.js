@@ -149,6 +149,7 @@ class AuthController {
 
       request.login(user, err => {
         if (err) return next(err)
+        tools.audit(user.username, 'AuthController', 'OIDCLOGIN');
         response.redirect('/')
       })
 

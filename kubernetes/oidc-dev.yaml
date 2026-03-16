@@ -139,7 +139,7 @@ spec:
             secretName: oidc-ssl 
       containers:
         - name: my-velero-oidc
-          image: ghcr.io/soluto/oidc-server-mock:latest
+          image: docker.io/medinvention/oidc-server-mock-arm:0.12.1 #ghcr.io/soluto/oidc-server-mock:latest
           volumeMounts:
             - name: client-config
               mountPath: /etc/config

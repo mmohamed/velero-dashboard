@@ -65,7 +65,7 @@
             <label class="form-check-label" for="snapshot">Snapshot Move Data</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if schedule and schedule.cluster == '1' %}checked{% endif %}{% if not user.admin %} disabled{% endif %}>
+            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if (schedule and schedule.cluster == '1') or (not schedule is defined and defaultVolumeSnapshots) %}checked{% endif %}{% if not user.isAdmin %} disabled{% endif %}>
             <label class="form-check-label" for="cluster">Include cluster resource</label>
         </div>
         <div class="form-check">

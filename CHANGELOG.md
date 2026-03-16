@@ -107,3 +107,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Add Velero 1.17.2 support (without add volumeGroupSnapshotLabelKey support)
+
+## [1.3.6] - 2026-03-16
+
+### Fixed
+
+- Fix Volume snapshot by enabling "Include cluster resources" when snapshot enabled or add admin user
