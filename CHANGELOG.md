@@ -118,6 +118,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add "Include cluster resources" application parameter to be uniq value for user and default for admins. 
+- Add "Include cluster resources" application parameter to be uniq value for user and default for admins
 
 ### Fixed
+
+- Fix "Include cluster resources" parameter for API and UI form
