@@ -273,7 +273,15 @@ class KubeService {
     if (tools.resourcePolicies() != null) {
       body.spec.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
-    body.spec.includeClusterResources = backupDef.cluster !== undefined && (user.isAdmin || backupDef.snapshot === '1') && backupDef.cluster === '1' ? true : false;
+    if (user.isAdmin){ // for admin, take form input
+      if(backupDef.cluster == 1  || backupDef.cluster == 0){
+        body.spec.includeClusterResources = backupDef.cluster == 1 ? true : false;
+      }
+    }else{ // for user take app configuration value
+      if(tools.clusterRessourceIncluded() == 1  || tools.clusterRessourceIncluded() == 0){
+        body.spec.includeClusterResources = tools.clusterRessourceIncluded() == 1 ? true : false;
+      }
+    }
     if (backupDef.useselector && backupDef.useselector.trim().length > 0) {
       let selectors = backupDef.useselector.split(',');
       let labelSelector = { matchLabels: {} };
@@ -573,7 +581,15 @@ class KubeService {
     if (tools.resourcePolicies() != null) {
       body.spec.template.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
-    body.spec.template.includeClusterResources = scheduleDef.cluster !== undefined && (user.isAdmin || scheduleDef.snapshot === '1') && scheduleDef.cluster === '1' ? true : false;
+    if (user.isAdmin){ // for admin, take form input
+      if(scheduleDef.cluster == 1  || scheduleDef.cluster == 0){
+        body.spec.template.includeClusterResources = scheduleDef.cluster == 1 ? true : false;
+      }
+    }else{ // for user take app configuration value
+      if(tools.clusterRessourceIncluded() == 1  || tools.clusterRessourceIncluded() == 0){
+        body.spec.template.includeClusterResources = tools.clusterRessourceIncluded() == 1 ? true : false;
+      }
+    }
     if (scheduleDef.useselector && scheduleDef.useselector.trim().length > 0) {
       let selectors = scheduleDef.useselector.split(',');
       let labelSelector = { matchLabels: {} };

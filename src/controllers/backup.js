@@ -115,6 +115,7 @@ class BackupController {
       this.twing
         .render('backup.form.html.twig', {
           backup: bodyRequest,
+          defaultClusterRessourceIncluded: tools.clusterRessourceIncluded(),
           backupStorageLocations: backupStorageLocations,
           volumeSnapshotLocations: volumeSnapshotLocations,
           namespaces: availableNamespaces,
@@ -129,13 +130,14 @@ class BackupController {
 
       return;
     }
-
+  
     return this.twing
       .render('backup.form.html.twig', {
         backupStorageLocations: backupStorageLocations,
         volumeSnapshotLocations: volumeSnapshotLocations,
         namespaces: availableNamespaces,
         user: user,
+        defaultClusterRessourceIncluded: tools.clusterRessourceIncluded(),
         defaultVolumesToFsBackup: tools.useFSBackup(),
         defaultVolumeSnapshots: tools.snapshotVolumes(),
         defaultSnapshotMoveData: tools.snapshotMoveData(),

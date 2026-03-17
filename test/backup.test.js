@@ -42,6 +42,7 @@ describe('Backups create', () => {
     process.env.ADMIN_PASSWORD = '';
     process.env.AUDIT_LOG = 'true';
     process.env.READ_ONLY_USER = 'false';
+    process.env.CLUSTER_RESOURCE_INCLUDE = 'false';
     process.env.RESOURCE_POLICIES = 'resource-policy-configmap';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
@@ -60,6 +61,8 @@ describe('Backups create', () => {
     var dom = new JSDOM(res.text);
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('new-backup-form');
+    // cluster resource included selector
+    expect(dom.window.document.getElementById('clusterno').checked).toBe(true);
 
     res = await await requestWithSupertest.post('/backup/new').send({ _csrf: auth.token });
     expect(res.status).toEqual(200);
@@ -90,6 +93,8 @@ describe('Backups create', () => {
     const filteringErrors = dom.window.document.getElementsByClassName('is-invalid');
     expect(filteringErrors.length).toEqual(1);
     expect(filteringErrors[0].getAttribute('id')).toEqual('includenamespace');
+    // cluster resource included selector
+    expect(dom.window.document.getElementById('clusteryes').checked).toBe(true);
 
     backupData.includenamespace = ['ns1', 'ns3'];
     res = await requestWithSupertest.post('/backup/new').send(backupData);

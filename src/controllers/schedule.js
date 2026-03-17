@@ -119,6 +119,7 @@ class ScheduleController {
       return this.twing
         .render('schedule.form.html.twig', {
           schedule: bodyRequest,
+          defaultClusterRessourceIncluded: tools.clusterRessourceIncluded(),
           backupStorageLocations: backupStorageLocations,
           volumeSnapshotLocations: volumeSnapshotLocations,
           namespaces: availableNamespaces,
@@ -136,6 +137,7 @@ class ScheduleController {
       .render('schedule.form.html.twig', {
         backupStorageLocations: backupStorageLocations,
         volumeSnapshotLocations: volumeSnapshotLocations,
+        defaultClusterRessourceIncluded: tools.clusterRessourceIncluded(),
         namespaces: availableNamespaces,
         user: user,
         defaultVolumesToFsBackup: tools.useFSBackup(),

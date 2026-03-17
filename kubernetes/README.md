@@ -45,7 +45,7 @@ openssl req -new -key oidcserver.key -out oidcserver.csr
 openssl x509 -req -in oidcserver.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out oidcserver.crt -days 825 -sha256
 openssl pkcs12 -export -out oidcserver.pfx -inkey oidcserver.key -in oidcserver.crt
 openssl x509 -outform PEM -in oidcserver.crt -out oidcserver.pem
-kubectl create secret generic oidc-ssl -n velero --from-file=medinvention.dev.pfx=oidcserver.pfx
+kubectl create secret generic oidc-ssl -n velero --from-file=medinvention.dev.pfx=./../certs/oidcserver.pfx
 
 # Deploy local MinIO for Velero backup location
 kubectl apply -f minio-dev.yaml --namespace velero
@@ -62,7 +62,7 @@ velero install \
     --secret-file ./credentials-velero \
     --use-volume-snapshots=true \
     --features=EnableCSI \
-    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.20.96.1:32541 --dry-run -o yaml | kubectl apply -f -
+    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.20.96.1:9000 --dry-run -o yaml | kubectl apply -f -
 # Deploy local ldap account for testing
 kubectl apply -f ldap-dev.yaml --namespace velero
 # Deploy OIDC server @Ref: https://github.com/Soluto/oidc-server-mock

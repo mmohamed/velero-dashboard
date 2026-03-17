@@ -113,3 +113,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix Volume snapshot by enabling "Include cluster resources" when snapshot enabled or add admin user
+
+## [1.4.0] - 2026-03-17
+
+### Added
+
+- Add "Include cluster resources" application parameter to be uniq value for user and default for admins. 
+
+### Fixed
