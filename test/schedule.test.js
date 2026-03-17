@@ -39,6 +39,7 @@ describe('Schedules create', () => {
     process.env.ADMIN_PASSWORD = 'admin';
     process.env.AUDIT_LOG = 'true';
     process.env.RESOURCE_POLICIES = 'resource-policy-configmap';
+    process.env.CLUSTER_RESOURCE_INCLUDE = 'false';
     process.env.NAMESPACE_FILTERING = JSON.stringify([{ group: 'group1', namespaces: ['ns1', 'ns3'] }]);
   });
   it('should have check and create a valid backup', async () => {
@@ -51,6 +52,8 @@ describe('Schedules create', () => {
     var dom = new JSDOM(res.text);
     const form = dom.window.document.querySelector('form');
     expect(form.getAttribute('id')).toBe('new-schedule-form');
+    // cluster resource included selector
+    expect(dom.window.document.getElementById('clusterno').checked).toBe(true);
 
     res = await requestWithSupertest.post('/schedule/new').send({ _csrf: auth.token });
     expect(res.status).toEqual(200);
@@ -69,7 +72,7 @@ describe('Schedules create', () => {
       retention: '90',
       snapshot: '1',
       snapshotmovedata: '1',
-      cluster: '1',
+      cluster: '-1',
       fsbackup: '1',
       backuplabels: 'app:test',
       useselector: 'app:test,ver:v1',
@@ -83,6 +86,8 @@ describe('Schedules create', () => {
     const cronErrors = dom.window.document.getElementsByClassName('is-invalid');
     expect(cronErrors.length).toEqual(1);
     expect(cronErrors[0].getAttribute('id')).toEqual('cron');
+     // cluster resource included selector
+    expect(dom.window.document.getElementById('clusterauto').checked).toBe(true);
 
     scheduleData.cron = '* * * * *';
     res = await requestWithSupertest.post('/schedule/new').send(scheduleData);

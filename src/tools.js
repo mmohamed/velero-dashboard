@@ -127,6 +127,21 @@ const tools = {
     }
     return false;
   },
+  clusterRessourceIncluded: function () {
+    if (
+      process.env.CLUSTER_RESOURCE_INCLUDE &&
+      (process.env.CLUSTER_RESOURCE_INCLUDE.trim() === '1' || process.env.CLUSTER_RESOURCE_INCLUDE.trim().toLowerCase() === 'true')
+    ) {
+      return 1;
+    }
+    if (
+      process.env.CLUSTER_RESOURCE_INCLUDE &&
+      (process.env.CLUSTER_RESOURCE_INCLUDE.trim() === '0' || process.env.CLUSTER_RESOURCE_INCLUDE.trim().toLowerCase() === 'false')
+    ) {
+      return 0;
+    }
+    return -1;
+  },
   resourcePolicies: function () {
     if (process.env.RESOURCE_POLICIES && process.env.RESOURCE_POLICIES.trim().length > 0) {
       return process.env.RESOURCE_POLICIES.trim();
