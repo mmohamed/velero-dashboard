@@ -71,7 +71,7 @@ NODE_EXTRA_CA_CERTS=/absolut/path/cert/file
 NAMESPACE_FILTERING='[{"group": "group-it", "namespaces": ["ns1","ns2","ns3"]}]' # json list
 ```
 
-- Velero default configuration : to define the Velero install namespace, force usage of resource policy configmap (configmap name) for backup / schedule and using FS Backup / Volume snapshot / snapshot move data option by default
+- Velero default configuration : to define the Velero install namespace, force usage of resource policy configmap (configmap name) for backup / schedule and using FS Backup / Volume snapshot / snapshot move data option by default.In addition the 'cluster resource include' can be true, false or empty/not set to be the uniq possible value for non admin user (can be changed by admin only).
 
 ```ini
 VELERO_NAMESPACE=myvelero #default velero
@@ -79,6 +79,7 @@ USE_FSBACKUP=true #default false
 RESOURCE_POLICIES=volume-policies #default empty
 SNAPSHOT_VOLUMES=true #default false
 SNAPSHOT_MOVE_DATA=false #default false
+CLUSTER_RESOURCE_INCLUDE=false #default empty 
 ```
 
 - Metrics for Prometheus: if is enabled, Backup and Restore status metrics will be available for Prometheus scraper

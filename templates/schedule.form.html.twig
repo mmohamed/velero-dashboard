@@ -53,6 +53,22 @@
         <label for="cron" class="form-label"></label>
         <input type="text" name="cron" class="form-control {% if errors is defined and 'cron' in errors %}is-invalid{% endif %}" id="cron" placeholder="my schedule cron" value="{{ schedule ? schedule.cron : '' }}">
         <div class="invalid-feedback">Please provide a valid schedule CRON.</div>
+
+        <div class="m-3"></div><hr/>
+
+        <label class="form-check-label" for="cluster">Include cluster resources</label>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="cluster" id="clusteryes" value="1" {% if (schedule and schedule.cluster == '1') or (not schedule is defined and defaultClusterRessourceIncluded == 1) %}checked{% endif %} {% if not user.isAdmin %}disabled{% endif %}>
+            <label class="form-check-label" for="clusteryes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="cluster" id="clusterno" value="0" {% if (schedule and schedule.cluster == '0') or (not schedule is defined and defaultClusterRessourceIncluded == 0) %}checked{% endif %} {% if not user.isAdmin %}disabled{% endif %}>
+            <label class="form-check-label" for="clusterno">No</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="cluster" id="clusterauto" value="-1" {% if (schedule and schedule.cluster == '-1') or (not schedule is defined and defaultClusterRessourceIncluded == -1) %}checked{% endif %} {% if not user.isAdmin %}disabled{% endif %}>
+            <label class="form-check-label" for="clusterauto">Auto</label>
+        </div>
     </div>
     <div class="col-md-6">
         <label class="form-label">Settings</label>
@@ -65,10 +81,6 @@
             <label class="form-check-label" for="snapshot">Snapshot Move Data</label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="cluster" id="cluster" value="1" {% if schedule and schedule.cluster == '1' %}checked{% endif %}{% if not user.admin %} disabled{% endif %}>
-            <label class="form-check-label" for="cluster">Include cluster resource</label>
-        </div>
-        <div class="form-check">
             <input class="form-check-input" type="checkbox" name="fsbackup" id="fsbackup" value="1" {% if (schedule and schedule.fsbackup == '1') or (not schedule is defined and defaultVolumesToFsBackup) %}checked{% endif %}>
             <label class="form-check-label" for="fsbackup">Default volume to FS Backup</label>
         </div>
@@ -77,7 +89,6 @@
             <label class="form-check-label" for="ownerreferences">Owner references in backup</label>
         </div>
     </div>
-    
     <div class="col-md-6">
         <label for="schedulelabels" class="form-label">Schedule labels</label>
         <input type="text" class="form-control {% if errors is defined and 'schedulelabels' in errors %}is-invalid{% endif %}" id="schedulelabels" placeholder="Labels"  value="{{ schedule ? schedule.schedulelabels : '' }}">
@@ -136,6 +147,9 @@ $(document).ready(function() {
         });
         $(this).find('input[type=checkbox]:not(:disabled)').each(function(){
             data[$(this).attr('id')] = $(this).is(':checked') ? '1' : '0';
+        });
+        $(this).find('input[type=radio]:checked').each(function(){
+            data[$(this).attr('name')] = $(this).val();
         });
         $('#form-modal .modal-content').block();
         $('#form-modal .modal-body').load("{{ path('/schedule/new') }}", data, function(response, status, xhr) {

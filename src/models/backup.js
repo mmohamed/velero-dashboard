@@ -32,7 +32,7 @@ class Backup {
    *           type: boolean
    *           required: false
    *           default: false
-   *           description: Include cluster resources.
+   *           description: Include cluster resources (not set for auto).
    *         snapshotLocation:
    *           type: string
    *           required: false
@@ -95,7 +95,7 @@ class Backup {
   #defaultVolumeToFS = true;
   #snapshot = false;
   #snapshotMoveData = false;
-  #includeClusterResources = false;
+  #includeClusterResources = null;
   #snapshotLocation;
   #backupLocation;
   #backupRetention;
@@ -143,7 +143,7 @@ class Backup {
   }
 
   setIncludeClusterResources(includeClusterResources) {
-    this.#includeClusterResources = Boolean(includeClusterResources);
+    this.#includeClusterResources = includeClusterResources == null ? null : Boolean(includeClusterResources);
   }
 
   getIncludeClusterResources() {
