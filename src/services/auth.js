@@ -1,9 +1,8 @@
-import tools from './../tools.js'
-import {decode} from 'html-entities'
-import {authenticate} from 'ldap-authentication'
+import tools from './../tools.js';
+import { decode } from 'html-entities';
+import { authenticate } from 'ldap-authentication';
 
 class AuthService {
-
   async auth(username, password, done) {
     let adminAccount = tools.admin();
     if (adminAccount) {
@@ -33,9 +32,9 @@ class AuthService {
         if (authenticated) {
           let groups = authenticated.memberOf ? authenticated.memberOf : authenticated.groups ? authenticated.groups.split('|') : [];
           let availableNamespaces = tools.userNamespace(groups);
-          
+
           tools.audit(username, 'AuthController', 'LOGIN');
-          
+
           return done(null, {
             isAdmin: false,
             username: authenticated.gecos ? authenticated.gecos : username,
@@ -47,7 +46,7 @@ class AuthService {
         }
       } catch (err) {
         console.error('Authentication error : ' + err);
-        return done(err)
+        return done(err);
       }
     }
     return done(new Error('Invalid credentials'));

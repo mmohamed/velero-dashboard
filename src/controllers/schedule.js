@@ -1,6 +1,6 @@
-import tools from './../tools.js'
-import {isValidCron} from 'cron-validator'
-import sanitizer from 'sanitizer'
+import tools from './../tools.js';
+import { isValidCron } from 'cron-validator';
+import sanitizer from 'sanitizer';
 
 class ScheduleController {
   constructor(kubeService, twing, k8sApi, customObjectsApi) {

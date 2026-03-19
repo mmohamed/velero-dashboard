@@ -1,8 +1,8 @@
-import tools from './../tools.js'
-import https from 'https'
-import axios from 'axios'
-import zlib from 'zlib'
-import sanitizer from 'sanitizer'
+import tools from './../tools.js';
+import https from 'https';
+import axios from 'axios';
+import zlib from 'zlib';
+import sanitizer from 'sanitizer';
 
 class RestoreController {
   constructor(kubeService, twing) {

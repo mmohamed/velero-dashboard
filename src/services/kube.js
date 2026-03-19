@@ -1,7 +1,7 @@
-import tools from './../tools.js'
-import fs from 'fs'
-import path from 'path'
-import * as k8s from '@kubernetes/client-node'
+import tools from './../tools.js';
+import fs from 'fs';
+import path from 'path';
+import * as k8s from '@kubernetes/client-node';
 
 class KubeService {
   constructor() {
@@ -273,12 +273,14 @@ class KubeService {
     if (tools.resourcePolicies() != null) {
       body.spec.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
-    if (user.isAdmin){ // for admin, take form input
-      if(backupDef.cluster == 1  || backupDef.cluster == 0){
+    if (user.isAdmin) {
+      // for admin, take form input
+      if (backupDef.cluster == 1 || backupDef.cluster == 0) {
         body.spec.includeClusterResources = backupDef.cluster == 1 ? true : false;
       }
-    }else{ // for user take app configuration value
-      if(tools.clusterRessourceIncluded() == 1  || tools.clusterRessourceIncluded() == 0){
+    } else {
+      // for user take app configuration value
+      if (tools.clusterRessourceIncluded() == 1 || tools.clusterRessourceIncluded() == 0) {
         body.spec.includeClusterResources = tools.clusterRessourceIncluded() == 1 ? true : false;
       }
     }
@@ -581,12 +583,14 @@ class KubeService {
     if (tools.resourcePolicies() != null) {
       body.spec.template.resourcePolicy = { kind: 'configmap', name: tools.resourcePolicies() };
     }
-    if (user.isAdmin){ // for admin, take form input
-      if(scheduleDef.cluster == 1  || scheduleDef.cluster == 0){
+    if (user.isAdmin) {
+      // for admin, take form input
+      if (scheduleDef.cluster == 1 || scheduleDef.cluster == 0) {
         body.spec.template.includeClusterResources = scheduleDef.cluster == 1 ? true : false;
       }
-    }else{ // for user take app configuration value
-      if(tools.clusterRessourceIncluded() == 1  || tools.clusterRessourceIncluded() == 0){
+    } else {
+      // for user take app configuration value
+      if (tools.clusterRessourceIncluded() == 1 || tools.clusterRessourceIncluded() == 0) {
         body.spec.template.includeClusterResources = tools.clusterRessourceIncluded() == 1 ? true : false;
       }
     }

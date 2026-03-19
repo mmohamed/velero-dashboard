@@ -1,8 +1,8 @@
-import tools from './../tools.js'
-import https from 'https'
-import axios from 'axios'
-import zlib from 'zlib'
-import sanitizer from 'sanitizer'
+import tools from './../tools.js';
+import https from 'https';
+import axios from 'axios';
+import zlib from 'zlib';
+import sanitizer from 'sanitizer';
 
 class BackupController {
   constructor(kubeService, twing) {
@@ -130,7 +130,7 @@ class BackupController {
 
       return;
     }
-  
+
     return this.twing
       .render('backup.form.html.twig', {
         backupStorageLocations: backupStorageLocations,
