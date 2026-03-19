@@ -123,3 +123,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix "Include cluster resources" parameter for API and UI form
+
+## [1.4.1] - 2026-03-19
+
+### Fixed
+
+- Switch openid-client to v5 instead of v6 to support old IDP with multiple audiences
