@@ -11,8 +11,10 @@ import { Strategy as LocalStrategy } from 'passport-local'
 import passport from 'passport'
 import { createFilesystemLoader, createEnvironment, createFunction } from 'twing'
 import dotenv from 'dotenv'
-import path from 'path';
-import { discovery } from 'openid-client'
+import path from 'path'
+import { Issuer } from 'openid-client'
+import { decodeJwt } from 'jose'
+import errorhandler from 'errorhandler'
 
 dotenv.config({
   path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'
@@ -37,6 +39,10 @@ var server = app;
 if (tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()) {
   console.log(new Date(), ': Start HTTPS server...');
   server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, app);
+}
+// dev mode
+if(tools.devMode()){
+  app.use(errorhandler());
 }
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -88,11 +94,27 @@ const homeController = new HomeController(kubeService, twing);
 
 // oidc
 const oidcConfig = tools.oidcConfig();
-let oidcDiscovery, initFN;
 if(oidcConfig){
-  oidcDiscovery =  discovery(new URL(oidcConfig.discoveryUrl), oidcConfig.clientId, oidcConfig.clientSecret);
   (async function() {
-      await authController.initOIDCConfiguration(oidcDiscovery, oidcConfig);
+      const issuer =  await Issuer.discover(oidcConfig.discoveryUrl);
+      class CustomClient extends issuer.Client {
+        async validateIdToken(tokenSet, nonce, returnedBy, maxAge, state) {
+          // Skip azp and audience checks, do own
+          const claims = decodeJwt(tokenSet.id_token ?? tokenSet);
+          const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud]
+          if (!aud.includes(oidcConfig.clientId)) {
+            throw new Error('Invalid audience : '+aud.join(','))
+          }
+          return claims;
+        }
+      }
+      const client = new CustomClient({
+        client_id: oidcConfig.clientId,
+        client_secret: oidcConfig.clientSecret,
+        redirect_uris: [oidcConfig.redirectUrl],
+        response_types: ['code']
+      });
+      authController.initOIDCConfiguration(client, oidcConfig);
   })();
 }
 
@@ -131,4 +153,4 @@ const metricsService = new MetricsService(kubeService);
 
 metrics.get('/' + tools.metricsPath(), (req, res, next) => metricsService.get(req, res, next));
 
-export default { app: server, metrics: metrics, init: initFN };
+export default { app: server, metrics: metrics };

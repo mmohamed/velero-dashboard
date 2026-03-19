@@ -5,6 +5,12 @@ const tools = {
   version: function () {
     return config.default.version;
   },
+  devMode: function() {
+    if (process.env.DEV_MODE && (process.env.DEV_MODE.trim() === '1' || process.env.DEV_MODE.trim().toLowerCase() === 'true')) {
+      return true;
+    }
+    return false;
+  },
   port: function () {
     return process.env.APP_PORT | 3000;
   },

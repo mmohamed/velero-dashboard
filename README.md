@@ -92,10 +92,11 @@ METRICS_PATH=internal-metrics #default metrics (prometheus.io/path)
 
 _Important : If user filtering is enabled and Restore/Backup include one namespace, metrics label 'namespace' will be overrided by the target namespace of the Restore/Backup._
 
-- Debug mode: if is enabled, debug information will be written to stdout.
+- For issues resolving, they are a debug mode: if is enabled, debug information will be written to stdout, and development mode for browser stack tracing printing.
 
 ```ini
 DEBUG=true #default false
+DEV_MODE=false #default false
 ```
 
 - AuditLog mode: if is enabled, audit information (actor, action, object time, ...) will be written to stdout

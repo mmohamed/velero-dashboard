@@ -1,18 +1,17 @@
 import tools from './../tools.js'
-import crypto from 'crypto'
-import {buildAuthorizationUrl, authorizationCodeGrant} from 'openid-client'
+import { generators } from 'openid-client'
 
 class AuthController {
   constructor(kubeService, twing, authService) {
     this.kubeService = kubeService;
     this.twing = twing;
     this.authService = authService;
-    this.oidcDiscovery = null;
+    this.oidcClient = null;
     this.oidcConfig = null;
   }
 
-  async initOIDCConfiguration(oidcDiscovery, oidcConfig){
-    this.oidcDiscovery = await Promise.resolve(oidcDiscovery);
+  initOIDCConfiguration(oidcClient, oidcConfig){
+    this.oidcClient = oidcClient;
     this.oidcConfig = oidcConfig;
   }
 
@@ -103,19 +102,18 @@ class AuthController {
   }
 
   async oidcAction(request, response) {
-    if(this.oidcConfig == null || this.oidcDiscovery == null){
+    if(this.oidcConfig == null || this.oidcClient == null){
       return response.redirect('/login');
     }
 
-    const codeVerifier = crypto.randomBytes(32).toString('base64url');
-    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    const codeVerifier = generators.codeVerifier()
+    const codeChallenge = generators.codeChallenge(codeVerifier)
 
     request.session.codeVerifier = codeVerifier;
 
     const extraScopes = this.oidcConfig.extraScopes && Array.isArray(this.oidcConfig.extraScopes) ? this.oidcConfig.extraScopes.join(" "): "";
-    const authorizationUrl = buildAuthorizationUrl(this.oidcDiscovery, {
+    const authorizationUrl = this.oidcClient.authorizationUrl({
       scope: 'openid profile email '+extraScopes,
-      redirect_uri: this.oidcConfig.redirectUrl,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256'
     });
@@ -124,17 +122,24 @@ class AuthController {
   }
 
   async oidcCallbackAction(request, response, next){
-    if(this.oidcConfig == null || this.oidcDiscovery == null){
+    if(this.oidcConfig == null || this.oidcClient == null){
       return response.redirect('/login');
     }
 
     try {
-      const tokens = await authorizationCodeGrant(this.oidcDiscovery, new URL(request.originalUrl, this.oidcConfig.baseUrl), {
-        pkceCodeVerifier: request.session.codeVerifier 
-      });
-      const claims = tokens.claims()
-      tools.debug('IODC : Authenticated user claims : ', claims);
 
+      const params = this.oidcClient.callbackParams(request)
+      const tokens = await this.oidcClient.callback(
+        this.oidcConfig.redirectUrl,
+        params,
+        {
+          code_verifier: request.session.codeVerifier
+        }
+      )
+
+      const claims = tokens.claims()
+      tools.debug('OIDC : Authenticated user claims : ', claims);
+      
       const userGroups = this.oidcConfig.groupClaim && this.oidcConfig.groupClaim.trim() != "" ? claims[this.oidcConfig.groupClaim] : [];
       const user = {
         isAdmin: false,
@@ -145,7 +150,7 @@ class AuthController {
         provider: 'oidc'
       }
 
-      tools.debug('IODC : Authenticated user : ', user);
+      tools.debug('OIDC : Authenticated user : ', user);
 
       request.login(user, err => {
         if (err) return next(err)
@@ -155,8 +160,8 @@ class AuthController {
 
     } catch (err) {
       tools.audit('oidc-user', 'AuthController', 'LOGINFAILED');
-      console.error('IODC authentication error : ' + err);
-      next(err)
+      console.error('OIDC authentication error : ' + err + ', caused by '+ err.cause);
+      next(new Error('OIDC error'))
     }
   }
 
