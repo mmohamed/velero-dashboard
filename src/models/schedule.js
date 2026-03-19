@@ -1,5 +1,5 @@
-import Backup from './backup.js'
-import Label from './label.js'
+import Backup from './backup.js';
+import Label from './label.js';
 
 class Schedule extends Backup {
   /**

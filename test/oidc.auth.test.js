@@ -1,4 +1,4 @@
-jest.mock('openid-client')
+jest.mock('openid-client');
 require('./oidc.mock').enable();
 const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');

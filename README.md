@@ -52,16 +52,17 @@ OIDC_CONFIG_PATH=/absolut/path/config/dir #default null
 # Set up OIDC SSL server
 NODE_EXTRA_CA_CERTS=/absolut/path/cert/file
 ```
+
 ```json
 {
-    "clientId": "authorization-code-client-id",
-    "clientSecret": "authorization-code-client-secret",
-    "discoveryUrl": "https://172.20.96.1:31246",
-    "redirectUrl": "http://localhost:3000/auth/oidc/callback",
-    "baseUrl": "http://localhost:3000",
-    "extraScopes": ["groups"],
-    "userClaim": "name",
-    "groupClaim": "groups"
+  "clientId": "authorization-code-client-id",
+  "clientSecret": "authorization-code-client-secret",
+  "discoveryUrl": "https://172.20.96.1:31246",
+  "redirectUrl": "http://localhost:3000/auth/oidc/callback",
+  "baseUrl": "http://localhost:3000",
+  "extraScopes": ["groups"],
+  "userClaim": "name",
+  "groupClaim": "groups"
 }
 ```
 
@@ -79,7 +80,7 @@ USE_FSBACKUP=true #default false
 RESOURCE_POLICIES=volume-policies #default empty
 SNAPSHOT_VOLUMES=true #default false
 SNAPSHOT_MOVE_DATA=false #default false
-CLUSTER_RESOURCE_INCLUDE=false #default empty 
+CLUSTER_RESOURCE_INCLUDE=false #default empty
 ```
 
 - Metrics for Prometheus: if is enabled, Backup and Restore status metrics will be available for Prometheus scraper
@@ -168,7 +169,7 @@ kubectl apply -f ./kubernetes/minio-dev.yaml
 velero install .....
 # Deploy Dev LDAP sever
 kubectl apply -f ./kubernetes/ldap-dev.yaml
-# Deploy Dev OIDC server 
+# Deploy Dev OIDC server
 kubectl apply -f ./kubernetes/oidc-dev.yaml
 # Deploy My-Velero (dev)
 kubectl apply -f ./kubernetes/my-velero.yaml

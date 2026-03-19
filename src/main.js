@@ -1,34 +1,34 @@
-import express from 'express'
-import bodyParser from 'body-parser'
-import session from 'express-session'
-import cookieParser from 'cookie-parser'
-import csrf from 'csurf'
-import xssShield from 'xss-shield'
-import https from 'https'
-import fs from 'fs'
-import helmet from 'helmet'
-import { Strategy as LocalStrategy } from 'passport-local'
-import passport from 'passport'
-import { createFilesystemLoader, createEnvironment, createFunction } from 'twing'
-import dotenv from 'dotenv'
-import path from 'path'
-import { Issuer } from 'openid-client'
-import { decodeJwt } from 'jose'
-import errorhandler from 'errorhandler'
+import express from 'express';
+import bodyParser from 'body-parser';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import csrf from 'csurf';
+import xssShield from 'xss-shield';
+import https from 'https';
+import fs from 'fs';
+import helmet from 'helmet';
+import { Strategy as LocalStrategy } from 'passport-local';
+import passport from 'passport';
+import { createFilesystemLoader, createEnvironment, createFunction } from 'twing';
+import dotenv from 'dotenv';
+import path from 'path';
+import { Issuer } from 'openid-client';
+import { decodeJwt } from 'jose';
+import errorhandler from 'errorhandler';
 
 dotenv.config({
   path: process.env.NODE_ENV !== 'test' ? '.env' : '.env.test'
-})
+});
 
-import AuthController from './controllers/auth.js'
-import BackupController from './controllers/backup.js'
-import ScheduleController from './controllers/schedule.js'
-import RestoreController from './controllers/restore.js'
-import HomeController from './controllers/home.js'
-import MetricsService from './services/metrics.js'
-import AuthService from './services/auth.js'
-import KubeService from './services/kube.js'
-import tools from './tools.js'
+import AuthController from './controllers/auth.js';
+import BackupController from './controllers/backup.js';
+import ScheduleController from './controllers/schedule.js';
+import RestoreController from './controllers/restore.js';
+import HomeController from './controllers/home.js';
+import MetricsService from './services/metrics.js';
+import AuthService from './services/auth.js';
+import KubeService from './services/kube.js';
+import tools from './tools.js';
 
 const app = express();
 const metrics = express();
@@ -41,7 +41,7 @@ if (tools.isSecureHost() && tools.sslCertFilePath() && tools.sslKeyFilePath()) {
   server = https.createServer({ key: fs.readFileSync(tools.sslKeyFilePath()), cert: fs.readFileSync(tools.sslCertFilePath()) }, app);
 }
 // dev mode
-if(tools.devMode()){
+if (tools.devMode()) {
   app.use(errorhandler());
 }
 
@@ -51,9 +51,7 @@ app.use(cookieParser());
 app.disable('x-powered-by');
 
 app.use(process.env.NODE_ENV !== 'test' ? xssShield.default.xssShield() : xssShield.xssShield()); // jest no-esm supporting
-app.use(
-  session({ secret: tools.secretKey(), resave: true, saveUninitialized: true, cookie: { secure: tools.isSecureHost() } })
-);
+app.use(session({ secret: tools.secretKey(), resave: true, saveUninitialized: true, cookie: { secure: tools.isSecureHost() } }));
 app.use('/static', express.static(path.resolve('./') + '/static'));
 
 const csrfProtect = csrf({ cookie: true });
@@ -69,8 +67,7 @@ const viewPath = createFunction(
 );
 twing.addFunction(viewPath);
 
-
-app.use(helmet({contentSecurityPolicy: {directives: {scriptSrc: ["'self'", "'unsafe-inline'"]}}}));
+app.use(helmet({ contentSecurityPolicy: { directives: { scriptSrc: ["'self'", "'unsafe-inline'"] } } }));
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 app.use(passport.initialize());
@@ -78,11 +75,11 @@ app.use(passport.session());
 
 const authService = new AuthService();
 
-passport.use(new LocalStrategy(
-  async (username, password, done) => {
-    return await authService.auth(username, password, done)
-  }
-))
+passport.use(
+  new LocalStrategy(async (username, password, done) => {
+    return await authService.auth(username, password, done);
+  })
+);
 
 const kubeService = new KubeService();
 
@@ -94,27 +91,27 @@ const homeController = new HomeController(kubeService, twing);
 
 // oidc
 const oidcConfig = tools.oidcConfig();
-if(oidcConfig){
-  (async function() {
-      const issuer =  await Issuer.discover(oidcConfig.discoveryUrl);
-      class CustomClient extends issuer.Client {
-        async validateIdToken(tokenSet, nonce, returnedBy, maxAge, state) {
-          // Skip azp and audience checks, do own
-          const claims = decodeJwt(tokenSet.id_token ?? tokenSet);
-          const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud]
-          if (!aud.includes(oidcConfig.clientId)) {
-            throw new Error('Invalid audience : '+aud.join(','))
-          }
-          return claims;
+if (oidcConfig) {
+  (async function () {
+    const issuer = await Issuer.discover(oidcConfig.discoveryUrl);
+    class CustomClient extends issuer.Client {
+      async validateIdToken(tokenSet, nonce, returnedBy, maxAge, state) {
+        // Skip azp and audience checks, do own
+        const claims = decodeJwt(tokenSet.id_token ?? tokenSet);
+        const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+        if (!aud.includes(oidcConfig.clientId)) {
+          throw new Error('Invalid audience : ' + aud.join(','));
         }
+        return claims;
       }
-      const client = new CustomClient({
-        client_id: oidcConfig.clientId,
-        client_secret: oidcConfig.clientSecret,
-        redirect_uris: [oidcConfig.redirectUrl],
-        response_types: ['code']
-      });
-      authController.initOIDCConfiguration(client, oidcConfig);
+    }
+    const client = new CustomClient({
+      client_id: oidcConfig.clientId,
+      client_secret: oidcConfig.clientSecret,
+      redirect_uris: [oidcConfig.redirectUrl],
+      response_types: ['code']
+    });
+    authController.initOIDCConfiguration(client, oidcConfig);
   })();
 }
 
@@ -124,7 +121,7 @@ app.get('/login', csrfProtect, (req, res, next) => authController.loginView(req,
 app.get('/logout', (req, res, next) => authController.logoutAction(req, res, next));
 app.post('/login', csrfProtect, (req, res, next) => authController.loginAction(req, res, next));
 
-if(oidcConfig){
+if (oidcConfig) {
   app.get('/auth/oidc', (req, res, next) => authController.oidcAction(req, res, next));
   app.get('/auth/oidc/callback', (req, res, next) => authController.oidcCallbackAction(req, res, next));
 }

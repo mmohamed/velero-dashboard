@@ -76,10 +76,7 @@ describe('Managing partial server errors 2', () => {
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(false);
 
-    res = await requestWithSupertest
-      .delete('/schedules')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.delete('/schedules').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -90,18 +87,12 @@ describe('Managing partial server errors 2', () => {
     res = await requestWithSupertest.get('/backups/result/backup-first');
     expect(res.status).toEqual(200);
 
-    res = await requestWithSupertest
-      .post('/schedules/toggle')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/toggle').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(false);
 
-    res = await requestWithSupertest
-      .post('/schedules/execute')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/execute').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(false);

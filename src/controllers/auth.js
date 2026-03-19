@@ -1,5 +1,5 @@
-import tools from './../tools.js'
-import { generators } from 'openid-client'
+import tools from './../tools.js';
+import { generators } from 'openid-client';
 
 class AuthController {
   constructor(kubeService, twing, authService) {
@@ -10,16 +10,16 @@ class AuthController {
     this.oidcConfig = null;
   }
 
-  initOIDCConfiguration(oidcClient, oidcConfig){
+  initOIDCConfiguration(oidcClient, oidcConfig) {
     this.oidcClient = oidcClient;
     this.oidcConfig = oidcConfig;
   }
 
   globalSecureAction(request, response, next) {
-    if(request.path.indexOf('/static/') === 0 || request.path.indexOf('/auth/oidc') === 0){
+    if (request.path.indexOf('/static/') === 0 || request.path.indexOf('/auth/oidc') === 0) {
       return next();
     }
-    
+
     if (!request.isAuthenticated()) {
       if (request.path !== '/login' && request.path !== '/') {
         return response.redirect(tools.subPath('/login'));
@@ -70,50 +70,62 @@ class AuthController {
 
   logoutAction(request, response) {
     const actor = request.user.username;
-    request.logout(err => {
-      if (err) return next(err)
+    request.logout((err) => {
+      if (err) return next(err);
       request.session.destroy(() => {
         tools.debug('user logged out.');
         tools.audit(actor, 'AuthController', 'LOGOUT');
-      })
+      });
       return response.redirect(tools.subPath('/'));
-    })
+    });
   }
 
   async loginAction(request, response) {
     if (!request.body.username || !request.body.password) {
-      return this.twing.render('login.html.twig', { csrfToken: request.csrfToken(), message: 'Please enter both username and password', oidcEnabled: this.oidcConfig ? true : false }).then((output) => {
-        response.set('Content-Type', 'text/html').end(output);
-      });
+      return this.twing
+        .render('login.html.twig', {
+          csrfToken: request.csrfToken(),
+          message: 'Please enter both username and password',
+          oidcEnabled: this.oidcConfig ? true : false
+        })
+        .then((output) => {
+          response.set('Content-Type', 'text/html').end(output);
+        });
     }
     return await this.authService.auth(request.body.username, request.body.password, (error, user) => {
-      if(user != null){
+      if (user != null) {
         return request.login(user, (err) => {
           return response.redirect(tools.subPath('/'));
         });
       }
       tools.audit(request.body.username, 'AuthController', 'LOGINFAILED');
 
-      return this.twing.render('login.html.twig', { csrfToken: request.csrfToken(), message: 'Invalid credentials!', oidcEnabled: this.oidcConfig ? true : false }).then((output) => {
-        response.set('Content-Type', 'text/html').end(output);
-      });
-
+      return this.twing
+        .render('login.html.twig', {
+          csrfToken: request.csrfToken(),
+          message: 'Invalid credentials!',
+          oidcEnabled: this.oidcConfig ? true : false
+        })
+        .then((output) => {
+          response.set('Content-Type', 'text/html').end(output);
+        });
     });
   }
 
   async oidcAction(request, response) {
-    if(this.oidcConfig == null || this.oidcClient == null){
+    if (this.oidcConfig == null || this.oidcClient == null) {
       return response.redirect('/login');
     }
 
-    const codeVerifier = generators.codeVerifier()
-    const codeChallenge = generators.codeChallenge(codeVerifier)
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
 
     request.session.codeVerifier = codeVerifier;
 
-    const extraScopes = this.oidcConfig.extraScopes && Array.isArray(this.oidcConfig.extraScopes) ? this.oidcConfig.extraScopes.join(" "): "";
+    const extraScopes =
+      this.oidcConfig.extraScopes && Array.isArray(this.oidcConfig.extraScopes) ? this.oidcConfig.extraScopes.join(' ') : '';
     const authorizationUrl = this.oidcClient.authorizationUrl({
-      scope: 'openid profile email '+extraScopes,
+      scope: 'openid profile email ' + extraScopes,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256'
     });
@@ -121,50 +133,43 @@ class AuthController {
     response.redirect(authorizationUrl.toString());
   }
 
-  async oidcCallbackAction(request, response, next){
-    if(this.oidcConfig == null || this.oidcClient == null){
+  async oidcCallbackAction(request, response, next) {
+    if (this.oidcConfig == null || this.oidcClient == null) {
       return response.redirect('/login');
     }
 
     try {
+      const params = this.oidcClient.callbackParams(request);
+      const tokens = await this.oidcClient.callback(this.oidcConfig.redirectUrl, params, {
+        code_verifier: request.session.codeVerifier
+      });
 
-      const params = this.oidcClient.callbackParams(request)
-      const tokens = await this.oidcClient.callback(
-        this.oidcConfig.redirectUrl,
-        params,
-        {
-          code_verifier: request.session.codeVerifier
-        }
-      )
-
-      const claims = tokens.claims()
+      const claims = tokens.claims();
       tools.debug('OIDC : Authenticated user claims : ', claims);
-      
-      const userGroups = this.oidcConfig.groupClaim && this.oidcConfig.groupClaim.trim() != "" ? claims[this.oidcConfig.groupClaim] : [];
+
+      const userGroups = this.oidcConfig.groupClaim && this.oidcConfig.groupClaim.trim() != '' ? claims[this.oidcConfig.groupClaim] : [];
       const user = {
         isAdmin: false,
-        username: this.oidcConfig.userClaim && this.oidcConfig.userClaim.trim() != "" ? claims[this.oidcConfig.userClaim] : claims.sub,
+        username: this.oidcConfig.userClaim && this.oidcConfig.userClaim.trim() != '' ? claims[this.oidcConfig.userClaim] : claims.sub,
         claims,
         groups: userGroups,
         namespaces: tools.userNamespace(userGroups),
         provider: 'oidc'
-      }
+      };
 
       tools.debug('OIDC : Authenticated user : ', user);
 
-      request.login(user, err => {
-        if (err) return next(err)
+      request.login(user, (err) => {
+        if (err) return next(err);
         tools.audit(user.username, 'AuthController', 'OIDCLOGIN');
-        response.redirect('/')
-      })
-
+        response.redirect('/');
+      });
     } catch (err) {
       tools.audit('oidc-user', 'AuthController', 'LOGINFAILED');
-      console.error('OIDC authentication error : ' + err + ', caused by '+ err.cause);
-      next(new Error('OIDC error'))
+      console.error('OIDC authentication error : ' + err + ', caused by ' + err.cause);
+      next(new Error('OIDC error'));
     }
   }
-
 }
 
 export default AuthController;

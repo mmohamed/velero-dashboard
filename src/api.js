@@ -1,10 +1,10 @@
-import express from 'express'
-import swaggerUI from 'swagger-ui-express'
-import swaggerSpec from './swagger.js'
-import https from 'https'
-import fs from 'fs'
+import express from 'express';
+import swaggerUI from 'swagger-ui-express';
+import swaggerSpec from './swagger.js';
+import https from 'https';
+import fs from 'fs';
 
-import KubeService from './services/kube.js'
+import KubeService from './services/kube.js';
 import APIController from './controllers/api.js';
 import tools from './tools.js';
 
