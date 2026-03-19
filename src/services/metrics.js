@@ -1,4 +1,4 @@
-import tools from './../tools.js'
+import tools from './../tools.js';
 import client from 'prom-client';
 
 class MetricsService {

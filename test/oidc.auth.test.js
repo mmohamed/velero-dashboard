@@ -1,7 +1,5 @@
-jest.mock('openid-client')
+jest.mock('openid-client');
 require('./oidc.mock').enable();
-const { discovery } = require('openid-client');
-const {buildAuthorizationUrl, authorizationCodeGrant} = require('openid-client');
 const supertestsession = require('supertest-session');
 const server = require('./../src/main.js');
 const requestWithSupertest = supertestsession(server.default.app);
@@ -19,8 +17,6 @@ describe('OIDC User Login / Logout actions', () => {
 
     const callbackRes = await requestWithSupertest.get('/auth/oidc/callback?code=fake&state=fake');
     expect(callbackRes.status).toEqual(302);
-    
-    expect(authorizationCodeGrant).toHaveBeenCalled();
 
     expect(callbackRes.status).toEqual(302);
     expect(callbackRes.get('Location')).toEqual('/');

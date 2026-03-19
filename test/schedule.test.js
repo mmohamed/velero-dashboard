@@ -22,9 +22,9 @@ describe('Schedules get', () => {
   it('should have access to 2 schedules', async () => {
     var auth = await util.auth(requestWithSupertest, 'admin', 'admin');
     expect(auth.response.get('Location')).toEqual('/');
-     
+
     res = await requestWithSupertest.get('/schedules');
-    
+
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.length).toEqual(2);
@@ -86,7 +86,7 @@ describe('Schedules create', () => {
     const cronErrors = dom.window.document.getElementsByClassName('is-invalid');
     expect(cronErrors.length).toEqual(1);
     expect(cronErrors[0].getAttribute('id')).toEqual('cron');
-     // cluster resource included selector
+    // cluster resource included selector
     expect(dom.window.document.getElementById('clusterauto').checked).toBe(true);
 
     scheduleData.cron = '* * * * *';
@@ -111,17 +111,11 @@ describe('Schedules delete', () => {
     expect(auth.response.status).toEqual(302);
     expect(auth.response.get('Location')).toEqual('/');
 
-    res = await requestWithSupertest
-      .delete('/schedules')
-      .send({ scheduleignored: 'notfound', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.delete('/schedules').send({ scheduleignored: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
     res = await requestWithSupertest.delete('/schedules').send({ schedule: 'notfound', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest
-      .delete('/schedules')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.delete('/schedules').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -144,15 +138,9 @@ describe('Schedule execute', () => {
 
     res = await requestWithSupertest.post('/schedules/execute').send({ _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest
-      .post('/schedules/execute')
-      .send({ schedule: 'notfound-schedule', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/execute').send({ schedule: 'notfound-schedule', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest
-      .post('/schedules/execute')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/execute').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);
@@ -175,15 +163,9 @@ describe('Schedule toggle', () => {
 
     res = await requestWithSupertest.post('/schedules/toggle').send({ _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest
-      .post('/schedules/toggle')
-      .send({ schedule: 'notfound-schedule', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/toggle').send({ schedule: 'notfound-schedule', _csrf: auth.token });
     expect(res.status).toEqual(404);
-    res = await requestWithSupertest
-      .post('/schedules/toggle')
-      .send({ schedule: 'first-schedules', _csrf: auth.token })
-      ;
+    res = await requestWithSupertest.post('/schedules/toggle').send({ schedule: 'first-schedules', _csrf: auth.token });
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
     expect(res.body.status).toBe(true);

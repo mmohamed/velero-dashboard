@@ -1,17 +1,17 @@
-import tools from './../tools.js'
-import https from 'https'
-import axios from 'axios'
-import zlib from 'zlib'
-import {isValidCron} from 'cron-validator'
-import sanitizer from 'sanitizer'
-import auth from 'basic-auth'
-import {authenticate} from 'ldap-authentication'
-import Backup from './../models/backup.js'
+import tools from './../tools.js';
+import https from 'https';
+import axios from 'axios';
+import zlib from 'zlib';
+import { isValidCron } from 'cron-validator';
+import sanitizer from 'sanitizer';
+import auth from 'basic-auth';
+import { authenticate } from 'ldap-authentication';
+import Backup from './../models/backup.js';
 import BackupStatus from './../models/backupstatus.js';
-import Restore from './../models/restore.js'
-import RestoreStatus from './../models/restorestatus.js'
-import Schedule from './../models/schedule.js'
-import ScheduleStatus from './../models/schedulestatus.js'
+import Restore from './../models/restore.js';
+import RestoreStatus from './../models/restorestatus.js';
+import Schedule from './../models/schedule.js';
+import ScheduleStatus from './../models/schedulestatus.js';
 
 class APIController {
   constructor(kubeService) {
@@ -255,7 +255,7 @@ class APIController {
         fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
         snapshot: bodyRequest.snapshot ? '1' : 0,
         snapshotMoveData: bodyRequest.snapshot && bodyRequest.snapshotmovedata,
-        cluster: bodyRequest.includeClusterResources == null ? -1 : (bodyRequest.includeClusterResources ? '1' : 0),
+        cluster: bodyRequest.includeClusterResources == null ? -1 : bodyRequest.includeClusterResources ? '1' : 0,
         backuplocation: bodyRequest.backupLocation,
         retention: bodyRequest.backupRetention,
         includenamespace: bodyRequest.includeNamespaces,
@@ -400,7 +400,7 @@ class APIController {
         fsbackup: bodyRequest.defaultVolumeToFS ? '1' : '0',
         snapshot: bodyRequest.snapshot ? '1' : 0,
         snapshotMoveData: bodyRequest.snapshot && bodyRequest.snapshotmovedata,
-        cluster: bodyRequest.includeClusterResources == null ? -1 : (bodyRequest.includeClusterResources ? '1' : 0),
+        cluster: bodyRequest.includeClusterResources == null ? -1 : bodyRequest.includeClusterResources ? '1' : 0,
         backuplocation: bodyRequest.backupLocation,
         retention: bodyRequest.backupRetention,
         includenamespace: bodyRequest.includeNamespaces,

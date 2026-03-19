@@ -1,5 +1,5 @@
-import swaggerJSDoc from 'swagger-jsdoc'
-import tools from './tools.js'
+import swaggerJSDoc from 'swagger-jsdoc';
+import tools from './tools.js';
 
 const swaggerDefinition = {
   openapi: '3.0.0',

@@ -109,10 +109,7 @@ data:
       }
     ]
 
-
-
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -132,11 +129,11 @@ spec:
     spec:
       volumes:
         - name: client-config
-          configMap: 
+          configMap:
             name: my-velero-oidc-client
         - name: oidc-ssl
-          secret: 
-            secretName: oidc-ssl 
+          secret:
+            secretName: oidc-ssl
       containers:
         - name: my-velero-oidc
           image: docker.io/medinvention/oidc-server-mock-arm:0.12.1 #ghcr.io/soluto/oidc-server-mock:latest
@@ -157,7 +154,7 @@ spec:
             - name: USERS_CONFIGURATION_PATH
               value: /etc/config/users-config.json
             - name: IDENTITY_RESOURCES_PATH
-              value: /etc/config/identify-config.json 
+              value: /etc/config/identify-config.json
             - name: ASPNETCORE_URLS
               value: https://+:8443;http://+:8080
             # - name: ASPNETCORE_Kestrel__Certificates__Default__Password
@@ -191,6 +188,6 @@ spec:
       targetPort: 8080
     - name: https
       port: 4001
-      targetPort: 8443  
+      targetPort: 8443
   selector:
     app: myvelerooidc
