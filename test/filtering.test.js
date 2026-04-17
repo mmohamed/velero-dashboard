@@ -23,7 +23,7 @@ describe('Admin full access', () => {
     res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-    expect(res.body.length).toEqual(3);
+    expect(res.body.length).toEqual(4);
   });
 });
 
@@ -84,6 +84,6 @@ describe('User with filtering feature disabled', () => {
     res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-    expect(res.body.length).toEqual(3);
+    expect(res.body.length).toEqual(4);
   });
 });

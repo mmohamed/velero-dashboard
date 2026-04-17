@@ -25,6 +25,6 @@ describe('Enabled metrics', () => {
   it('should have good response', async () => {
     var res = await requestWithSupertest.get('/internal-metrics');
     expect(res.status).toEqual(200);
-    expect(res.text.split(/\r\n|\r|\n/).length).toEqual(12);
+    expect(res.text.split(/\r\n|\r|\n/).length).toEqual(13);
   });
 });

@@ -481,7 +481,7 @@ $(document).ready(function() {
             { "data" : null },
             { "data" : "name" },
             { "data" : "status" },
-            { "data" : "ttl" },
+            { "data" : "ttl", "defaultContent": "" },
             { "data" : "schedule" },
             { 
                 data : "last", 

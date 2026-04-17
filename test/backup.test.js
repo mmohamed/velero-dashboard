@@ -30,7 +30,7 @@ describe('Backups get', () => {
     res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-    expect(res.body.length).toEqual(3);
+    expect(res.body.length).toEqual(4);
   });
 });
 
