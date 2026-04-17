@@ -129,3 +129,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Switch openid-client to v5 instead of v6 to support old IDP with multiple audiences
+
+## [1.4.2] - 2026-04-17
+
+### Fixed
+
+- Fix metrics error "TypeError in metrics.js:34" when backup.spec.includedNamespaces is undefined
+- Fix list schedule error when no TTL is defined

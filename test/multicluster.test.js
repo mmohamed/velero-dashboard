@@ -24,7 +24,7 @@ describe('Multi cluster view and switch', () => {
     res = await requestWithSupertest.get('/backups');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-    expect(res.body.length).toEqual(3);
+    expect(res.body.length).toEqual(4);
 
     res = await requestWithSupertest.get('/');
     expect(res.status).toEqual(200);

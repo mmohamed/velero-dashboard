@@ -1,6 +1,6 @@
 {
   "name": "my-velero",
-  "version": "1.4.1-stable-1.17.2",
+  "version": "1.4.2-stable-1.17.2",
   "description": "Velero dashboard UI",
   "main": "app.js",
   "scripts": {

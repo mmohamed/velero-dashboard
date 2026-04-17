@@ -31,7 +31,7 @@ class MetricsService {
     for (let i in backups) {
       let backup = backups[i];
       let namespace = tools.namespace();
-      if (backup.spec.includedNamespaces.length === 1 && backup.spec.includedNamespaces[0] !== '*') {
+      if (backup.spec.includedNamespaces?.length === 1 && backup.spec.includedNamespaces[0] !== '*') {
         if (tools.filtering() && tools.ldap()) {
           namespace = backup.spec.includedNamespaces[0];
         }

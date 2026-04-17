@@ -36,6 +36,17 @@ const data = {
         },
         metadata: { name: 'backup-third' },
         status: {}
+      },
+      {
+        spec: {
+          storageLocation: 'default',
+          volumeSnapshotLocations: ['default'],
+          defaultVolumesToFsBackup: false,
+          snapshot: true,
+          snapshotMoveData: true
+        },
+        metadata: { name: 'backup-cluster-wide' },
+        status: {}
       }
     ];
   },

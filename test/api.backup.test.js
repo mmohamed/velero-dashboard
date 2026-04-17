@@ -24,7 +24,7 @@ describe('Backups get', () => {
     var res = await requestWithSupertest.get('/v1/backups').auth('admin', 'admin');
     expect(res.status).toEqual(200);
     expect(res.get('Content-Type')).toEqual('application/json; charset=utf-8');
-    expect(res.body.length).toEqual(3);
+    expect(res.body.length).toEqual(4);
   });
 });
 
